@@ -3,8 +3,11 @@ import type {
   IDailyQuest,
   IParentSubjectSummary,
   IPlayerProfile,
+  IQuestProgressRecord,
+  IQuestReward,
   ISkillMastery,
   ITelemetryLog,
+  QuestStatus,
   SubjectCategory,
 } from '../types/cctp';
 import type { ISpacedRepetitionEntry } from '../services/EloEngine';
@@ -38,6 +41,14 @@ CREATE TABLE IF NOT EXISTS combat_telemetry_log (
   reaction_time_ms INTEGER NOT NULL,
   recorded_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS quest_progress (
+  quest_id TEXT PRIMARY KEY,
+  status TEXT NOT NULL DEFAULT 'AVAILABLE',
+  current_objective_index INTEGER NOT NULL DEFAULT 0,
+  current_count INTEGER NOT NULL DEFAULT 0,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
 `.trim();
 
 const STORAGE_KEY = 'brawl_college_sqlite_v1';
@@ -50,6 +61,7 @@ interface ISqliteInternalState {
   player_profile: IPlayerProfile;
   skill_mastery: Record<string, ISkillMastery>;
   combat_telemetry_log: ITelemetryLog[];
+  quest_progress: Record<string, IQuestProgressRecord>;
   next_log_id: number;
   combat_stars: number;
   knowledge_points: number;
@@ -165,6 +177,7 @@ function createDefaultState(): ISqliteInternalState {
     },
     skill_mastery: skillMastery,
     combat_telemetry_log: [],
+    quest_progress: {},
     next_log_id: 1,
     combat_stars: 0,
     knowledge_points: 0,
@@ -199,7 +212,7 @@ function cloneSpacedEntry(entry: ISpacedRepetitionEntry): ISpacedRepetitionEntry
 }
 
 /**
- * Base SQLite locale 100% hors-ligne (tables player_profile, skill_mastery, combat_telemetry_log)
+ * Base SQLite locale 100% hors-ligne (tables player_profile, skill_mastery, combat_telemetry_log, quest_progress)
  * avec persistance synchrone localStorage et miroir asynchrone IndexedDB + export SQL.
  */
 export class LocalSQLiteDB {
@@ -207,6 +220,9 @@ export class LocalSQLiteDB {
 
   constructor() {
     this.state = this.loadFromLocalStorage() ?? createDefaultState();
+    if (!this.state.quest_progress) {
+      this.state.quest_progress = {};
+    }
     this.persist();
   }
 
@@ -216,10 +232,13 @@ export class LocalSQLiteDB {
     }
     try {
       const idbState = await this.loadFromIndexedDB();
+      const idbQuestCount = idbState ? Object.keys(idbState.quest_progress ?? {}).length : 0;
+      const localQuestCount = Object.keys(this.state.quest_progress).length;
       if (
         idbState &&
         typeof idbState.next_log_id === 'number' &&
-        idbState.next_log_id > this.state.next_log_id
+        (idbState.next_log_id > this.state.next_log_id ||
+          (idbState.next_log_id === this.state.next_log_id && idbQuestCount > localQuestCount))
       ) {
         this.state = this.normalizeState(idbState);
         this.saveToLocalStorage();
@@ -532,6 +551,46 @@ export class LocalSQLiteDB {
     return { ...entry };
   }
 
+  public getQuestProgress(questId: string): IQuestProgressRecord | undefined {
+    const entry = this.state.quest_progress[questId];
+    return entry ? { ...entry } : undefined;
+  }
+
+  public getAllQuestProgress(): IQuestProgressRecord[] {
+    return Object.values(this.state.quest_progress).map((q) => ({ ...q }));
+  }
+
+  public upsertQuestProgress(record: IQuestProgressRecord): IQuestProgressRecord {
+    const saved: IQuestProgressRecord = {
+      ...record,
+      current_objective_index: Math.max(0, Math.floor(record.current_objective_index)),
+      current_count: Math.max(0, Math.floor(record.current_count)),
+      updated_at: record.updated_at || new Date().toISOString(),
+    };
+    this.state.quest_progress[saved.quest_id] = saved;
+    this.persist();
+    return { ...saved };
+  }
+
+  /**
+   * Crédite les récompenses d'une quête accomplie sur le profil SQLite du joueur.
+   */
+  public claimQuestRewardToProfile(reward: IQuestReward): void {
+    const profile = this.getPlayerProfile();
+    this.updatePlayerProfile({
+      coins: profile.coins + Math.max(0, reward.coins),
+      trophies: Math.max(0, Math.min(1000, profile.trophies + Math.max(0, reward.trophies))),
+      starr_drops_available:
+        profile.starr_drops_available + Math.max(0, reward.starr_drop_bonus ?? 0),
+    });
+
+    this.addCombatStars(reward.combat_stars);
+    this.addKnowledgePoints(reward.knowledge_points);
+    if (reward.unlocked_title_or_badge) {
+      this.addUnlockedReward(reward.unlocked_title_or_badge);
+    }
+  }
+
   public recordCombatTelemetry(
     log: ITelemetryLog,
     skillUpdate?: {
@@ -668,6 +727,13 @@ export class LocalSQLiteDB {
       );
     }
 
+    const escSql = (val: string): string => val.replace(/'/g, "''");
+    for (const q of Object.values(this.state.quest_progress)) {
+      lines.push(
+        `INSERT OR REPLACE INTO quest_progress (quest_id, status, current_objective_index, current_count, updated_at) VALUES ('${escSql(q.quest_id)}', '${escSql(q.status)}', ${q.current_objective_index}, ${q.current_count}, '${escSql(q.updated_at)}');`
+      );
+    }
+
     return lines.join('\n');
   }
 
@@ -789,12 +855,44 @@ export class LocalSQLiteDB {
           .map(cloneSpacedEntry)
       : [];
 
+    const validQuestStatuses: QuestStatus[] = [
+      'LOCKED',
+      'AVAILABLE',
+      'ACTIVE',
+      'COMPLETED',
+      'CLAIMED',
+    ];
+    const questProgress: Record<string, IQuestProgressRecord> = {};
+    if (raw.quest_progress && typeof raw.quest_progress === 'object') {
+      for (const [questId, qEntry] of Object.entries(raw.quest_progress)) {
+        if (!qEntry || typeof qEntry !== 'object') continue;
+        questProgress[questId] = {
+          quest_id: typeof qEntry.quest_id === 'string' ? qEntry.quest_id : questId,
+          status: validQuestStatuses.includes(qEntry.status) ? qEntry.status : 'AVAILABLE',
+          current_objective_index:
+            typeof qEntry.current_objective_index === 'number' &&
+            Number.isFinite(qEntry.current_objective_index)
+              ? Math.max(0, Math.floor(qEntry.current_objective_index))
+              : 0,
+          current_count:
+            typeof qEntry.current_count === 'number' && Number.isFinite(qEntry.current_count)
+              ? Math.max(0, Math.floor(qEntry.current_count))
+              : 0,
+          updated_at:
+            typeof qEntry.updated_at === 'string'
+              ? qEntry.updated_at
+              : new Date().toISOString(),
+        };
+      }
+    }
+
     return {
       player_profile: playerProfile,
       skill_mastery: skillMastery,
       combat_telemetry_log: Array.isArray(raw.combat_telemetry_log)
         ? raw.combat_telemetry_log
         : defaults.combat_telemetry_log,
+      quest_progress: questProgress,
       next_log_id:
         typeof raw.next_log_id === 'number' && Number.isFinite(raw.next_log_id)
           ? Math.max(1, Math.floor(raw.next_log_id))
@@ -863,7 +961,12 @@ export class LocalSQLiteDB {
       const tx = db.transaction(IDB_STORE, 'readonly');
       const store = tx.objectStore(IDB_STORE);
       const req = store.get(IDB_KEY);
-      req.onsuccess = () => resolve((req.result as ISqliteInternalState | undefined) ?? null);
+      req.onsuccess = () =>
+        resolve(
+          req.result
+            ? this.normalizeState(req.result as Partial<ISqliteInternalState>)
+            : null
+        );
       req.onerror = () => reject(req.error);
     });
   }
