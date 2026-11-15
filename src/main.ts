@@ -51,6 +51,7 @@ class BrawlCollegeApp {
   private matchCounter = 0;
   private activeEngine: GameEngine | null = null;
   private lobbyPreview3D: LobbyBrawlerPreview3D | null = null;
+  private lobbyBannerMsg: string | null = null;
 
   constructor(root: HTMLElement) {
     this.root = root;
@@ -58,6 +59,7 @@ class BrawlCollegeApp {
 
   public async bootstrap(): Promise<void> {
     await this.db.init();
+    this.questionProvider.hydrateSpacedQueue(this.db.getSpacedRepetitionEntries());
     this.renderLobby();
   }
 
@@ -70,6 +72,18 @@ class BrawlCollegeApp {
     const profile = this.db.getPlayerProfile();
     const brawlers = getAllBrawlers();
     const selectedBrawler = getBrawlerById(profile.selected_brawler);
+    const selectedBrawlerLevel = this.db.getBrawlerLevel(selectedBrawler.id);
+    const selectedScaledHp = Math.round(
+      selectedBrawler.base_hp * (1 + 0.08 * (selectedBrawlerLevel - 1))
+    );
+    const selectedScaledDmg = Math.round(
+      selectedBrawler.basic_attack.base_damage * (1 + 0.08 * (selectedBrawlerLevel - 1))
+    );
+    const upgradeCost = this.db.getUpgradeCost(selectedBrawlerLevel);
+    const knowledgePoints = this.db.getKnowledgePoints();
+    const claimedMilestones = this.db.getClaimedMilestones();
+    const dailyQuests = this.db.getDailyQuests();
+    const unlockedRewards = this.db.getUnlockedRewards();
     const selectedMode = getGameModeById(this.selectedModeId);
     const hourlyMode = getHourlyRotatedMode();
     const stars = this.db.getCombatStars();
@@ -88,6 +102,7 @@ class BrawlCollegeApp {
             <div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px;">
               <div class="brawl-outline-text" style="background:#0b1129; border:2.5px solid #090d16; padding:7px 12px; border-radius:11px; font-size:13px; box-shadow:0 3px 0 #090d16;">🏆 ${profile.trophies} / 1000</div>
               <div class="brawl-outline-text" style="background:#0b1129; border:2.5px solid #090d16; padding:7px 12px; border-radius:11px; font-size:13px; color:#ffd426; box-shadow:0 3px 0 #090d16;">🪙 ${profile.coins}</div>
+              <div class="brawl-outline-text" style="background:#0b1129; border:2.5px solid #090d16; padding:7px 12px; border-radius:11px; font-size:13px; color:#c084fc; box-shadow:0 3px 0 #090d16;">📖 ${knowledgePoints}</div>
               <div class="brawl-outline-text" style="background:#0b1129; border:2.5px solid #090d16; padding:7px 12px; border-radius:11px; font-size:13px; color:#22b8ff; box-shadow:0 3px 0 #090d16;">⭐ ${starsProgress}/3</div>
               <button id="btn-starr-drop" class="brawl-btn brawl-btn-sm ${profile.starr_drops_available > 0 ? 'brawl-btn-yellow brawl-pulse' : ''}" ${profile.starr_drops_available === 0 ? 'disabled' : ''}>
                 🎁 Casiers (${profile.starr_drops_available})
@@ -98,11 +113,60 @@ class BrawlCollegeApp {
               <button id="btn-toggle-mute" class="brawl-btn brawl-btn-sm" title="Activer ou couper les effets sonores">
                 ${isMuted ? '🔇 Muet' : '🔊 Son'}
               </button>
+              <button id="btn-fullscreen" class="brawl-btn brawl-btn-sm" title="Plein écran & Paysage">
+                ⛶ Plein écran
+              </button>
             </div>
           </header>
 
+          ${
+            this.lobbyBannerMsg
+              ? `<div class="brawl-pd-subcard" style="background:rgba(56,189,248,0.18); border-color:#38bdf8; color:#e0f2fe; font-weight:800; padding:10px 14px; display:flex; justify-content:space-between; align-items:center;">
+                  <span>✨ ${this.lobbyBannerMsg}</span>
+                  <button id="btn-dismiss-banner" style="background:transparent; border:none; color:#fef08a; font-weight:900; cursor:pointer;">✖</button>
+                </div>`
+              : ''
+          }
+
           <!-- Route vers la 6ème -->
-          ${renderTrophyRoadHtml(profile.trophies)}
+          ${renderTrophyRoadHtml(profile.trophies, claimedMilestones)}
+
+          <!-- 3 Quêtes du Jour -->
+          <section class="brawl-card" style="padding:12px 14px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <h2 class="brawl-outline-text" style="margin:0; font-size:15px; color:#38e54d;">📜 QUÊTES DU JOUR</h2>
+              <span style="font-size:11px; color:#94a3b8; font-weight:700;">Complète des combats pour gagner Pièces & Étoiles</span>
+            </div>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:10px;">
+              ${dailyQuests
+                .map((q) => {
+                  const pct = Math.min(100, Math.round((q.progress / Math.max(1, q.target)) * 100));
+                  const canClaim = !q.claimed && q.progress >= q.target;
+                  return `
+                  <div class="brawl-pd-subcard" style="padding:9px 11px; display:flex; flex-direction:column; gap:6px; justify-content:space-between;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+                      <strong style="font-size:12px; color:#f8fafc;">${q.title}</strong>
+                      <span style="font-size:11px; font-weight:900; color:#facc15;">+${q.reward_coins}🪙${q.reward_stars > 0 ? ` +${q.reward_stars}⭐` : ''}</span>
+                    </div>
+                    <div style="height:8px; background:#090d16; border-radius:999px; overflow:hidden; border:1.5px solid #1e293b;">
+                      <div style="width:${pct}%; height:100%; background:${q.claimed ? '#475569' : '#22c55e'};"></div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+                      <span style="font-size:11px; color:#cbd5e1; font-weight:700;">${q.progress} / ${q.target}</span>
+                      ${
+                        q.claimed
+                          ? `<span style="font-size:11px; color:#86efac; font-weight:900;">✓ Réclamée</span>`
+                          : `<button data-claim-quest="${q.id}" class="brawl-btn brawl-btn-sm ${canClaim ? 'brawl-btn-yellow' : ''}" ${canClaim ? '' : 'disabled'} style="padding:3px 9px; font-size:11px;">
+                              ${canClaim ? 'Réclamer !' : 'En cours'}
+                            </button>`
+                      }
+                    </div>
+                  </div>
+                `;
+                })
+                .join('')}
+            </div>
+          </section>
 
           <!-- Sélection Héros & Modes -->
           <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:16px;">
@@ -115,6 +179,8 @@ class BrawlCollegeApp {
                     const isSelected = b.id === selectedBrawler.id;
                     const accent = BRAWLER_BADGE_COLORS[b.id];
                     const ringClass = BRAWLER_RING_CLASS[b.id];
+                    const lvl = this.db.getBrawlerLevel(b.id);
+                    const hpAtLvl = Math.round(b.base_hp * (1 + 0.08 * (lvl - 1)));
                     return `
                     <button data-brawler-id="${b.id}" class="brawl-card ${isSelected ? 'brawl-card-active' : ''}" style="text-align:left; padding:10px; cursor:pointer; display:flex; align-items:center; gap:10px;">
                       <span class="brawl-portrait-ring ${ringClass}" style="width:52px; height:52px; flex-shrink:0;">
@@ -123,9 +189,9 @@ class BrawlCollegeApp {
                       <div style="min-width:0; flex:1;">
                         <div style="display:flex; justify-content:space-between; align-items:center; gap:4px;">
                           <strong class="brawl-outline-text" style="font-size:15px; color:${accent};">${b.name}</strong>
-                          <span style="font-size:11px; font-weight:800; color:#f8fafc;">❤️ ${b.base_hp}</span>
+                          <span style="font-size:10px; font-weight:900; color:#fde047; background:#090d16; border-radius:6px; padding:1px 5px;">Niv.${lvl}</span>
                         </div>
-                        <div style="font-size:11px; color:#cbd5e1; margin:1px 0 3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${b.title}</div>
+                        <div style="font-size:11px; color:#cbd5e1; margin:1px 0 3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">❤️ ${hpAtLvl} • ${b.title}</div>
                         <div style="font-size:11px; font-weight:700; color:#e2e8f0;">📚 ${SUBJECT_NAMES[b.favorite_subject]}</div>
                         <div style="font-size:10px; color:#fde68a; margin-top:2px;">⚡ ${b.super_ability.name}</div>
                       </div>
@@ -139,19 +205,41 @@ class BrawlCollegeApp {
                   <div id="brawler-3d-preview" style="width:100%; height:200px;"></div>
                   <div style="font-size:10px; color:#cbd5e1; margin-top:2px; font-weight:700;">🧊 Modèle 3D — glisser pour pivoter</div>
                 </div>
-                <div class="brawl-pd-subcard" style="padding:12px; font-size:12px; color:#e2e8f0; display:flex; flex-direction:column; justify-content:center; gap:7px;">
-                  <div style="display:flex; align-items:center; gap:8px;">
-                    <span class="brawl-portrait-ring ${BRAWLER_RING_CLASS[selectedBrawler.id]}" style="width:36px; height:36px; flex-shrink:0;">
-                      <img src="${BRAWLER_PORTRAITS[selectedBrawler.id]}" alt="${selectedBrawler.name}" style="width:100%; height:100%; object-fit:cover; display:block;" />
-                    </span>
-                    <div>
-                      <div style="font-size:15px;"><strong class="brawl-outline-text" style="color:${BRAWLER_BADGE_COLORS[selectedBrawler.id]};">${selectedBrawler.name}</strong> — <span style="font-weight:700;">${selectedBrawler.title}</span></div>
-                      <div style="font-size:11px; color:#93c5fd; font-weight:700;">${selectedBrawler.archetype} • ⚡ ${selectedBrawler.speed_value} • ❤️ ${selectedBrawler.base_hp} PV</div>
+                <div class="brawl-pd-subcard" style="padding:12px; font-size:12px; color:#e2e8f0; display:flex; flex-direction:column; justify-content:space-between; gap:7px;">
+                  <div style="display:flex; flex-direction:column; gap:6px;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                      <span class="brawl-portrait-ring ${BRAWLER_RING_CLASS[selectedBrawler.id]}" style="width:36px; height:36px; flex-shrink:0;">
+                        <img src="${BRAWLER_PORTRAITS[selectedBrawler.id]}" alt="${selectedBrawler.name}" style="width:100%; height:100%; object-fit:cover; display:block;" />
+                      </span>
+                      <div>
+                        <div style="font-size:15px;"><strong class="brawl-outline-text" style="color:${BRAWLER_BADGE_COLORS[selectedBrawler.id]};">${selectedBrawler.name}</strong> <span style="font-size:11px; color:#fde047; font-weight:900;">Niv.${selectedBrawlerLevel}</span> — <span style="font-weight:700;">${selectedBrawler.title}</span></div>
+                        <div style="font-size:11px; color:#93c5fd; font-weight:700;">${selectedBrawler.archetype} • ⚡ ${selectedBrawler.speed_value} • ❤️ ${selectedScaledHp} PV (+8%/niv)</div>
+                      </div>
                     </div>
+                    <div>🎯 <strong>${selectedBrawler.basic_attack.name}</strong> : ${selectedBrawler.id === 'MAYA' ? 3 : selectedBrawler.basic_attack.projectiles_count}×${selectedScaledDmg} dégâts</div>
+                    <div>🟡 <strong>Super</strong> : ${selectedBrawler.super_ability.name}</div>
+                    <div>🟢 <strong>Gadget (×3)</strong> : ${selectedBrawler.gadget.name}</div>
+                    ${
+                      unlockedRewards.length > 0
+                        ? `<div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:2px;">
+                            ${unlockedRewards
+                              .slice(-4)
+                              .map(
+                                (r) =>
+                                  `<span style="background:rgba(250,204,21,0.16); border:1px solid #facc15; color:#fef08a; border-radius:6px; padding:1px 6px; font-size:10px; font-weight:800;">🏅 ${r}</span>`
+                              )
+                              .join('')}
+                          </div>`
+                        : ''
+                    }
                   </div>
-                  <div>🎯 <strong>${selectedBrawler.basic_attack.name}</strong> : ${selectedBrawler.basic_attack.projectiles_count}×${selectedBrawler.basic_attack.base_damage} dégâts</div>
-                  <div>🟡 <strong>Super</strong> : ${selectedBrawler.super_ability.name}</div>
-                  <div>🟢 <strong>Gadget (×3)</strong> : ${selectedBrawler.gadget.name}</div>
+                  <button id="btn-upgrade-brawler" class="brawl-btn brawl-btn-sm brawl-btn-yellow" ${selectedBrawlerLevel >= 10 ? 'disabled' : ''} style="width:100%;">
+                    ${
+                      selectedBrawlerLevel >= 10
+                        ? '⭐ NIVEAU MAX (10)'
+                        : `⬆️ Améliorer Niv.${selectedBrawlerLevel + 1} (${upgradeCost.coins}🪙 + ${upgradeCost.knowledgePoints}📖)`
+                    }
+                  </button>
                 </div>
               </div>
             </section>
@@ -231,8 +319,69 @@ class BrawlCollegeApp {
       muteBtn.textContent = mutedNow ? '🔇 Muet' : '🔊 Son';
     });
 
+    // Plein écran & Paysage mobile
+    this.root.querySelector('#btn-fullscreen')?.addEventListener('click', () => {
+      try {
+        if (!document.fullscreenElement) {
+          void document.documentElement.requestFullscreen?.();
+        } else {
+          void document.exitFullscreen?.();
+        }
+        const orientation = screen.orientation as unknown as { lock?: (o: string) => Promise<void> };
+        void orientation?.lock?.('landscape')?.catch?.(() => {});
+      } catch {
+        // Ignoré sur navigateurs sans API Fullscreen/Orientation
+      }
+    });
+
+    // Fermeture bannière
+    this.root.querySelector('#btn-dismiss-banner')?.addEventListener('click', () => {
+      this.lobbyBannerMsg = null;
+      this.renderLobby();
+    });
+
+    // Réclamation paliers Route des Trophées
+    this.root.querySelectorAll<HTMLButtonElement>('[data-claim-milestone]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const val = Number(btn.dataset.claimMilestone);
+        if (!Number.isFinite(val)) return;
+        const res = this.db.claimTrophyMilestone(val);
+        this.lobbyBannerMsg = res.claimed
+          ? `Palier ${val} 🏆 réclamé : ${res.rewardDescription} !`
+          : res.rewardDescription;
+        if (res.claimed) soundManager.playStarrDropReveal('EPIQUE');
+        this.renderLobby();
+      });
+    });
+
+    // Réclamation Quêtes du Jour
+    this.root.querySelectorAll<HTMLButtonElement>('[data-claim-quest]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const qId = btn.dataset.claimQuest;
+        if (!qId) return;
+        if (this.db.claimDailyQuest(qId)) {
+          soundManager.playStarrDropReveal('RARE');
+          this.lobbyBannerMsg = 'Quête du jour validée et récompense ajoutée !';
+          this.renderLobby();
+        }
+      });
+    });
+
+    // Amélioration Héros Niveau 1 -> 10
+    this.root.querySelector('#btn-upgrade-brawler')?.addEventListener('click', () => {
+      const up = this.db.upgradeBrawler(selectedBrawler.id);
+      if (up.success) {
+        soundManager.playSuperReady();
+        this.lobbyBannerMsg = `${selectedBrawler.name} passe Niveau ${up.newLevel} ! (+8% PV & Dégâts)`;
+      } else {
+        this.lobbyBannerMsg = up.reason ?? 'Amélioration impossible.';
+      }
+      this.renderLobby();
+    });
+
     // Lancer le combat 60 FPS
     this.root.querySelector('#btn-play-match')?.addEventListener('click', () => {
+      this.lobbyBannerMsg = null;
       this.startMatch(selectedBrawler.id, selectedMode);
     });
   }
@@ -243,7 +392,13 @@ class BrawlCollegeApp {
     this.matchCounter += 1;
     const currentMatchIndex = this.matchCounter;
     const brawler = getBrawlerById(brawlerId);
+    const brawlerLevel = this.db.getBrawlerLevel(brawlerId);
     const preferredSubject = mode.target_subject ?? brawler.favorite_subject;
+    const candidateSubjects = mode.target_subject
+      ? [mode.target_subject]
+      : brawler.secondary_subject
+        ? [brawler.favorite_subject, brawler.secondary_subject]
+        : [brawler.favorite_subject];
 
     this.root.innerHTML = `
       <div class="arena-container">
@@ -290,9 +445,16 @@ class BrawlCollegeApp {
         const firstQ = this.questionProvider.getQuestionById('MATH_MUL_001');
         if (firstQ) return firstQ;
       }
-      const subjectSkills = this.db
-        .getAllSkillMasteries()
-        .filter((s) => s.subject_category === preferredSubject);
+      const chosenSubject =
+        mode.target_subject ??
+        (Math.random() < 0.78
+          ? candidateSubjects[Math.floor(Math.random() * candidateSubjects.length)]
+          : undefined);
+      const allSkills = this.db.getAllSkillMasteries();
+      const subjectSkills = chosenSubject
+        ? allSkills.filter((s) => s.subject_category === chosenSubject)
+        : allSkills;
+      const weakestSkill = [...subjectSkills].sort((a, b) => a.elo_rating - b.elo_rating)[0];
       const avgElo =
         subjectSkills.length > 0
           ? Math.round(
@@ -301,16 +463,29 @@ class BrawlCollegeApp {
           : ELO_DEFAULT;
 
       return this.questionProvider.getNextQuestion({
-        subject: mode.target_subject ?? (Math.random() < 0.7 ? preferredSubject : undefined),
+        subject: chosenSubject,
         targetElo: avgElo,
         currentMatchIndex,
+        preferSkillCode: weakestSkill?.skill_code,
       });
     };
+
+    const initialMasteries = this.db
+      .getAllSkillMasteries()
+      .filter((s) => s.subject_category === preferredSubject);
+    const initialAvgElo =
+      initialMasteries.length > 0
+        ? Math.round(
+            initialMasteries.reduce((acc, s) => acc + s.elo_rating, 0) / initialMasteries.length
+          )
+        : ELO_DEFAULT;
 
     const engine = new GameEngine({
       canvas,
       brawler,
       mode,
+      brawlerLevel,
+      targetSpeedMultiplier: this.questionProvider.getTargetSpeedMultiplier(initialAvgElo),
       requestNextQuestion: getAdaptiveQuestion,
       onHitTelemetry: ({ question, isCorrect, reactionTimeMs }) => {
         const mastery = this.db.getSkillMastery(question.skill_code);
@@ -336,6 +511,7 @@ class BrawlCollegeApp {
             new_elo: eloResult.new_elo,
           }
         );
+        this.db.setSpacedRepetitionEntries(this.questionProvider.serializeSpacedQueue());
 
         engine.setTargetSpeedMultiplier(
           this.questionProvider.getTargetSpeedMultiplier(eloResult.new_elo)
@@ -368,14 +544,25 @@ class BrawlCollegeApp {
     this.activeEngine = engine;
     engine.start();
 
-    btnSuper?.addEventListener('click', () => engine.triggerSuperFromUI());
-    btnGadget?.addEventListener('click', () => engine.triggerGadgetFromUI());
+    const bindPointerTap = (el: Element | null, handler: () => void): void => {
+      if (!el) return;
+      el.addEventListener('pointerdown', (ev) => {
+        ev.stopPropagation();
+        ev.preventDefault();
+        handler();
+      });
+    };
+
+    bindPointerTap(btnSuper, () => engine.triggerSuperFromUI());
+    bindPointerTap(btnGadget, () => engine.triggerGadgetFromUI());
     const matchMuteBtn = this.root.querySelector<HTMLButtonElement>('#btn-match-mute');
-    matchMuteBtn?.addEventListener('click', () => {
+    bindPointerTap(matchMuteBtn, () => {
       const mutedNow = soundManager.toggleMute();
-      matchMuteBtn.textContent = mutedNow ? '🔇' : '🔊';
+      if (matchMuteBtn) {
+        matchMuteBtn.textContent = mutedNow ? '🔇' : '🔊';
+      }
     });
-    this.root.querySelector('#btn-quit-match')?.addEventListener('click', () => {
+    bindPointerTap(this.root.querySelector('#btn-quit-match'), () => {
       engine.stop();
       this.renderLobby();
     });
@@ -391,19 +578,44 @@ class BrawlCollegeApp {
       coins: profile.coins + coinsGain,
     });
     const starUpdate = this.db.addCombatStars(summary.starsEarned);
+    this.db.recordQuestProgress({
+      correctHits: summary.correctHits,
+      fastReflexHits: summary.fastReflexHits,
+      matchWon: summary.victory,
+    });
+    this.db.setSpacedRepetitionEntries(this.questionProvider.serializeSpacedQueue());
+
+    const missedHtml =
+      summary.missedQuestions.length > 0
+        ? `<div class="brawl-pd-subcard" style="text-align:left; padding:10px 12px; margin-bottom:14px; background:rgba(15,23,42,0.86); border-color:#38bdf8;">
+            <div style="font-size:12px; font-weight:900; color:#38bdf8; margin-bottom:6px;">💡 À RETENIR DE CETTE PARTIE</div>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              ${summary.missedQuestions
+                .slice(0, 3)
+                .map(
+                  (q) => `
+                <div style="font-size:11px; color:#e2e8f0; border-left:3px solid #facc15; padding-left:8px;">
+                  <div style="font-weight:800; color:#fef08a;">${q.hud_prompt}</div>
+                  <div style="color:#cbd5e1;">${q.explanation_flash}</div>
+                </div>`
+                )
+                .join('')}
+            </div>
+          </div>`
+        : '';
 
     const overlay = document.createElement('div');
     overlay.className = 'brawl-modal-overlay';
 
     overlay.innerHTML = `
-      <div class="brawl-modal-panel brawl-pop" style="width:min(460px, 94vw); padding:26px; text-align:center;">
+      <div class="brawl-modal-panel brawl-pop" style="width:min(490px, 94vw); padding:24px; text-align:center;">
         ${summary.victory ? '<div class="brawl-rays"></div>' : ''}
         <div style="position:relative; z-index:1;">
           <h2 class="brawl-title" style="margin:0 0 8px; font-size:30px; color:${summary.victory ? '#ffd426' : '#22b8ff'};">
             ${summary.victory ? '🏆 VICTOIRE !' : '📘 FIN DE PARTIE'}
           </h2>
           <div style="font-size:14px; color:#e2e8f0; margin-bottom:16px; font-weight:700;">
-            Score d'objectif : <strong style="color:#ffd426;">${summary.objectiveScore}</strong> • Bonnes cibles : <strong style="color:#38e54d;">${summary.correctHits}</strong>
+            Score d'objectif : <strong style="color:#ffd426;">${summary.objectiveScore}</strong> • Bonnes cibles : <strong style="color:#38e54d;">${summary.correctHits}</strong> • Réflexes ⚡ : <strong style="color:#38bdf8;">${summary.fastReflexHits}</strong>
           </div>
           <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px;">
             <div class="brawl-reward-tile">
@@ -419,6 +631,7 @@ class BrawlCollegeApp {
               <div style="font-size:11px; font-weight:700; color:#cbd5e1;">Étoiles ⭐</div>
             </div>
           </div>
+          ${missedHtml}
           ${
             starUpdate.unlockedStarrDrops > 0
               ? `<div class="brawl-pd-subcard" style="background:rgba(250,204,21,0.18); border-color:#ffd426; color:#fef08a; font-weight:900; margin-bottom:14px;">
@@ -426,12 +639,22 @@ class BrawlCollegeApp {
                  </div>`
               : ''
           }
-          <button id="btn-back-lobby" class="brawl-btn brawl-btn-lg brawl-btn-yellow" style="width:100%;">
-            RETOUR AU LOBBY
-          </button>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <button id="btn-replay-match" class="brawl-btn brawl-btn-lg brawl-btn-yellow" style="width:100%;">
+              🔄 REJOUER
+            </button>
+            <button id="btn-back-lobby" class="brawl-btn brawl-btn-lg brawl-btn-blue" style="width:100%;">
+              RETOUR AU LOBBY
+            </button>
+          </div>
         </div>
       </div>
     `;
+
+    overlay.querySelector('#btn-replay-match')?.addEventListener('click', () => {
+      overlay.remove();
+      this.startMatch(summary.brawlerId, getGameModeById(summary.modeId));
+    });
 
     overlay.querySelector('#btn-back-lobby')?.addEventListener('click', () => {
       overlay.remove();
