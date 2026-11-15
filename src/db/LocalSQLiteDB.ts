@@ -1,6 +1,8 @@
 import type {
   IParentSubjectSummary,
   IPlayerProfile,
+  IQuestProgressRecord,
+  IQuestReward,
   ISkillMastery,
   ITelemetryLog,
   SubjectCategory,
@@ -35,6 +37,14 @@ CREATE TABLE IF NOT EXISTS combat_telemetry_log (
   reaction_time_ms INTEGER NOT NULL,
   recorded_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS quest_progress (
+  quest_id TEXT PRIMARY KEY,
+  status TEXT NOT NULL DEFAULT 'AVAILABLE',
+  current_objective_index INTEGER NOT NULL DEFAULT 0,
+  current_count INTEGER NOT NULL DEFAULT 0,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
 `.trim();
 
 const STORAGE_KEY = 'brawl_college_sqlite_v1';
@@ -46,6 +56,7 @@ interface ISqliteInternalState {
   player_profile: IPlayerProfile;
   skill_mastery: Record<string, ISkillMastery>;
   combat_telemetry_log: ITelemetryLog[];
+  quest_progress: Record<string, IQuestProgressRecord>;
   next_log_id: number;
   combat_stars: number;
   knowledge_points: number;
@@ -100,6 +111,7 @@ function createDefaultState(): ISqliteInternalState {
     },
     skill_mastery: skillMastery,
     combat_telemetry_log: [],
+    quest_progress: {},
     next_log_id: 1,
     combat_stars: 0,
     knowledge_points: 0,
@@ -108,7 +120,7 @@ function createDefaultState(): ISqliteInternalState {
 }
 
 /**
- * Base SQLite locale 100% hors-ligne (tables player_profile, skill_mastery, combat_telemetry_log)
+ * Base SQLite locale 100% hors-ligne (tables player_profile, skill_mastery, combat_telemetry_log, quest_progress)
  * avec persistance synchrone localStorage et miroir asynchrone IndexedDB + export SQL.
  */
 export class LocalSQLiteDB {
@@ -116,6 +128,9 @@ export class LocalSQLiteDB {
 
   constructor() {
     this.state = this.loadFromLocalStorage() ?? createDefaultState();
+    if (!this.state.quest_progress) {
+      this.state.quest_progress = {};
+    }
     this.persist();
   }
 
@@ -125,8 +140,17 @@ export class LocalSQLiteDB {
     }
     try {
       const idbState = await this.loadFromIndexedDB();
-      if (idbState && idbState.next_log_id > this.state.next_log_id) {
+      const idbQuestCount = idbState ? Object.keys(idbState.quest_progress).length : 0;
+      const localQuestCount = Object.keys(this.state.quest_progress).length;
+      if (
+        idbState &&
+        (idbState.next_log_id > this.state.next_log_id ||
+          (idbState.next_log_id === this.state.next_log_id && idbQuestCount > localQuestCount))
+      ) {
         this.state = idbState;
+        if (!this.state.quest_progress) {
+          this.state.quest_progress = {};
+        }
         this.saveToLocalStorage();
       } else {
         await this.saveToIndexedDB();
@@ -225,6 +249,46 @@ export class LocalSQLiteDB {
     this.state.skill_mastery[entry.skill_code] = { ...entry };
     this.persist();
     return { ...entry };
+  }
+
+  public getQuestProgress(questId: string): IQuestProgressRecord | undefined {
+    const entry = this.state.quest_progress[questId];
+    return entry ? { ...entry } : undefined;
+  }
+
+  public getAllQuestProgress(): IQuestProgressRecord[] {
+    return Object.values(this.state.quest_progress).map((q) => ({ ...q }));
+  }
+
+  public upsertQuestProgress(record: IQuestProgressRecord): IQuestProgressRecord {
+    const saved: IQuestProgressRecord = {
+      ...record,
+      current_objective_index: Math.max(0, Math.floor(record.current_objective_index)),
+      current_count: Math.max(0, Math.floor(record.current_count)),
+      updated_at: record.updated_at || new Date().toISOString(),
+    };
+    this.state.quest_progress[saved.quest_id] = saved;
+    this.persist();
+    return { ...saved };
+  }
+
+  /**
+   * Crédite les récompenses d'une quête accomplie sur le profil SQLite du joueur.
+   */
+  public claimQuestRewardToProfile(reward: IQuestReward): void {
+    const profile = this.getPlayerProfile();
+    this.updatePlayerProfile({
+      coins: profile.coins + Math.max(0, reward.coins),
+      trophies: Math.max(0, Math.min(1000, profile.trophies + Math.max(0, reward.trophies))),
+      starr_drops_available:
+        profile.starr_drops_available + Math.max(0, reward.starr_drop_bonus ?? 0),
+    });
+
+    this.addCombatStars(reward.combat_stars);
+    this.addKnowledgePoints(reward.knowledge_points);
+    if (reward.unlocked_title_or_badge) {
+      this.addUnlockedReward(reward.unlocked_title_or_badge);
+    }
   }
 
   public recordCombatTelemetry(
@@ -362,7 +426,43 @@ export class LocalSQLiteDB {
       );
     }
 
+    const escSql = (val: string): string => val.replace(/'/g, "''");
+    for (const q of Object.values(this.state.quest_progress)) {
+      lines.push(
+        `INSERT OR REPLACE INTO quest_progress (quest_id, status, current_objective_index, current_count, updated_at) VALUES ('${escSql(q.quest_id)}', '${escSql(q.status)}', ${q.current_objective_index}, ${q.current_count}, '${escSql(q.updated_at)}');`
+      );
+    }
+
     return lines.join('\n');
+  }
+
+  private normalizeLoadedState(
+    rawState: Partial<ISqliteInternalState> | null | undefined
+  ): ISqliteInternalState | null {
+    if (!rawState || typeof rawState !== 'object') {
+      return null;
+    }
+    const defaults = createDefaultState();
+    return {
+      ...defaults,
+      ...rawState,
+      player_profile: {
+        ...defaults.player_profile,
+        ...(rawState.player_profile ?? {}),
+        id: 1,
+      },
+      skill_mastery: rawState.skill_mastery ?? defaults.skill_mastery,
+      combat_telemetry_log: Array.isArray(rawState.combat_telemetry_log)
+        ? rawState.combat_telemetry_log
+        : [],
+      quest_progress:
+        rawState.quest_progress && typeof rawState.quest_progress === 'object'
+          ? rawState.quest_progress
+          : {},
+      unlocked_rewards: Array.isArray(rawState.unlocked_rewards)
+        ? rawState.unlocked_rewards
+        : [],
+    };
   }
 
   private persist(): void {
@@ -375,7 +475,8 @@ export class LocalSQLiteDB {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return null;
-      return JSON.parse(raw) as ISqliteInternalState;
+      const parsed = JSON.parse(raw) as Partial<ISqliteInternalState>;
+      return this.normalizeLoadedState(parsed);
     } catch {
       return null;
     }
@@ -410,7 +511,8 @@ export class LocalSQLiteDB {
       const tx = db.transaction(IDB_STORE, 'readonly');
       const store = tx.objectStore(IDB_STORE);
       const req = store.get(IDB_KEY);
-      req.onsuccess = () => resolve((req.result as ISqliteInternalState | undefined) ?? null);
+      req.onsuccess = () =>
+        resolve(this.normalizeLoadedState(req.result as Partial<ISqliteInternalState> | undefined));
       req.onerror = () => reject(req.error);
     });
   }

@@ -1,4 +1,9 @@
-import type { IParentSubjectSummary, ISkillMastery, SubjectCategory } from '../types/cctp';
+import type {
+  IParentSubjectSummary,
+  IQuestProgressRecord,
+  ISkillMastery,
+  SubjectCategory,
+} from '../types/cctp';
 import type { LocalSQLiteDB } from '../db/LocalSQLiteDB';
 
 const SUBJECT_LABELS: Record<SubjectCategory, string> = {
@@ -39,6 +44,31 @@ const SKILL_LABELS: Record<string, string> = {
 
 function formatSkillName(code: string): string {
   return SKILL_LABELS[code] ?? code;
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function formatQuestIdentifier(questId: string): string {
+  return questId
+    .replace(/[_-]+/g, ' ')
+    .trim()
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+type AutonomyLandmarkStatus = 'ACQUIS' | 'EN_COURS' | 'A_DECOUVRIR';
+
+interface IAutonomyLandmarkItem {
+  label: string;
+  detail: string;
+  status: AutonomyLandmarkStatus;
 }
 
 /**
@@ -107,6 +137,7 @@ export class ParentDashboard {
       const top5 = this.db.getTopSkillsToConsolidate(5);
       const logs = this.db.getTelemetryLogs(8);
       const profile = this.db.getPlayerProfile();
+      const questProgress = this.db.getAllQuestProgress();
 
       modal.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:16px;">
@@ -151,6 +182,8 @@ export class ParentDashboard {
               .join('')}
           </div>
         </div>
+
+        ${this.buildCampusExplorationSectionHtml(questProgress)}
 
         <div style="background:#1e293b; border-radius:14px; padding:14px; border:1px solid #334155;">
           <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
@@ -204,6 +237,193 @@ export class ParentDashboard {
 
     renderPinPrompt();
     document.body.appendChild(overlay);
+  }
+
+  private buildCampusExplorationSectionHtml(questProgress: IQuestProgressRecord[]): string {
+    const accomplished = questProgress.filter(
+      (q) => q.status === 'CLAIMED' || q.status === 'COMPLETED'
+    );
+    const claimedCount = questProgress.filter((q) => q.status === 'CLAIMED').length;
+    const completedPendingCount = questProgress.filter((q) => q.status === 'COMPLETED').length;
+    const activeQuests = questProgress.filter((q) => q.status === 'ACTIVE');
+    const availableCount = questProgress.filter((q) => q.status === 'AVAILABLE').length;
+    const landmarks = this.evaluateAutonomyLandmarks(questProgress);
+
+    const activeListHtml =
+      activeQuests.length === 0
+        ? `<div style="font-size:12px; color:#94a3b8;">
+             ${
+               questProgress.length === 0
+                 ? "Aucune quête démarrée pour le moment. L'exploration du collège enrichira cet indicateur."
+                 : `Aucune quête suivie activement (${availableCount} quête(s) disponible(s)).`
+             }
+           </div>`
+        : `<div style="display:flex; flex-direction:column; gap:6px;">
+             ${activeQuests
+               .map(
+                 (q) => `
+               <div style="background:#0f172a; border:1px solid #334155; border-left:3px solid #facc15; border-radius:8px; padding:7px 10px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                 <div>
+                   <div style="font-size:12px; font-weight:800; color:#f8fafc;">📍 ${escapeHtml(formatQuestIdentifier(q.quest_id))}</div>
+                   <div style="font-size:11px; color:#94a3b8;">ID : ${escapeHtml(q.quest_id)}</div>
+                 </div>
+                 <span style="font-size:11px; font-weight:800; color:#facc15; white-space:nowrap;">
+                   Étape ${q.current_objective_index + 1} (${q.current_count})
+                 </span>
+               </div>
+             `
+               )
+               .join('')}
+           </div>`;
+
+    const landmarksHtml = landmarks
+      .map((item) => {
+        const badge =
+          item.status === 'ACQUIS'
+            ? { icon: '✅', text: 'Acquis', color: '#4ade80', border: '#22c55e' }
+            : item.status === 'EN_COURS'
+              ? { icon: '⏳', text: 'En cours', color: '#facc15', border: '#eab308' }
+              : { icon: '⬜', text: 'À découvrir', color: '#94a3b8', border: '#334155' };
+
+        return `
+          <div style="background:#0f172a; border:1px solid ${badge.border}; border-radius:10px; padding:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+              <strong style="font-size:12px; color:#f8fafc;">${escapeHtml(item.label)}</strong>
+              <span style="font-size:11px; font-weight:800; color:${badge.color}; white-space:nowrap;">${badge.icon} ${badge.text}</span>
+            </div>
+            <div style="font-size:11px; color:#94a3b8; margin-top:4px;">${escapeHtml(item.detail)}</div>
+          </div>
+        `;
+      })
+      .join('');
+
+    return `
+      <div style="background:#1e293b; border-radius:14px; padding:14px; border:1px solid #334155; margin-bottom:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
+          <h3 style="margin:0; font-size:15px; color:#facc15;">🏫 Progression Exploration & Quêtes du Collège</h3>
+          <span style="font-size:12px; color:#cbd5e1; font-weight:700;">
+            ${accomplished.length} accomplie(s) • ${activeQuests.length} en cours
+          </span>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px; margin-bottom:12px;">
+          <div style="background:#0f172a; border-radius:10px; padding:12px; border:1px solid #334155;">
+            <div style="font-size:12px; color:#94a3b8; font-weight:700;">Quêtes accomplies</div>
+            <div style="font-size:26px; font-weight:900; color:#4ade80; margin:4px 0;">
+              ${accomplished.length}${questProgress.length > 0 ? ` <span style="font-size:14px; color:#94a3b8; font-weight:700;">/ ${questProgress.length}</span>` : ''}
+            </div>
+            <div style="font-size:11px; color:#cbd5e1;">
+              ${claimedCount} réclamée(s) • ${completedPendingCount} à récupérer
+            </div>
+          </div>
+
+          <div style="background:#0f172a; border-radius:10px; padding:12px; border:1px solid #334155;">
+            <div style="font-size:12px; color:#94a3b8; font-weight:700; margin-bottom:6px;">Quêtes en cours</div>
+            ${activeListHtml}
+          </div>
+        </div>
+
+        <div style="font-size:12px; font-weight:800; color:#38bdf8; margin-bottom:8px;">
+          Repères d'autonomie acquis au collège
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:8px;">
+          ${landmarksHtml}
+        </div>
+      </div>
+    `;
+  }
+
+  private evaluateAutonomyLandmarks(
+    questProgress: IQuestProgressRecord[]
+  ): IAutonomyLandmarkItem[] {
+    const accomplished = questProgress.filter(
+      (q) => q.status === 'CLAIMED' || q.status === 'COMPLETED'
+    );
+    const active = questProgress.filter((q) => q.status === 'ACTIVE');
+    const unlockedRewards = this.db.getUnlockedRewards().map((r) => r.toUpperCase());
+    const edtMastery = this.db.getSkillMastery('COL_EDT');
+    const aduMastery = this.db.getSkillMastery('COL_ADU');
+    const accomplishedCount = accomplished.length;
+
+    const hasQuestMatch = (list: IQuestProgressRecord[], tokens: string[]): boolean =>
+      list.some((q) => {
+        const upperId = q.quest_id.toUpperCase();
+        return tokens.some((token) => upperId.includes(token));
+      });
+
+    const hasRewardMatch = (tokens: string[]): boolean =>
+      unlockedRewards.some((reward) => tokens.some((token) => reward.includes(token)));
+
+    const definitions: Array<{
+      label: string;
+      detail: string;
+      questTokens: string[];
+      rewardTokens: string[];
+      mastery?: ISkillMastery;
+      minMasterySuccess: number;
+      minAccomplishedQuests: number;
+    }> = [
+      {
+        label: 'Salle 204',
+        detail: 'Repérage étage 2 / porte 04',
+        questTokens: ['204', 'SALLE_204', 'DEFIS_204', 'ETAGE'],
+        rewardTokens: ['204'],
+        mastery: edtMastery,
+        minMasterySuccess: 2,
+        minAccomplishedQuests: 4,
+      },
+      {
+        label: 'CDI',
+        detail: 'Recherche & documentaliste',
+        questTokens: ['CDI', 'BIBLIO', 'DOC'],
+        rewardTokens: ['CDI'],
+        mastery: aduMastery,
+        minMasterySuccess: 2,
+        minAccomplishedQuests: 2,
+      },
+      {
+        label: 'Vie Scolaire',
+        detail: 'Rôle du CPE & vie du collège',
+        questTokens: ['VIE', 'CPE', 'SCOLAIRE', 'RENTREE', 'Q01'],
+        rewardTokens: ['CPE', 'VIE SCOLAIRE'],
+        mastery: aduMastery,
+        minMasterySuccess: 1,
+        minAccomplishedQuests: 1,
+      },
+      {
+        label: 'Emploi du temps',
+        detail: 'Semaine A/B & changement de salle',
+        questTokens: ['EDT', 'EMPLOI', 'HORAIRE', 'PLANNING'],
+        rewardTokens: ['EDT', 'EMPLOI'],
+        mastery: edtMastery,
+        minMasterySuccess: 1,
+        minAccomplishedQuests: 3,
+      },
+    ];
+
+    return definitions.map((def) => {
+      const isAcquired =
+        hasQuestMatch(accomplished, def.questTokens) ||
+        hasRewardMatch(def.rewardTokens) ||
+        (def.mastery !== undefined && def.mastery.success_count >= def.minMasterySuccess) ||
+        accomplishedCount >= def.minAccomplishedQuests;
+
+      const isInProgress =
+        hasQuestMatch(active, def.questTokens) ||
+        (def.mastery !== undefined && def.mastery.attempts_count >= 1);
+
+      const status: AutonomyLandmarkStatus = isAcquired
+        ? 'ACQUIS'
+        : isInProgress
+          ? 'EN_COURS'
+          : 'A_DECOUVRIR';
+
+      return {
+        label: def.label,
+        detail: def.detail,
+        status,
+      };
+    });
   }
 
   private buildSkillRowHtml(skill: ISkillMastery, rank: number): string {
