@@ -1,0 +1,5202 @@
+[
+  {
+    "id": "MATH_MUL_001",
+    "subject": "mathematiques",
+    "skill_code": "MATH_MUL",
+    "elo_difficulty": 950,
+    "hud_prompt": "7 × 8 ?",
+    "explanation_flash": "Table de 7 : 7 × 8 = 56 !",
+    "targets": [
+      {
+        "label": "56",
+        "is_correct": true
+      },
+      {
+        "label": "54",
+        "is_correct": false
+      },
+      {
+        "label": "48",
+        "is_correct": false
+      },
+      {
+        "label": "64",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "MATH_MUL_002",
+    "subject": "mathematiques",
+    "skill_code": "MATH_MUL",
+    "elo_difficulty": 900,
+    "hud_prompt": "6 × 7 ?",
+    "explanation_flash": "Table de 6 : 6 × 7 = 42 !",
+    "targets": [
+      {
+        "label": "42",
+        "is_correct": true
+      },
+      {
+        "label": "36",
+        "is_correct": false
+      },
+      {
+        "label": "48",
+        "is_correct": false
+      },
+      {
+        "label": "49",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "MATH_MUL_003",
+    "subject": "mathematiques",
+    "skill_code": "MATH_MUL",
+    "elo_difficulty": 1000,
+    "hud_prompt": "8 × 9 ?",
+    "explanation_flash": "Table de 8 : 8 × 9 = 72 !",
+    "targets": [
+      {
+        "label": "72",
+        "is_correct": true
+      },
+      {
+        "label": "64",
+        "is_correct": false
+      },
+      {
+        "label": "81",
+        "is_correct": false
+      },
+      {
+        "label": "74",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "MATH_MUL_004",
+    "subject": "mathematiques",
+    "skill_code": "MATH_MUL",
+    "elo_difficulty": 980,
+    "hud_prompt": "9 × 7 ?",
+    "explanation_flash": "Table de 9 : 9 × 7 = 63 !",
+    "targets": [
+      {
+        "label": "63",
+        "is_correct": true
+      },
+      {
+        "label": "56",
+        "is_correct": false
+      },
+      {
+        "label": "72",
+        "is_correct": false
+      },
+      {
+        "label": "64",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "MATH_MUL_005",
+    "subject": "mathematiques",
+    "skill_code": "MATH_MUL",
+    "elo_difficulty": 1050,
+    "hud_prompt": "12 × 4 ?",
+    "explanation_flash": "Table de 12 : 12 × 4 = 48 !",
+    "targets": [
+      {
+        "label": "48",
+        "is_correct": true
+      },
+      {
+        "label": "44",
+        "is_correct": false
+      },
+      {
+        "label": "52",
+        "is_correct": false
+      },
+      {
+        "label": "36",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "MATH_MUL_006",
+    "subject": "mathematiques",
+    "skill_code": "MATH_MUL",
+    "elo_difficulty": 1000,
+    "hud_prompt": "11 × 8 ?",
+    "explanation_flash": "Table de 11 : 11 × 8 = 88 !",
+    "targets": [
+      {
+        "label": "88",
+        "is_correct": true
+      },
+      {
+        "label": "80",
+        "is_correct": false
+      },
+      {
+        "label": "96",
+        "is_correct": false
+      },
+      {
+        "label": "78",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "MATH_MUL_007",
+    "subject": "mathematiques",
+    "skill_code": "MATH_MUL",
+    "elo_difficulty": 920,
+    "hud_prompt": "6 × 9 ?",
+    "explanation_flash": "Table de 6 : 6 × 9 = 54 !",
+    "targets": [
+      {
+        "label": "54",
+        "is_correct": true
+      },
+      {
+        "label": "56",
+        "is_correct": false
+      },
+      {
+        "label": "45",
+        "is_correct": false
+      },
+      {
+        "label": "63",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "MATH_MUL_008",
+    "subject": "mathematiques",
+    "skill_code": "MATH_MUL",
+    "elo_difficulty": 950,
+    "hud_prompt": "8 × 8 ?",
+    "explanation_flash": "Table de 8 : 8 × 8 = 64 !",
+    "targets": [
+      {
+        "label": "64",
+        "is_correct": true
+      },
+      {
+        "label": "56",
+        "is_correct": false
+      },
+      {
+        "label": "72",
+        "is_correct": false
+      },
+      {
+        "label": "48",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "MATH_MUL_009",
+    "subject": "mathematiques",
+    "skill_code": "MATH_MUL",
+    "elo_difficulty": 1100,
+    "hud_prompt": "12 × 6 ?",
+    "explanation_flash": "Table de 12 : 12 × 6 = 72 !",
+    "targets": [
+      {
+        "label": "72",
+        "is_correct": true
+      },
+      {
+        "label": "60",
+        "is_correct": false
+      },
+      {
+        "label": "84",
+        "is_correct": false
+      },
+      {
+        "label": "68",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "MATH_MUL_010",
+    "subject": "mathematiques",
+    "skill_code": "MATH_MUL",
+    "elo_difficulty": 980,
+    "hud_prompt": "9 × 9 ?",
+    "explanation_flash": "Table de 9 : 9 × 9 = 81 !",
+    "targets": [
+      {
+        "label": "81",
+        "is_correct": true
+      },
+      {
+        "label": "72",
+        "is_correct": false
+      },
+      {
+        "label": "90",
+        "is_correct": false
+      },
+      {
+        "label": "79",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "MATH_MUL_011",
+    "subject": "mathematiques",
+    "skill_code": "MATH_MUL",
+    "elo_difficulty": 1150,
+    "hud_prompt": "11 × 11 ?",
+    "explanation_flash": "Table de 11 : 11 × 11 = 121 !",
+    "targets": [
+      {
+        "label": "121",
+        "is_correct": true
+      },
+      {
+        "label": "111",
+        "is_correct": false
+      },
+      {
+        "label": "132",
+        "is_correct": false
+      },
+      {
+        "label": "110",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "MATH_MUL_012",
+    "subject": "mathematiques",
+    "skill_code": "MATH_MUL",
+    "elo_difficulty": 1020,
+    "hud_prompt": "12 × 5 ?",
+    "explanation_flash": "Table de 12 : 12 × 5 = 60 !",
+    "targets": [
+      {
+        "label": "60",
+        "is_correct": true
+      },
+      {
+        "label": "50",
+        "is_correct": false
+      },
+      {
+        "label": "70",
+        "is_correct": false
+      },
+      {
+        "label": "55",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "MATH_MUL_013",
+    "subject": "mathematiques",
+    "skill_code": "MATH_MUL",
+    "elo_difficulty": 900,
+    "hud_prompt": "7 × 7 ?",
+    "explanation_flash": "Table de 7 : 7 × 7 = 49 !",
+    "targets": [
+      {
+        "label": "49",
+        "is_correct": true
+      },
+      {
+        "label": "42",
+        "is_correct": false
+      },
+      {
+        "label": "56",
+        "is_correct": false
+      },
+      {
+        "label": "48",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "MATH_MUL_014",
+    "subject": "mathematiques",
+    "skill_code": "MATH_MUL",
+    "elo_difficulty": 920,
+    "hud_prompt": "8 × 6 ?",
+    "explanation_flash": "Table de 8 : 8 × 6 = 48 !",
+    "targets": [
+      {
+        "label": "48",
+        "is_correct": true
+      },
+      {
+        "label": "42",
+        "is_correct": false
+      },
+      {
+        "label": "54",
+        "is_correct": false
+      },
+      {
+        "label": "46",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "MATH_MUL_015",
+    "subject": "mathematiques",
+    "skill_code": "MATH_MUL",
+    "elo_difficulty": 960,
+    "hud_prompt": "12 × 3 ?",
+    "explanation_flash": "Table de 12 : 12 × 3 = 36 !",
+    "targets": [
+      {
+        "label": "36",
+        "is_correct": true
+      },
+      {
+        "label": "24",
+        "is_correct": false
+      },
+      {
+        "label": "32",
+        "is_correct": false
+      },
+      {
+        "label": "48",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "MATH_MUL_016",
+    "subject": "mathematiques",
+    "skill_code": "MATH_MUL",
+    "elo_difficulty": 1040,
+    "hud_prompt": "11 × 9 ?",
+    "explanation_flash": "Table de 11 : 11 × 9 = 99 !",
+    "targets": [
+      {
+        "label": "99",
+        "is_correct": true
+      },
+      {
+        "label": "90",
+        "is_correct": false
+      },
+      {
+        "label": "108",
+        "is_correct": false
+      },
+      {
+        "label": "89",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "MATH_DIV_001",
+    "subject": "mathematiques",
+    "skill_code": "MATH_DIV",
+    "elo_difficulty": 920,
+    "hud_prompt": "56 ÷ 8 ?",
+    "explanation_flash": "56 = 8 × 7, donc 56 ÷ 8 = 7 !",
+    "targets": [
+      {
+        "label": "7",
+        "is_correct": true
+      },
+      {
+        "label": "6",
+        "is_correct": false
+      },
+      {
+        "label": "8",
+        "is_correct": false
+      },
+      {
+        "label": "9",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "MATH_DIV_002",
+    "subject": "mathematiques",
+    "skill_code": "MATH_DIV",
+    "elo_difficulty": 950,
+    "hud_prompt": "72 ÷ 9 ?",
+    "explanation_flash": "72 = 9 × 8, donc 72 ÷ 9 = 8 !",
+    "targets": [
+      {
+        "label": "8",
+        "is_correct": true
+      },
+      {
+        "label": "7",
+        "is_correct": false
+      },
+      {
+        "label": "9",
+        "is_correct": false
+      },
+      {
+        "label": "6",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "MATH_DIV_003",
+    "subject": "mathematiques",
+    "skill_code": "MATH_DIV",
+    "elo_difficulty": 950,
+    "hud_prompt": "63 ÷ 7 ?",
+    "explanation_flash": "63 = 7 × 9, donc 63 ÷ 7 = 9 !",
+    "targets": [
+      {
+        "label": "9",
+        "is_correct": true
+      },
+      {
+        "label": "8",
+        "is_correct": false
+      },
+      {
+        "label": "7",
+        "is_correct": false
+      },
+      {
+        "label": "6",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "MATH_DIV_004",
+    "subject": "mathematiques",
+    "skill_code": "MATH_DIV",
+    "elo_difficulty": 850,
+    "hud_prompt": "45 ÷ 5 ?",
+    "explanation_flash": "45 = 5 × 9, donc 45 ÷ 5 = 9 !",
+    "targets": [
+      {
+        "label": "9",
+        "is_correct": true
+      },
+      {
+        "label": "8",
+        "is_correct": false
+      },
+      {
+        "label": "7",
+        "is_correct": false
+      },
+      {
+        "label": "10",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "MATH_DIV_005",
+    "subject": "mathematiques",
+    "skill_code": "MATH_DIV",
+    "elo_difficulty": 1120,
+    "hud_prompt": "84 ÷ 12 ?",
+    "explanation_flash": "12 × 7 = 84, donc 84 ÷ 12 = 7 !",
+    "targets": [
+      {
+        "label": "7",
+        "is_correct": true
+      },
+      {
+        "label": "6",
+        "is_correct": false
+      },
+      {
+        "label": "8",
+        "is_correct": false
+      },
+      {
+        "label": "9",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "MATH_DIV_006",
+    "subject": "mathematiques",
+    "skill_code": "MATH_DIV",
+    "elo_difficulty": 1080,
+    "hud_prompt": "Reste de 25 ÷ 4 ?",
+    "explanation_flash": "25 = (4 × 6) + 1, reste 1 !",
+    "targets": [
+      {
+        "label": "1",
+        "is_correct": true
+      },
+      {
+        "label": "2",
+        "is_correct": false
+      },
+      {
+        "label": "3",
+        "is_correct": false
+      },
+      {
+        "label": "0",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "MATH_FRAC_001",
+    "subject": "mathematiques",
+    "skill_code": "MATH_FRAC",
+    "elo_difficulty": 920,
+    "hud_prompt": "Fraction 1/2 en décimal ?",
+    "explanation_flash": "1/2 = la moitié = 0,5 !",
+    "targets": [
+      {
+        "label": "0,5",
+        "is_correct": true
+      },
+      {
+        "label": "0,2",
+        "is_correct": false
+      },
+      {
+        "label": "0,25",
+        "is_correct": false
+      },
+      {
+        "label": "1,2",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "MATH_FRAC_002",
+    "subject": "mathematiques",
+    "skill_code": "MATH_FRAC",
+    "elo_difficulty": 980,
+    "hud_prompt": "Fraction 1/4 en décimal ?",
+    "explanation_flash": "Un quart (1/4) vaut 0,25 !",
+    "targets": [
+      {
+        "label": "0,25",
+        "is_correct": true
+      },
+      {
+        "label": "0,4",
+        "is_correct": false
+      },
+      {
+        "label": "0,5",
+        "is_correct": false
+      },
+      {
+        "label": "0,75",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "MATH_FRAC_003",
+    "subject": "mathematiques",
+    "skill_code": "MATH_FRAC",
+    "elo_difficulty": 1050,
+    "hud_prompt": "Fraction 3/4 en décimal ?",
+    "explanation_flash": "3 × 0,25 = 0,75 !",
+    "targets": [
+      {
+        "label": "0,75",
+        "is_correct": true
+      },
+      {
+        "label": "0,34",
+        "is_correct": false
+      },
+      {
+        "label": "0,5",
+        "is_correct": false
+      },
+      {
+        "label": "0,25",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "MATH_FRAC_004",
+    "subject": "mathematiques",
+    "skill_code": "MATH_FRAC",
+    "elo_difficulty": 900,
+    "hud_prompt": "Fraction 1/10 en décimal ?",
+    "explanation_flash": "Un dixième (1/10) = 0,1 !",
+    "targets": [
+      {
+        "label": "0,1",
+        "is_correct": true
+      },
+      {
+        "label": "0,01",
+        "is_correct": false
+      },
+      {
+        "label": "1,0",
+        "is_correct": false
+      },
+      {
+        "label": "0,5",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "MATH_FRAC_005",
+    "subject": "mathematiques",
+    "skill_code": "MATH_FRAC",
+    "elo_difficulty": 1080,
+    "hud_prompt": "Fraction 1/5 en décimal ?",
+    "explanation_flash": "1 ÷ 5 = 0,2 !",
+    "targets": [
+      {
+        "label": "0,2",
+        "is_correct": true
+      },
+      {
+        "label": "0,5",
+        "is_correct": false
+      },
+      {
+        "label": "0,25",
+        "is_correct": false
+      },
+      {
+        "label": "0,15",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "MATH_FRAC_006",
+    "subject": "mathematiques",
+    "skill_code": "MATH_FRAC",
+    "elo_difficulty": 940,
+    "hud_prompt": "Double de 0,25 ?",
+    "explanation_flash": "0,25 + 0,25 = 0,5 !",
+    "targets": [
+      {
+        "label": "0,5",
+        "is_correct": true
+      },
+      {
+        "label": "0,45",
+        "is_correct": false
+      },
+      {
+        "label": "1,0",
+        "is_correct": false
+      },
+      {
+        "label": "0,75",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "MATH_CONV_001",
+    "subject": "mathematiques",
+    "skill_code": "MATH_CONV",
+    "elo_difficulty": 860,
+    "hud_prompt": "1 km en mètres ?",
+    "explanation_flash": "1 kilomètre = 1000 mètres !",
+    "targets": [
+      {
+        "label": "1000 m",
+        "is_correct": true
+      },
+      {
+        "label": "100 m",
+        "is_correct": false
+      },
+      {
+        "label": "10 m",
+        "is_correct": false
+      },
+      {
+        "label": "10000 m",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "MATH_CONV_002",
+    "subject": "mathematiques",
+    "skill_code": "MATH_CONV",
+    "elo_difficulty": 1020,
+    "hud_prompt": "2,5 kg en grammes ?",
+    "explanation_flash": "1 kg = 1000 g, donc 2,5 kg = 2500 g !",
+    "targets": [
+      {
+        "label": "2500 g",
+        "is_correct": true
+      },
+      {
+        "label": "250 g",
+        "is_correct": false
+      },
+      {
+        "label": "25 g",
+        "is_correct": false
+      },
+      {
+        "label": "2050 g",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "MATH_CONV_003",
+    "subject": "mathematiques",
+    "skill_code": "MATH_CONV",
+    "elo_difficulty": 1060,
+    "hud_prompt": "1,5 L en centilitres ?",
+    "explanation_flash": "1 L = 100 cL, donc 1,5 L = 150 cL !",
+    "targets": [
+      {
+        "label": "150 cL",
+        "is_correct": true
+      },
+      {
+        "label": "15 cL",
+        "is_correct": false
+      },
+      {
+        "label": "1500 cL",
+        "is_correct": false
+      },
+      {
+        "label": "105 cL",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "MATH_CONV_004",
+    "subject": "mathematiques",
+    "skill_code": "MATH_CONV",
+    "elo_difficulty": 850,
+    "hud_prompt": "3 m en centimètres ?",
+    "explanation_flash": "1 m = 100 cm, donc 3 m = 300 cm !",
+    "targets": [
+      {
+        "label": "300 cm",
+        "is_correct": true
+      },
+      {
+        "label": "30 cm",
+        "is_correct": false
+      },
+      {
+        "label": "3000 cm",
+        "is_correct": false
+      },
+      {
+        "label": "3 cm",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "MATH_CONV_005",
+    "subject": "mathematiques",
+    "skill_code": "MATH_CONV",
+    "elo_difficulty": 1000,
+    "hud_prompt": "500 g en kilogrammes ?",
+    "explanation_flash": "500 g est la moitié de 1000 g = 0,5 kg !",
+    "targets": [
+      {
+        "label": "0,5 kg",
+        "is_correct": true
+      },
+      {
+        "label": "5 kg",
+        "is_correct": false
+      },
+      {
+        "label": "0,05 kg",
+        "is_correct": false
+      },
+      {
+        "label": "50 kg",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "MATH_CONV_006",
+    "subject": "mathematiques",
+    "skill_code": "MATH_CONV",
+    "elo_difficulty": 1040,
+    "hud_prompt": "2 h 30 en minutes ?",
+    "explanation_flash": "2 × 60 + 30 = 150 minutes !",
+    "targets": [
+      {
+        "label": "150 min",
+        "is_correct": true
+      },
+      {
+        "label": "130 min",
+        "is_correct": false
+      },
+      {
+        "label": "230 min",
+        "is_correct": false
+      },
+      {
+        "label": "120 min",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "MATH_GEO_001",
+    "subject": "mathematiques",
+    "skill_code": "MATH_GEOM",
+    "elo_difficulty": 920,
+    "hud_prompt": "Périmètre carré côté 5 cm ?",
+    "explanation_flash": "Carré : 4 × 5 cm = 20 cm !",
+    "targets": [
+      {
+        "label": "20 cm",
+        "is_correct": true
+      },
+      {
+        "label": "25 cm",
+        "is_correct": false
+      },
+      {
+        "label": "10 cm",
+        "is_correct": false
+      },
+      {
+        "label": "15 cm",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "MATH_GEO_002",
+    "subject": "mathematiques",
+    "skill_code": "MATH_GEOM",
+    "elo_difficulty": 980,
+    "hud_prompt": "Aire carré côté 6 cm ?",
+    "explanation_flash": "Aire carré = côté × côté = 36 cm² !",
+    "targets": [
+      {
+        "label": "36 cm²",
+        "is_correct": true
+      },
+      {
+        "label": "24 cm²",
+        "is_correct": false
+      },
+      {
+        "label": "12 cm²",
+        "is_correct": false
+      },
+      {
+        "label": "18 cm²",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "MATH_GEO_003",
+    "subject": "mathematiques",
+    "skill_code": "MATH_GEOM",
+    "elo_difficulty": 1020,
+    "hud_prompt": "Périmètre rectangle 6 × 4 cm ?",
+    "explanation_flash": "2 × (6 + 4) = 20 cm !",
+    "targets": [
+      {
+        "label": "20 cm",
+        "is_correct": true
+      },
+      {
+        "label": "24 cm",
+        "is_correct": false
+      },
+      {
+        "label": "10 cm",
+        "is_correct": false
+      },
+      {
+        "label": "16 cm",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "MATH_GEO_004",
+    "subject": "mathematiques",
+    "skill_code": "MATH_GEOM",
+    "elo_difficulty": 960,
+    "hud_prompt": "Aire rectangle 7 × 3 cm ?",
+    "explanation_flash": "Aire rectangle = L × l = 21 cm² !",
+    "targets": [
+      {
+        "label": "21 cm²",
+        "is_correct": true
+      },
+      {
+        "label": "20 cm²",
+        "is_correct": false
+      },
+      {
+        "label": "10 cm²",
+        "is_correct": false
+      },
+      {
+        "label": "42 cm²",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "MATH_GEO_005",
+    "subject": "mathematiques",
+    "skill_code": "MATH_PRIO",
+    "elo_difficulty": 1120,
+    "hud_prompt": "Calcul : 2 + 3 × 4 ?",
+    "explanation_flash": "Multiplication prioritaire : 2 + 12 = 14 !",
+    "targets": [
+      {
+        "label": "14",
+        "is_correct": true
+      },
+      {
+        "label": "20",
+        "is_correct": false
+      },
+      {
+        "label": "24",
+        "is_correct": false
+      },
+      {
+        "label": "11",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "MATH_GEO_006",
+    "subject": "mathematiques",
+    "skill_code": "MATH_PRIO",
+    "elo_difficulty": 1050,
+    "hud_prompt": "Calcul : (2 + 3) × 4 ?",
+    "explanation_flash": "Parenthèses d'abord : 5 × 4 = 20 !",
+    "targets": [
+      {
+        "label": "20",
+        "is_correct": true
+      },
+      {
+        "label": "14",
+        "is_correct": false
+      },
+      {
+        "label": "11",
+        "is_correct": false
+      },
+      {
+        "label": "24",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "FR_6E_001",
+    "subject": "francais",
+    "skill_code": "FR_HOMO",
+    "elo_difficulty": 880,
+    "hud_prompt": "Il ___ pris son sac.",
+    "explanation_flash": "Verbe avoir (avait) = a sans accent !",
+    "targets": [
+      {
+        "label": "a",
+        "is_correct": true
+      },
+      {
+        "label": "à",
+        "is_correct": false
+      },
+      {
+        "label": "as",
+        "is_correct": false
+      },
+      {
+        "label": "ont",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "FR_6E_002",
+    "subject": "francais",
+    "skill_code": "FR_HOMO",
+    "elo_difficulty": 880,
+    "hud_prompt": "Je vais ___ l'école.",
+    "explanation_flash": "Préposition invariable = à avec accent !",
+    "targets": [
+      {
+        "label": "à",
+        "is_correct": true
+      },
+      {
+        "label": "a",
+        "is_correct": false
+      },
+      {
+        "label": "as",
+        "is_correct": false
+      },
+      {
+        "label": "et",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "FR_6E_003",
+    "subject": "francais",
+    "skill_code": "FR_HOMO",
+    "elo_difficulty": 880,
+    "hud_prompt": "Léa ___ contente aujourd'hui.",
+    "explanation_flash": "Verbe être (était) = est !",
+    "targets": [
+      {
+        "label": "est",
+        "is_correct": true
+      },
+      {
+        "label": "et",
+        "is_correct": false
+      },
+      {
+        "label": "es",
+        "is_correct": false
+      },
+      {
+        "label": "ai",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "FR_6E_004",
+    "subject": "francais",
+    "skill_code": "FR_HOMO",
+    "elo_difficulty": 860,
+    "hud_prompt": "Pain ___ chocolat.",
+    "explanation_flash": "Mot de liaison (et puis) = et !",
+    "targets": [
+      {
+        "label": "et",
+        "is_correct": true
+      },
+      {
+        "label": "est",
+        "is_correct": false
+      },
+      {
+        "label": "es",
+        "is_correct": false
+      },
+      {
+        "label": "ou",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "FR_6E_005",
+    "subject": "francais",
+    "skill_code": "FR_HOMO",
+    "elo_difficulty": 900,
+    "hud_prompt": "Les élèves ___ prêts.",
+    "explanation_flash": "Verbe être (étaient) = sont !",
+    "targets": [
+      {
+        "label": "sont",
+        "is_correct": true
+      },
+      {
+        "label": "son",
+        "is_correct": false
+      },
+      {
+        "label": "ont",
+        "is_correct": false
+      },
+      {
+        "label": "on",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "FR_6E_006",
+    "subject": "francais",
+    "skill_code": "FR_HOMO",
+    "elo_difficulty": 900,
+    "hud_prompt": "Il range ___ cahier bleu.",
+    "explanation_flash": "Déterminant possessif (mon/ton) = son !",
+    "targets": [
+      {
+        "label": "son",
+        "is_correct": true
+      },
+      {
+        "label": "sont",
+        "is_correct": false
+      },
+      {
+        "label": "ce",
+        "is_correct": false
+      },
+      {
+        "label": "ont",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "FR_6E_007",
+    "subject": "francais",
+    "skill_code": "FR_HOMO",
+    "elo_difficulty": 1050,
+    "hud_prompt": "___ chaussures sont neuves.",
+    "explanation_flash": "Désigne ici (démonstratif) = Ces !",
+    "targets": [
+      {
+        "label": "Ces",
+        "is_correct": true
+      },
+      {
+        "label": "Ses",
+        "is_correct": false
+      },
+      {
+        "label": "C'est",
+        "is_correct": false
+      },
+      {
+        "label": "S'est",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "FR_6E_008",
+    "subject": "francais",
+    "skill_code": "FR_HOMO",
+    "elo_difficulty": 1020,
+    "hud_prompt": "Il lave ___ mains propres.",
+    "explanation_flash": "Les siennes (possessif) = ses !",
+    "targets": [
+      {
+        "label": "ses",
+        "is_correct": true
+      },
+      {
+        "label": "ces",
+        "is_correct": false
+      },
+      {
+        "label": "c'est",
+        "is_correct": false
+      },
+      {
+        "label": "s'est",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "FR_6E_009",
+    "subject": "francais",
+    "skill_code": "FR_HOMO",
+    "elo_difficulty": 900,
+    "hud_prompt": "Thé ___ café ?",
+    "explanation_flash": "Choix (ou bien) = ou sans accent !",
+    "targets": [
+      {
+        "label": "ou",
+        "is_correct": true
+      },
+      {
+        "label": "où",
+        "is_correct": false
+      },
+      {
+        "label": "a",
+        "is_correct": false
+      },
+      {
+        "label": "et",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "FR_6E_010",
+    "subject": "francais",
+    "skill_code": "FR_HOMO",
+    "elo_difficulty": 920,
+    "hud_prompt": "___ est mon casier ?",
+    "explanation_flash": "Lieu = Où avec accent grave !",
+    "targets": [
+      {
+        "label": "Où",
+        "is_correct": true
+      },
+      {
+        "label": "Ou",
+        "is_correct": false
+      },
+      {
+        "label": "Au",
+        "is_correct": false
+      },
+      {
+        "label": "On",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "FR_6E_011",
+    "subject": "francais",
+    "skill_code": "FR_HOMO",
+    "elo_difficulty": 940,
+    "hud_prompt": "___ regarde le tableau.",
+    "explanation_flash": "Pronom sujet (il/elle) = On !",
+    "targets": [
+      {
+        "label": "On",
+        "is_correct": true
+      },
+      {
+        "label": "Ont",
+        "is_correct": false
+      },
+      {
+        "label": "Son",
+        "is_correct": false
+      },
+      {
+        "label": "Sont",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "FR_6E_012",
+    "subject": "francais",
+    "skill_code": "FR_HOMO",
+    "elo_difficulty": 940,
+    "hud_prompt": "Ils ___ fini le devoir.",
+    "explanation_flash": "Verbe avoir (avaient) = ont !",
+    "targets": [
+      {
+        "label": "ont",
+        "is_correct": true
+      },
+      {
+        "label": "on",
+        "is_correct": false
+      },
+      {
+        "label": "sont",
+        "is_correct": false
+      },
+      {
+        "label": "son",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "FR_6E_013",
+    "subject": "francais",
+    "skill_code": "FR_TERM",
+    "elo_difficulty": 1000,
+    "hud_prompt": "Les joueurs ont ___.",
+    "explanation_flash": "Auxiliaire avoir : on dit vendu -> gagné !",
+    "targets": [
+      {
+        "label": "gagné",
+        "is_correct": true
+      },
+      {
+        "label": "gagner",
+        "is_correct": false
+      },
+      {
+        "label": "gagnés",
+        "is_correct": false
+      },
+      {
+        "label": "gagnait",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "FR_6E_014",
+    "subject": "francais",
+    "skill_code": "FR_TERM",
+    "elo_difficulty": 960,
+    "hud_prompt": "Il faut ___ ce texte.",
+    "explanation_flash": "Après il faut = infinitif copier !",
+    "targets": [
+      {
+        "label": "copier",
+        "is_correct": true
+      },
+      {
+        "label": "copié",
+        "is_correct": false
+      },
+      {
+        "label": "copiée",
+        "is_correct": false
+      },
+      {
+        "label": "copiait",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "FR_6E_015",
+    "subject": "francais",
+    "skill_code": "FR_ACC",
+    "elo_difficulty": 1120,
+    "hud_prompt": "Dans la cour ___ les enfants.",
+    "explanation_flash": "Sujet inversé pluriel (les enfants) -> jouent !",
+    "targets": [
+      {
+        "label": "jouent",
+        "is_correct": true
+      },
+      {
+        "label": "joue",
+        "is_correct": false
+      },
+      {
+        "label": "joues",
+        "is_correct": false
+      },
+      {
+        "label": "jouait",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "FR_6E_016",
+    "subject": "francais",
+    "skill_code": "FR_ACC",
+    "elo_difficulty": 1100,
+    "hud_prompt": "Le chat des voisins ___.",
+    "explanation_flash": "Sujet = Le chat (singulier) -> dort !",
+    "targets": [
+      {
+        "label": "dort",
+        "is_correct": true
+      },
+      {
+        "label": "dorment",
+        "is_correct": false
+      },
+      {
+        "label": "dors",
+        "is_correct": false
+      },
+      {
+        "label": "dormir",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "FR_6E_017",
+    "subject": "francais",
+    "skill_code": "FR_ACC",
+    "elo_difficulty": 1080,
+    "hud_prompt": "Les fleurs du jardin ___.",
+    "explanation_flash": "Sujet = Les fleurs (pluriel) -> poussent !",
+    "targets": [
+      {
+        "label": "poussent",
+        "is_correct": true
+      },
+      {
+        "label": "pousse",
+        "is_correct": false
+      },
+      {
+        "label": "pousses",
+        "is_correct": false
+      },
+      {
+        "label": "poussait",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "FR_6E_018",
+    "subject": "francais",
+    "skill_code": "FR_TERM",
+    "elo_difficulty": 1020,
+    "hud_prompt": "Elles ___ vite hier.",
+    "explanation_flash": "Imparfait 3e pers. pluriel -> -aient !",
+    "targets": [
+      {
+        "label": "couraient",
+        "is_correct": true
+      },
+      {
+        "label": "courait",
+        "is_correct": false
+      },
+      {
+        "label": "courent",
+        "is_correct": false
+      },
+      {
+        "label": "courir",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "FR_6E_019",
+    "subject": "francais",
+    "skill_code": "FR_TERM",
+    "elo_difficulty": 940,
+    "hud_prompt": "Tu ___ bien ta leçon.",
+    "explanation_flash": "Avec Tu : terminaison en -s -> sais !",
+    "targets": [
+      {
+        "label": "sais",
+        "is_correct": true
+      },
+      {
+        "label": "sait",
+        "is_correct": false
+      },
+      {
+        "label": "savent",
+        "is_correct": false
+      },
+      {
+        "label": "savoir",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "FR_6E_020",
+    "subject": "francais",
+    "skill_code": "FR_TERM",
+    "elo_difficulty": 900,
+    "hud_prompt": "Nous ___ en classe.",
+    "explanation_flash": "Avec Nous : terminaison -ons -> entrons !",
+    "targets": [
+      {
+        "label": "entrons",
+        "is_correct": true
+      },
+      {
+        "label": "entrent",
+        "is_correct": false
+      },
+      {
+        "label": "entrez",
+        "is_correct": false
+      },
+      {
+        "label": "entre",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "FR_6E_021",
+    "subject": "francais",
+    "skill_code": "FR_TERM",
+    "elo_difficulty": 920,
+    "hud_prompt": "Vous ___ la question.",
+    "explanation_flash": "Avec Vous : terminaison -ez -> lisez !",
+    "targets": [
+      {
+        "label": "lisez",
+        "is_correct": true
+      },
+      {
+        "label": "lisons",
+        "is_correct": false
+      },
+      {
+        "label": "lisent",
+        "is_correct": false
+      },
+      {
+        "label": "lit",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "FR_6E_022",
+    "subject": "francais",
+    "skill_code": "FR_ACC",
+    "elo_difficulty": 980,
+    "hud_prompt": "Des robes ___ et jolies.",
+    "explanation_flash": "Féminin pluriel (robes) -> bleues !",
+    "targets": [
+      {
+        "label": "bleues",
+        "is_correct": true
+      },
+      {
+        "label": "bleu",
+        "is_correct": false
+      },
+      {
+        "label": "bleus",
+        "is_correct": false
+      },
+      {
+        "label": "bleue",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "FR_6E_023",
+    "subject": "francais",
+    "skill_code": "FR_ACC",
+    "elo_difficulty": 920,
+    "hud_prompt": "Un garçon très ___.",
+    "explanation_flash": "Masculin singulier -> gentil !",
+    "targets": [
+      {
+        "label": "gentil",
+        "is_correct": true
+      },
+      {
+        "label": "gentille",
+        "is_correct": false
+      },
+      {
+        "label": "gentils",
+        "is_correct": false
+      },
+      {
+        "label": "gentilles",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "FR_6E_024",
+    "subject": "francais",
+    "skill_code": "FR_ACC",
+    "elo_difficulty": 1150,
+    "hud_prompt": "Elles sont ___ en 6ème.",
+    "explanation_flash": "Avec être, accord féminin pluriel -> entrées !",
+    "targets": [
+      {
+        "label": "entrées",
+        "is_correct": true
+      },
+      {
+        "label": "entré",
+        "is_correct": false
+      },
+      {
+        "label": "entrée",
+        "is_correct": false
+      },
+      {
+        "label": "entrer",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "FR_6E_025",
+    "subject": "francais",
+    "skill_code": "FR_TERM",
+    "elo_difficulty": 940,
+    "hud_prompt": "Il aime ___ au foot.",
+    "explanation_flash": "On peut dire vendre -> infinitif jouer !",
+    "targets": [
+      {
+        "label": "jouer",
+        "is_correct": true
+      },
+      {
+        "label": "joué",
+        "is_correct": false
+      },
+      {
+        "label": "jouait",
+        "is_correct": false
+      },
+      {
+        "label": "jouent",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "FR_6E_026",
+    "subject": "francais",
+    "skill_code": "FR_TERM",
+    "elo_difficulty": 980,
+    "hud_prompt": "Hier, il ___ très froid.",
+    "explanation_flash": "Imparfait singulier (il) -> faisait !",
+    "targets": [
+      {
+        "label": "faisait",
+        "is_correct": true
+      },
+      {
+        "label": "faisaient",
+        "is_correct": false
+      },
+      {
+        "label": "fait",
+        "is_correct": false
+      },
+      {
+        "label": "faire",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "FR_6E_027",
+    "subject": "francais",
+    "skill_code": "FR_NAT",
+    "elo_difficulty": 1040,
+    "hud_prompt": "Nature de « rapidement » ?",
+    "explanation_flash": "Un mot en -ment qui précise l'action est un adverbe !",
+    "targets": [
+      {
+        "label": "Adverbe",
+        "is_correct": true
+      },
+      {
+        "label": "Adjectif",
+        "is_correct": false
+      },
+      {
+        "label": "Nom",
+        "is_correct": false
+      },
+      {
+        "label": "Verbe",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "FR_6E_028",
+    "subject": "francais",
+    "skill_code": "FR_NAT",
+    "elo_difficulty": 960,
+    "hud_prompt": "Nature de « courageux » ?",
+    "explanation_flash": "Courageux qualifie un nom : c'est un adjectif !",
+    "targets": [
+      {
+        "label": "Adjectif",
+        "is_correct": true
+      },
+      {
+        "label": "Nom",
+        "is_correct": false
+      },
+      {
+        "label": "Pronom",
+        "is_correct": false
+      },
+      {
+        "label": "Verbe",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "FR_6E_029",
+    "subject": "francais",
+    "skill_code": "FR_NAT",
+    "elo_difficulty": 860,
+    "hud_prompt": "Nature de « cartable » ?",
+    "explanation_flash": "On peut mettre 'un/le' devant : c'est un nom !",
+    "targets": [
+      {
+        "label": "Nom",
+        "is_correct": true
+      },
+      {
+        "label": "Verbe",
+        "is_correct": false
+      },
+      {
+        "label": "Adjectif",
+        "is_correct": false
+      },
+      {
+        "label": "Adverbe",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "FR_6E_030",
+    "subject": "francais",
+    "skill_code": "FR_NAT",
+    "elo_difficulty": 940,
+    "hud_prompt": "Nature de « nous » ?",
+    "explanation_flash": "Nous remplace un nom : c'est un pronom !",
+    "targets": [
+      {
+        "label": "Pronom",
+        "is_correct": true
+      },
+      {
+        "label": "Déterminant",
+        "is_correct": false
+      },
+      {
+        "label": "Nom",
+        "is_correct": false
+      },
+      {
+        "label": "Adjectif",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "FR_6E_031",
+    "subject": "francais",
+    "skill_code": "FR_NAT",
+    "elo_difficulty": 980,
+    "hud_prompt": "Nature de « ces » ?",
+    "explanation_flash": "Placé devant un nom, c'est un déterminant !",
+    "targets": [
+      {
+        "label": "Déterminant",
+        "is_correct": true
+      },
+      {
+        "label": "Pronom",
+        "is_correct": false
+      },
+      {
+        "label": "Adverbe",
+        "is_correct": false
+      },
+      {
+        "label": "Nom",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "FR_6E_032",
+    "subject": "francais",
+    "skill_code": "FR_NAT",
+    "elo_difficulty": 860,
+    "hud_prompt": "Nature de « chanter » ?",
+    "explanation_flash": "Chanter exprime une action à l'infinitif : verbe !",
+    "targets": [
+      {
+        "label": "Verbe",
+        "is_correct": true
+      },
+      {
+        "label": "Nom",
+        "is_correct": false
+      },
+      {
+        "label": "Adjectif",
+        "is_correct": false
+      },
+      {
+        "label": "Pronom",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "FR_6E_033",
+    "subject": "francais",
+    "skill_code": "FR_PREF",
+    "elo_difficulty": 950,
+    "hud_prompt": "Préfixe de « refaire » ?",
+    "explanation_flash": "Le préfixe re- signifie faire de nouveau !",
+    "targets": [
+      {
+        "label": "re-",
+        "is_correct": true
+      },
+      {
+        "label": "-faire",
+        "is_correct": false
+      },
+      {
+        "label": "-ire",
+        "is_correct": false
+      },
+      {
+        "label": "r-",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "FR_6E_034",
+    "subject": "francais",
+    "skill_code": "FR_PREF",
+    "elo_difficulty": 1020,
+    "hud_prompt": "Préfixe de « impossible » ?",
+    "explanation_flash": "im- devant p/b/m indique le contraire !",
+    "targets": [
+      {
+        "label": "im-",
+        "is_correct": true
+      },
+      {
+        "label": "-ible",
+        "is_correct": false
+      },
+      {
+        "label": "poss-",
+        "is_correct": false
+      },
+      {
+        "label": "in-",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "FR_6E_035",
+    "subject": "francais",
+    "skill_code": "FR_PREF",
+    "elo_difficulty": 920,
+    "hud_prompt": "Contraire de « heureux » ?",
+    "explanation_flash": "Le préfixe mal- forme malheureux !",
+    "targets": [
+      {
+        "label": "malheureux",
+        "is_correct": true
+      },
+      {
+        "label": "reheureux",
+        "is_correct": false
+      },
+      {
+        "label": "déheureux",
+        "is_correct": false
+      },
+      {
+        "label": "inheureux",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "FR_6E_036",
+    "subject": "francais",
+    "skill_code": "FR_PREF",
+    "elo_difficulty": 1040,
+    "hud_prompt": "Suffixe de « boulangerie » ?",
+    "explanation_flash": "Le suffixe -erie désigne un lieu de métier !",
+    "targets": [
+      {
+        "label": "-erie",
+        "is_correct": true
+      },
+      {
+        "label": "boul-",
+        "is_correct": false
+      },
+      {
+        "label": "-ange",
+        "is_correct": false
+      },
+      {
+        "label": "bou-",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "FR_6E_037",
+    "subject": "francais",
+    "skill_code": "FR_PREF",
+    "elo_difficulty": 1060,
+    "hud_prompt": "Préfixe signifiant « avant » ?",
+    "explanation_flash": "pré- signifie avant (ex: préhistoire) !",
+    "targets": [
+      {
+        "label": "pré-",
+        "is_correct": true
+      },
+      {
+        "label": "re-",
+        "is_correct": false
+      },
+      {
+        "label": "dé-",
+        "is_correct": false
+      },
+      {
+        "label": "sur-",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "FR_6E_038",
+    "subject": "francais",
+    "skill_code": "FR_NAT",
+    "elo_difficulty": 1080,
+    "hud_prompt": "Nature de « dans » ?",
+    "explanation_flash": "dans est un mot invariable : une préposition !",
+    "targets": [
+      {
+        "label": "Préposition",
+        "is_correct": true
+      },
+      {
+        "label": "Verbe",
+        "is_correct": false
+      },
+      {
+        "label": "Adjectif",
+        "is_correct": false
+      },
+      {
+        "label": "Nom",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "FR_6E_039",
+    "subject": "francais",
+    "skill_code": "FR_NAT",
+    "elo_difficulty": 880,
+    "hud_prompt": "Nature de « grand » ?",
+    "explanation_flash": "Grand qualifie un nom : adjectif qualificatif !",
+    "targets": [
+      {
+        "label": "Adjectif",
+        "is_correct": true
+      },
+      {
+        "label": "Nom",
+        "is_correct": false
+      },
+      {
+        "label": "Verbe",
+        "is_correct": false
+      },
+      {
+        "label": "Pronom",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "FR_6E_040",
+    "subject": "francais",
+    "skill_code": "FR_PREF",
+    "elo_difficulty": 900,
+    "hud_prompt": "Famille de « dent » ?",
+    "explanation_flash": "dentiste partage le radical dent- !",
+    "targets": [
+      {
+        "label": "dentiste",
+        "is_correct": true
+      },
+      {
+        "label": "danseur",
+        "is_correct": false
+      },
+      {
+        "label": "tente",
+        "is_correct": false
+      },
+      {
+        "label": "dedans",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "ANG_6E_001",
+    "subject": "anglais",
+    "skill_code": "ANG_VOC",
+    "elo_difficulty": 860,
+    "hud_prompt": "Traduire : « stylo »",
+    "explanation_flash": "Un stylo = a pen (crayon = pencil) !",
+    "targets": [
+      {
+        "label": "pen",
+        "is_correct": true
+      },
+      {
+        "label": "pencil",
+        "is_correct": false
+      },
+      {
+        "label": "book",
+        "is_correct": false
+      },
+      {
+        "label": "bag",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "ANG_6E_002",
+    "subject": "anglais",
+    "skill_code": "ANG_VOC",
+    "elo_difficulty": 900,
+    "hud_prompt": "Traduire : « cahier »",
+    "explanation_flash": "Un cahier = a notebook !",
+    "targets": [
+      {
+        "label": "notebook",
+        "is_correct": true
+      },
+      {
+        "label": "rubber",
+        "is_correct": false
+      },
+      {
+        "label": "ruler",
+        "is_correct": false
+      },
+      {
+        "label": "desk",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "ANG_6E_003",
+    "subject": "anglais",
+    "skill_code": "ANG_VOC",
+    "elo_difficulty": 900,
+    "hud_prompt": "Traduire : « règle »",
+    "explanation_flash": "Une règle = a ruler !",
+    "targets": [
+      {
+        "label": "ruler",
+        "is_correct": true
+      },
+      {
+        "label": "pencil",
+        "is_correct": false
+      },
+      {
+        "label": "chair",
+        "is_correct": false
+      },
+      {
+        "label": "door",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "ANG_6E_004",
+    "subject": "anglais",
+    "skill_code": "ANG_VOC",
+    "elo_difficulty": 880,
+    "hud_prompt": "Traduire : « sac à dos »",
+    "explanation_flash": "Sac à dos d'école = schoolbag !",
+    "targets": [
+      {
+        "label": "schoolbag",
+        "is_correct": true
+      },
+      {
+        "label": "pencilcase",
+        "is_correct": false
+      },
+      {
+        "label": "table",
+        "is_correct": false
+      },
+      {
+        "label": "board",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "ANG_6E_005",
+    "subject": "anglais",
+    "skill_code": "ANG_VOC",
+    "elo_difficulty": 850,
+    "hud_prompt": "Traduire : « professeur »",
+    "explanation_flash": "Professeur = teacher !",
+    "targets": [
+      {
+        "label": "teacher",
+        "is_correct": true
+      },
+      {
+        "label": "student",
+        "is_correct": false
+      },
+      {
+        "label": "friend",
+        "is_correct": false
+      },
+      {
+        "label": "driver",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "ANG_6E_006",
+    "subject": "anglais",
+    "skill_code": "ANG_VOC",
+    "elo_difficulty": 880,
+    "hud_prompt": "Traduire : « chaise »",
+    "explanation_flash": "Chaise = chair !",
+    "targets": [
+      {
+        "label": "chair",
+        "is_correct": true
+      },
+      {
+        "label": "desk",
+        "is_correct": false
+      },
+      {
+        "label": "window",
+        "is_correct": false
+      },
+      {
+        "label": "floor",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "ANG_6E_007",
+    "subject": "anglais",
+    "skill_code": "ANG_VOC",
+    "elo_difficulty": 950,
+    "hud_prompt": "Traduire : « trousse »",
+    "explanation_flash": "Trousse = pencil case !",
+    "targets": [
+      {
+        "label": "pencil case",
+        "is_correct": true
+      },
+      {
+        "label": "school bag",
+        "is_correct": false
+      },
+      {
+        "label": "book",
+        "is_correct": false
+      },
+      {
+        "label": "pen",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "ANG_6E_008",
+    "subject": "anglais",
+    "skill_code": "ANG_VOC",
+    "elo_difficulty": 960,
+    "hud_prompt": "Traduire : « gomme »",
+    "explanation_flash": "Gomme = rubber (ou eraser) !",
+    "targets": [
+      {
+        "label": "rubber",
+        "is_correct": true
+      },
+      {
+        "label": "ruler",
+        "is_correct": false
+      },
+      {
+        "label": "paper",
+        "is_correct": false
+      },
+      {
+        "label": "glue",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "ANG_6E_009",
+    "subject": "anglais",
+    "skill_code": "ANG_VOC",
+    "elo_difficulty": 880,
+    "hud_prompt": "Traduire : « lundi »",
+    "explanation_flash": "Monday = lundi !",
+    "targets": [
+      {
+        "label": "Monday",
+        "is_correct": true
+      },
+      {
+        "label": "Tuesday",
+        "is_correct": false
+      },
+      {
+        "label": "Sunday",
+        "is_correct": false
+      },
+      {
+        "label": "Friday",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "ANG_6E_010",
+    "subject": "anglais",
+    "skill_code": "ANG_VOC",
+    "elo_difficulty": 980,
+    "hud_prompt": "Traduire : « mercredi »",
+    "explanation_flash": "Wednesday = mercredi !",
+    "targets": [
+      {
+        "label": "Wednesday",
+        "is_correct": true
+      },
+      {
+        "label": "Tuesday",
+        "is_correct": false
+      },
+      {
+        "label": "Thursday",
+        "is_correct": false
+      },
+      {
+        "label": "Monday",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "ANG_6E_011",
+    "subject": "anglais",
+    "skill_code": "ANG_VOC",
+    "elo_difficulty": 900,
+    "hud_prompt": "Traduire : « vendredi »",
+    "explanation_flash": "Friday = vendredi !",
+    "targets": [
+      {
+        "label": "Friday",
+        "is_correct": true
+      },
+      {
+        "label": "Thursday",
+        "is_correct": false
+      },
+      {
+        "label": "Saturday",
+        "is_correct": false
+      },
+      {
+        "label": "Monday",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "ANG_6E_012",
+    "subject": "anglais",
+    "skill_code": "ANG_VOC",
+    "elo_difficulty": 900,
+    "hud_prompt": "Traduire : « dimanche »",
+    "explanation_flash": "Sunday = dimanche !",
+    "targets": [
+      {
+        "label": "Sunday",
+        "is_correct": true
+      },
+      {
+        "label": "Saturday",
+        "is_correct": false
+      },
+      {
+        "label": "Monday",
+        "is_correct": false
+      },
+      {
+        "label": "Friday",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "ANG_6E_013",
+    "subject": "anglais",
+    "skill_code": "ANG_VOC",
+    "elo_difficulty": 850,
+    "hud_prompt": "Traduire : « jaune »",
+    "explanation_flash": "Yellow = jaune !",
+    "targets": [
+      {
+        "label": "yellow",
+        "is_correct": true
+      },
+      {
+        "label": "green",
+        "is_correct": false
+      },
+      {
+        "label": "blue",
+        "is_correct": false
+      },
+      {
+        "label": "purple",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "ANG_6E_014",
+    "subject": "anglais",
+    "skill_code": "ANG_VOC",
+    "elo_difficulty": 920,
+    "hud_prompt": "Traduire : « violet »",
+    "explanation_flash": "Purple = violet !",
+    "targets": [
+      {
+        "label": "purple",
+        "is_correct": true
+      },
+      {
+        "label": "pink",
+        "is_correct": false
+      },
+      {
+        "label": "orange",
+        "is_correct": false
+      },
+      {
+        "label": "brown",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "ANG_6E_015",
+    "subject": "anglais",
+    "skill_code": "ANG_VOC",
+    "elo_difficulty": 850,
+    "hud_prompt": "Traduire : « vert »",
+    "explanation_flash": "Green = vert !",
+    "targets": [
+      {
+        "label": "green",
+        "is_correct": true
+      },
+      {
+        "label": "grey",
+        "is_correct": false
+      },
+      {
+        "label": "red",
+        "is_correct": false
+      },
+      {
+        "label": "black",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "ANG_6E_016",
+    "subject": "anglais",
+    "skill_code": "ANG_NUM",
+    "elo_difficulty": 960,
+    "hud_prompt": "Nombre « 15 » en anglais ?",
+    "explanation_flash": "15 = fifteen (50 = fifty) !",
+    "targets": [
+      {
+        "label": "fifteen",
+        "is_correct": true
+      },
+      {
+        "label": "fifty",
+        "is_correct": false
+      },
+      {
+        "label": "fourteen",
+        "is_correct": false
+      },
+      {
+        "label": "five",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "ANG_6E_017",
+    "subject": "anglais",
+    "skill_code": "ANG_NUM",
+    "elo_difficulty": 980,
+    "hud_prompt": "Nombre « 40 » en anglais ?",
+    "explanation_flash": "40 = forty !",
+    "targets": [
+      {
+        "label": "forty",
+        "is_correct": true
+      },
+      {
+        "label": "fourteen",
+        "is_correct": false
+      },
+      {
+        "label": "four",
+        "is_correct": false
+      },
+      {
+        "label": "fifty",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "ANG_6E_018",
+    "subject": "anglais",
+    "skill_code": "ANG_NUM",
+    "elo_difficulty": 940,
+    "hud_prompt": "Nombre « 100 » en anglais ?",
+    "explanation_flash": "100 = one hundred !",
+    "targets": [
+      {
+        "label": "one hundred",
+        "is_correct": true
+      },
+      {
+        "label": "one thousand",
+        "is_correct": false
+      },
+      {
+        "label": "ten",
+        "is_correct": false
+      },
+      {
+        "label": "twelve",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "ANG_6E_019",
+    "subject": "anglais",
+    "skill_code": "ANG_NUM",
+    "elo_difficulty": 900,
+    "hud_prompt": "Nombre « 12 » en anglais ?",
+    "explanation_flash": "12 = twelve !",
+    "targets": [
+      {
+        "label": "twelve",
+        "is_correct": true
+      },
+      {
+        "label": "twenty",
+        "is_correct": false
+      },
+      {
+        "label": "two",
+        "is_correct": false
+      },
+      {
+        "label": "eleven",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "ANG_6E_020",
+    "subject": "anglais",
+    "skill_code": "ANG_NUM",
+    "elo_difficulty": 980,
+    "hud_prompt": "Nombre « 80 » en anglais ?",
+    "explanation_flash": "80 = eighty !",
+    "targets": [
+      {
+        "label": "eighty",
+        "is_correct": true
+      },
+      {
+        "label": "eighteen",
+        "is_correct": false
+      },
+      {
+        "label": "eight",
+        "is_correct": false
+      },
+      {
+        "label": "seventy",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "ANG_6E_021",
+    "subject": "anglais",
+    "skill_code": "ANG_PRON",
+    "elo_difficulty": 850,
+    "hud_prompt": "Pronom pour « elle » ?",
+    "explanation_flash": "Elle (féminin) = She !",
+    "targets": [
+      {
+        "label": "She",
+        "is_correct": true
+      },
+      {
+        "label": "He",
+        "is_correct": false
+      },
+      {
+        "label": "It",
+        "is_correct": false
+      },
+      {
+        "label": "We",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "ANG_6E_022",
+    "subject": "anglais",
+    "skill_code": "ANG_PRON",
+    "elo_difficulty": 860,
+    "hud_prompt": "Pronom pour « nous » ?",
+    "explanation_flash": "Nous = We !",
+    "targets": [
+      {
+        "label": "We",
+        "is_correct": true
+      },
+      {
+        "label": "They",
+        "is_correct": false
+      },
+      {
+        "label": "You",
+        "is_correct": false
+      },
+      {
+        "label": "He",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "ANG_6E_023",
+    "subject": "anglais",
+    "skill_code": "ANG_PRON",
+    "elo_difficulty": 880,
+    "hud_prompt": "Pronom pour « ils / elles » ?",
+    "explanation_flash": "Ils / Elles = They !",
+    "targets": [
+      {
+        "label": "They",
+        "is_correct": true
+      },
+      {
+        "label": "We",
+        "is_correct": false
+      },
+      {
+        "label": "You",
+        "is_correct": false
+      },
+      {
+        "label": "It",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "ANG_6E_024",
+    "subject": "anglais",
+    "skill_code": "ANG_PRON",
+    "elo_difficulty": 920,
+    "hud_prompt": "Pronom pour un objet ?",
+    "explanation_flash": "Pour un objet ou animal : It !",
+    "targets": [
+      {
+        "label": "It",
+        "is_correct": true
+      },
+      {
+        "label": "He",
+        "is_correct": false
+      },
+      {
+        "label": "She",
+        "is_correct": false
+      },
+      {
+        "label": "We",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "ANG_6E_025",
+    "subject": "anglais",
+    "skill_code": "ANG_AUX",
+    "elo_difficulty": 950,
+    "hud_prompt": "I ___ twelve years old.",
+    "explanation_flash": "Avec I, verbe Be = I am (et non have) !",
+    "targets": [
+      {
+        "label": "am",
+        "is_correct": true
+      },
+      {
+        "label": "is",
+        "is_correct": false
+      },
+      {
+        "label": "are",
+        "is_correct": false
+      },
+      {
+        "label": "have",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "ANG_6E_026",
+    "subject": "anglais",
+    "skill_code": "ANG_AUX",
+    "elo_difficulty": 880,
+    "hud_prompt": "She ___ very happy.",
+    "explanation_flash": "Avec She, auxiliaire Be = is !",
+    "targets": [
+      {
+        "label": "is",
+        "is_correct": true
+      },
+      {
+        "label": "am",
+        "is_correct": false
+      },
+      {
+        "label": "are",
+        "is_correct": false
+      },
+      {
+        "label": "has",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "ANG_6E_027",
+    "subject": "anglais",
+    "skill_code": "ANG_AUX",
+    "elo_difficulty": 900,
+    "hud_prompt": "They ___ at school.",
+    "explanation_flash": "Avec They, auxiliaire Be = are !",
+    "targets": [
+      {
+        "label": "are",
+        "is_correct": true
+      },
+      {
+        "label": "is",
+        "is_correct": false
+      },
+      {
+        "label": "am",
+        "is_correct": false
+      },
+      {
+        "label": "have",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "ANG_6E_028",
+    "subject": "anglais",
+    "skill_code": "ANG_AUX",
+    "elo_difficulty": 960,
+    "hud_prompt": "He ___ a blue bike.",
+    "explanation_flash": "Possession avec He/She/It = has !",
+    "targets": [
+      {
+        "label": "has",
+        "is_correct": true
+      },
+      {
+        "label": "have",
+        "is_correct": false
+      },
+      {
+        "label": "is",
+        "is_correct": false
+      },
+      {
+        "label": "am",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "ANG_6E_029",
+    "subject": "anglais",
+    "skill_code": "ANG_AUX",
+    "elo_difficulty": 920,
+    "hud_prompt": "We ___ two brothers.",
+    "explanation_flash": "Avec We, verbe Have = have !",
+    "targets": [
+      {
+        "label": "have",
+        "is_correct": true
+      },
+      {
+        "label": "has",
+        "is_correct": false
+      },
+      {
+        "label": "are",
+        "is_correct": false
+      },
+      {
+        "label": "is",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "ANG_6E_030",
+    "subject": "anglais",
+    "skill_code": "ANG_AUX",
+    "elo_difficulty": 880,
+    "hud_prompt": "You ___ my best friend.",
+    "explanation_flash": "Avec You, Be = are !",
+    "targets": [
+      {
+        "label": "are",
+        "is_correct": true
+      },
+      {
+        "label": "is",
+        "is_correct": false
+      },
+      {
+        "label": "am",
+        "is_correct": false
+      },
+      {
+        "label": "has",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "ANG_6E_031",
+    "subject": "anglais",
+    "skill_code": "ANG_INT",
+    "elo_difficulty": 940,
+    "hud_prompt": "Mot interrogatif pour « Où » ?",
+    "explanation_flash": "Where = Où ? (lieu) !",
+    "targets": [
+      {
+        "label": "Where",
+        "is_correct": true
+      },
+      {
+        "label": "When",
+        "is_correct": false
+      },
+      {
+        "label": "Who",
+        "is_correct": false
+      },
+      {
+        "label": "What",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "ANG_6E_032",
+    "subject": "anglais",
+    "skill_code": "ANG_INT",
+    "elo_difficulty": 940,
+    "hud_prompt": "Mot interrogatif pour « Quand » ?",
+    "explanation_flash": "When = Quand ? (temps) !",
+    "targets": [
+      {
+        "label": "When",
+        "is_correct": true
+      },
+      {
+        "label": "Where",
+        "is_correct": false
+      },
+      {
+        "label": "Why",
+        "is_correct": false
+      },
+      {
+        "label": "Who",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "ANG_6E_033",
+    "subject": "anglais",
+    "skill_code": "ANG_INT",
+    "elo_difficulty": 920,
+    "hud_prompt": "Mot interrogatif pour « Qui » ?",
+    "explanation_flash": "Who = Qui ? (personne) !",
+    "targets": [
+      {
+        "label": "Who",
+        "is_correct": true
+      },
+      {
+        "label": "What",
+        "is_correct": false
+      },
+      {
+        "label": "Where",
+        "is_correct": false
+      },
+      {
+        "label": "When",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "ANG_6E_034",
+    "subject": "anglais",
+    "skill_code": "ANG_INT",
+    "elo_difficulty": 1020,
+    "hud_prompt": "Mot interrogatif pour « Combien » ?",
+    "explanation_flash": "How many = Combien ? (quantité) !",
+    "targets": [
+      {
+        "label": "How many",
+        "is_correct": true
+      },
+      {
+        "label": "How old",
+        "is_correct": false
+      },
+      {
+        "label": "What",
+        "is_correct": false
+      },
+      {
+        "label": "Where",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "ANG_6E_035",
+    "subject": "anglais",
+    "skill_code": "ANG_INT",
+    "elo_difficulty": 900,
+    "hud_prompt": "Mot interrogatif pour « Quoi » ?",
+    "explanation_flash": "What = Quoi / Que ? !",
+    "targets": [
+      {
+        "label": "What",
+        "is_correct": true
+      },
+      {
+        "label": "Who",
+        "is_correct": false
+      },
+      {
+        "label": "Where",
+        "is_correct": false
+      },
+      {
+        "label": "When",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "ANG_6E_036",
+    "subject": "anglais",
+    "skill_code": "ANG_INT",
+    "elo_difficulty": 880,
+    "hud_prompt": "___ is your name?",
+    "explanation_flash": "What is your name? = Comment t'appelles-tu ?",
+    "targets": [
+      {
+        "label": "What",
+        "is_correct": true
+      },
+      {
+        "label": "Who",
+        "is_correct": false
+      },
+      {
+        "label": "Where",
+        "is_correct": false
+      },
+      {
+        "label": "When",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "ANG_6E_037",
+    "subject": "anglais",
+    "skill_code": "ANG_INT",
+    "elo_difficulty": 900,
+    "hud_prompt": "___ old are you?",
+    "explanation_flash": "How old are you? = Quel âge as-tu ?",
+    "targets": [
+      {
+        "label": "How",
+        "is_correct": true
+      },
+      {
+        "label": "What",
+        "is_correct": false
+      },
+      {
+        "label": "Who",
+        "is_correct": false
+      },
+      {
+        "label": "When",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "ANG_6E_038",
+    "subject": "anglais",
+    "skill_code": "ANG_VOC",
+    "elo_difficulty": 980,
+    "hud_prompt": "Traduire : « bibliothèque »",
+    "explanation_flash": "Bibliothèque = library (CDI) !",
+    "targets": [
+      {
+        "label": "library",
+        "is_correct": true
+      },
+      {
+        "label": "canteen",
+        "is_correct": false
+      },
+      {
+        "label": "gym",
+        "is_correct": false
+      },
+      {
+        "label": "hall",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "ANG_6E_039",
+    "subject": "anglais",
+    "skill_code": "ANG_VOC",
+    "elo_difficulty": 1020,
+    "hud_prompt": "Traduire : « récréation »",
+    "explanation_flash": "La récréation = break (ou playtime) !",
+    "targets": [
+      {
+        "label": "break",
+        "is_correct": true
+      },
+      {
+        "label": "homework",
+        "is_correct": false
+      },
+      {
+        "label": "lesson",
+        "is_correct": false
+      },
+      {
+        "label": "test",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "ANG_6E_040",
+    "subject": "anglais",
+    "skill_code": "ANG_VOC",
+    "elo_difficulty": 960,
+    "hud_prompt": "Traduire : « devoirs »",
+    "explanation_flash": "Les devoirs = homework !",
+    "targets": [
+      {
+        "label": "homework",
+        "is_correct": true
+      },
+      {
+        "label": "classroom",
+        "is_correct": false
+      },
+      {
+        "label": "notebook",
+        "is_correct": false
+      },
+      {
+        "label": "teacher",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "HGS_6E_001",
+    "subject": "histoire_geo_sciences",
+    "skill_code": "HG_PER",
+    "elo_difficulty": 880,
+    "hud_prompt": "Période avant l'écriture ?",
+    "explanation_flash": "L'invention de l'écriture sépare Préhistoire et Antiquité !",
+    "targets": [
+      {
+        "label": "Préhistoire",
+        "is_correct": true
+      },
+      {
+        "label": "Antiquité",
+        "is_correct": false
+      },
+      {
+        "label": "Moyen Âge",
+        "is_correct": false
+      },
+      {
+        "label": "Temps Modernes",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "HGS_6E_002",
+    "subject": "histoire_geo_sciences",
+    "skill_code": "HG_PER",
+    "elo_difficulty": 960,
+    "hud_prompt": "Invention vers -3300 ?",
+    "explanation_flash": "L'écriture naît vers -3300 en Mésopotamie !",
+    "targets": [
+      {
+        "label": "L'écriture",
+        "is_correct": true
+      },
+      {
+        "label": "L'imprimerie",
+        "is_correct": false
+      },
+      {
+        "label": "La vapeur",
+        "is_correct": false
+      },
+      {
+        "label": "La boussole",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "HGS_6E_003",
+    "subject": "histoire_geo_sciences",
+    "skill_code": "HG_PER",
+    "elo_difficulty": 1040,
+    "hud_prompt": "Chute de Rome en 476 ?",
+    "explanation_flash": "476 marque la fin de l'Antiquité et le début du Moyen Âge !",
+    "targets": [
+      {
+        "label": "Moyen Âge",
+        "is_correct": true
+      },
+      {
+        "label": "Antiquité",
+        "is_correct": false
+      },
+      {
+        "label": "Temps Modernes",
+        "is_correct": false
+      },
+      {
+        "label": "Préhistoire",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "HGS_6E_004",
+    "subject": "histoire_geo_sciences",
+    "skill_code": "HG_PER",
+    "elo_difficulty": 1040,
+    "hud_prompt": "Découverte de l'Amérique (1492) ?",
+    "explanation_flash": "1492 ouvre la période des Temps Modernes !",
+    "targets": [
+      {
+        "label": "Temps Modernes",
+        "is_correct": true
+      },
+      {
+        "label": "Moyen Âge",
+        "is_correct": false
+      },
+      {
+        "label": "Antiquité",
+        "is_correct": false
+      },
+      {
+        "label": "Contemporaine",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "HGS_6E_005",
+    "subject": "histoire_geo_sciences",
+    "skill_code": "HG_PER",
+    "elo_difficulty": 1060,
+    "hud_prompt": "Révolution française (1789) ?",
+    "explanation_flash": "1789 ouvre l'Époque Contemporaine !",
+    "targets": [
+      {
+        "label": "Époque Contemporaine",
+        "is_correct": true
+      },
+      {
+        "label": "Moyen Âge",
+        "is_correct": false
+      },
+      {
+        "label": "Temps Modernes",
+        "is_correct": false
+      },
+      {
+        "label": "Antiquité",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "HGS_6E_006",
+    "subject": "histoire_geo_sciences",
+    "skill_code": "HG_PER",
+    "elo_difficulty": 920,
+    "hud_prompt": "Chef gaulois vaincu à Alésia ?",
+    "explanation_flash": "Vercingétorix affronte Jules César en -52 !",
+    "targets": [
+      {
+        "label": "Vercingétorix",
+        "is_correct": true
+      },
+      {
+        "label": "Clovis",
+        "is_correct": false
+      },
+      {
+        "label": "Charlemagne",
+        "is_correct": false
+      },
+      {
+        "label": "Louis XIV",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "HGS_6E_007",
+    "subject": "histoire_geo_sciences",
+    "skill_code": "HG_PER",
+    "elo_difficulty": 980,
+    "hud_prompt": "Premier roi Francs baptisé ?",
+    "explanation_flash": "Clovis est baptisé à Reims vers 496 !",
+    "targets": [
+      {
+        "label": "Clovis",
+        "is_correct": true
+      },
+      {
+        "label": "Charlemagne",
+        "is_correct": false
+      },
+      {
+        "label": "Henri IV",
+        "is_correct": false
+      },
+      {
+        "label": "Napoléon",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "HGS_6E_008",
+    "subject": "histoire_geo_sciences",
+    "skill_code": "HG_PER",
+    "elo_difficulty": 960,
+    "hud_prompt": "Empereur couronné en 800 ?",
+    "explanation_flash": "Charlemagne est couronné empereur en l'an 800 !",
+    "targets": [
+      {
+        "label": "Charlemagne",
+        "is_correct": true
+      },
+      {
+        "label": "Clovis",
+        "is_correct": false
+      },
+      {
+        "label": "François Ier",
+        "is_correct": false
+      },
+      {
+        "label": "Jules César",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "HGS_6E_009",
+    "subject": "histoire_geo_sciences",
+    "skill_code": "HG_PER",
+    "elo_difficulty": 920,
+    "hud_prompt": "Le Roi-Soleil ?",
+    "explanation_flash": "Louis XIV a fait construire Versailles !",
+    "targets": [
+      {
+        "label": "Louis XIV",
+        "is_correct": true
+      },
+      {
+        "label": "Louis XVI",
+        "is_correct": false
+      },
+      {
+        "label": "François Ier",
+        "is_correct": false
+      },
+      {
+        "label": "Henri IV",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "HGS_6E_010",
+    "subject": "histoire_geo_sciences",
+    "skill_code": "HG_PER",
+    "elo_difficulty": 1020,
+    "hud_prompt": "Roi de la Renaissance ?",
+    "explanation_flash": "François Ier invite Léonard de Vinci en France !",
+    "targets": [
+      {
+        "label": "François Ier",
+        "is_correct": true
+      },
+      {
+        "label": "Louis XIV",
+        "is_correct": false
+      },
+      {
+        "label": "Clovis",
+        "is_correct": false
+      },
+      {
+        "label": "Philippe Auguste",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "HGS_6E_011",
+    "subject": "histoire_geo_sciences",
+    "skill_code": "HG_PER",
+    "elo_difficulty": 1020,
+    "hud_prompt": "Inventeur de l'imprimerie (1450) ?",
+    "explanation_flash": "Gutenberg invente l'imprimerie à caractères mobiles !",
+    "targets": [
+      {
+        "label": "Gutenberg",
+        "is_correct": true
+      },
+      {
+        "label": "Pasteur",
+        "is_correct": false
+      },
+      {
+        "label": "Edison",
+        "is_correct": false
+      },
+      {
+        "label": "Galilée",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "HGS_6E_012",
+    "subject": "histoire_geo_sciences",
+    "skill_code": "HG_PER",
+    "elo_difficulty": 960,
+    "hud_prompt": "Vaccin contre la rage ?",
+    "explanation_flash": "Louis Pasteur met au point le vaccin contre la rage !",
+    "targets": [
+      {
+        "label": "Louis Pasteur",
+        "is_correct": true
+      },
+      {
+        "label": "Marie Curie",
+        "is_correct": false
+      },
+      {
+        "label": "Jean Moulin",
+        "is_correct": false
+      },
+      {
+        "label": "De Gaulle",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "HGS_6E_013",
+    "subject": "histoire_geo_sciences",
+    "skill_code": "HG_PER",
+    "elo_difficulty": 940,
+    "hud_prompt": "Date de l'Armistice 1918 ?",
+    "explanation_flash": "Le 11 novembre 1918 termine la 1ère Guerre mondiale !",
+    "targets": [
+      {
+        "label": "11 novembre",
+        "is_correct": true
+      },
+      {
+        "label": "8 mai",
+        "is_correct": false
+      },
+      {
+        "label": "14 juillet",
+        "is_correct": false
+      },
+      {
+        "label": "1er mai",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "HGS_6E_014",
+    "subject": "histoire_geo_sciences",
+    "skill_code": "HG_PER",
+    "elo_difficulty": 880,
+    "hud_prompt": "Symbole de la République ?",
+    "explanation_flash": "Marianne incarne la République française !",
+    "targets": [
+      {
+        "label": "Marianne",
+        "is_correct": true
+      },
+      {
+        "label": "Astérix",
+        "is_correct": false
+      },
+      {
+        "label": "Vercingétorix",
+        "is_correct": false
+      },
+      {
+        "label": "Charlemagne",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "HGS_6E_015",
+    "subject": "histoire_geo_sciences",
+    "skill_code": "HG_GEO",
+    "elo_difficulty": 900,
+    "hud_prompt": "Plus grand océan du monde ?",
+    "explanation_flash": "L'océan Pacifique couvre un tiers de la Terre !",
+    "targets": [
+      {
+        "label": "Pacifique",
+        "is_correct": true
+      },
+      {
+        "label": "Atlantique",
+        "is_correct": false
+      },
+      {
+        "label": "Indien",
+        "is_correct": false
+      },
+      {
+        "label": "Arctique",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "HGS_6E_016",
+    "subject": "histoire_geo_sciences",
+    "skill_code": "HG_GEO",
+    "elo_difficulty": 880,
+    "hud_prompt": "Océan à l'ouest de France ?",
+    "explanation_flash": "La côte ouest française borde l'océan Atlantique !",
+    "targets": [
+      {
+        "label": "Atlantique",
+        "is_correct": true
+      },
+      {
+        "label": "Pacifique",
+        "is_correct": false
+      },
+      {
+        "label": "Indien",
+        "is_correct": false
+      },
+      {
+        "label": "Arctique",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "HGS_6E_017",
+    "subject": "histoire_geo_sciences",
+    "skill_code": "HG_GEO",
+    "elo_difficulty": 920,
+    "hud_prompt": "Nombre de continents sur Terre ?",
+    "explanation_flash": "Amérique, Europe, Afrique, Asie, Océanie, Antarctique !",
+    "targets": [
+      {
+        "label": "6 continents",
+        "is_correct": true
+      },
+      {
+        "label": "4 continents",
+        "is_correct": false
+      },
+      {
+        "label": "8 continents",
+        "is_correct": false
+      },
+      {
+        "label": "3 continents",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "HGS_6E_018",
+    "subject": "histoire_geo_sciences",
+    "skill_code": "HG_GEO",
+    "elo_difficulty": 850,
+    "hud_prompt": "Continent de la France ?",
+    "explanation_flash": "La France métropolitaine est en Europe !",
+    "targets": [
+      {
+        "label": "Europe",
+        "is_correct": true
+      },
+      {
+        "label": "Asie",
+        "is_correct": false
+      },
+      {
+        "label": "Afrique",
+        "is_correct": false
+      },
+      {
+        "label": "Amérique",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "HGS_6E_019",
+    "subject": "histoire_geo_sciences",
+    "skill_code": "HG_GEO",
+    "elo_difficulty": 860,
+    "hud_prompt": "Fleuve traversant Paris ?",
+    "explanation_flash": "Paris est traversée par la Seine !",
+    "targets": [
+      {
+        "label": "La Seine",
+        "is_correct": true
+      },
+      {
+        "label": "Le Rhône",
+        "is_correct": false
+      },
+      {
+        "label": "La Loire",
+        "is_correct": false
+      },
+      {
+        "label": "La Garonne",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "HGS_6E_020",
+    "subject": "histoire_geo_sciences",
+    "skill_code": "HG_GEO",
+    "elo_difficulty": 960,
+    "hud_prompt": "Plus long fleuve de France ?",
+    "explanation_flash": "La Loire mesure environ 1006 km !",
+    "targets": [
+      {
+        "label": "La Loire",
+        "is_correct": true
+      },
+      {
+        "label": "La Seine",
+        "is_correct": false
+      },
+      {
+        "label": "Le Rhin",
+        "is_correct": false
+      },
+      {
+        "label": "Le Rhône",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "HGS_6E_021",
+    "subject": "histoire_geo_sciences",
+    "skill_code": "HG_GEO",
+    "elo_difficulty": 820,
+    "hud_prompt": "Capitale de la France ?",
+    "explanation_flash": "Paris est la capitale politique de la France !",
+    "targets": [
+      {
+        "label": "Paris",
+        "is_correct": true
+      },
+      {
+        "label": "Lyon",
+        "is_correct": false
+      },
+      {
+        "label": "Marseille",
+        "is_correct": false
+      },
+      {
+        "label": "Bordeaux",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "HGS_6E_022",
+    "subject": "histoire_geo_sciences",
+    "skill_code": "HG_GEO",
+    "elo_difficulty": 940,
+    "hud_prompt": "2e plus grande ville française ?",
+    "explanation_flash": "Marseille est la 2e ville de France par sa population !",
+    "targets": [
+      {
+        "label": "Marseille",
+        "is_correct": true
+      },
+      {
+        "label": "Lyon",
+        "is_correct": false
+      },
+      {
+        "label": "Toulouse",
+        "is_correct": false
+      },
+      {
+        "label": "Nice",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "HGS_6E_023",
+    "subject": "histoire_geo_sciences",
+    "skill_code": "HG_GEO",
+    "elo_difficulty": 1040,
+    "hud_prompt": "Métropole célèbre pour les canuts ?",
+    "explanation_flash": "Lyon est au confluent du Rhône et de la Saône !",
+    "targets": [
+      {
+        "label": "Lyon",
+        "is_correct": true
+      },
+      {
+        "label": "Lille",
+        "is_correct": false
+      },
+      {
+        "label": "Nantes",
+        "is_correct": false
+      },
+      {
+        "label": "Strasbourg",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "HGS_6E_024",
+    "subject": "histoire_geo_sciences",
+    "skill_code": "HG_GEO",
+    "elo_difficulty": 1020,
+    "hud_prompt": "Ville du Parlement européen ?",
+    "explanation_flash": "Strasbourg accueille le Parlement européen !",
+    "targets": [
+      {
+        "label": "Strasbourg",
+        "is_correct": true
+      },
+      {
+        "label": "Toulouse",
+        "is_correct": false
+      },
+      {
+        "label": "Rennes",
+        "is_correct": false
+      },
+      {
+        "label": "Nice",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "HGS_6E_025",
+    "subject": "histoire_geo_sciences",
+    "skill_code": "HG_GEO",
+    "elo_difficulty": 920,
+    "hud_prompt": "Chaîne entre France et Espagne ?",
+    "explanation_flash": "Les Pyrénées séparent France et Espagne !",
+    "targets": [
+      {
+        "label": "Pyrénées",
+        "is_correct": true
+      },
+      {
+        "label": "Alpes",
+        "is_correct": false
+      },
+      {
+        "label": "Vosges",
+        "is_correct": false
+      },
+      {
+        "label": "Jura",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "HGS_6E_026",
+    "subject": "histoire_geo_sciences",
+    "skill_code": "HG_GEO",
+    "elo_difficulty": 900,
+    "hud_prompt": "Plus haut sommet des Alpes ?",
+    "explanation_flash": "Le Mont Blanc culmine à environ 4808 m !",
+    "targets": [
+      {
+        "label": "Mont Blanc",
+        "is_correct": true
+      },
+      {
+        "label": "Pic du Midi",
+        "is_correct": false
+      },
+      {
+        "label": "Puy de Dôme",
+        "is_correct": false
+      },
+      {
+        "label": "Mont Ventoux",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "HGS_6E_027",
+    "subject": "histoire_geo_sciences",
+    "skill_code": "HG_GEO",
+    "elo_difficulty": 980,
+    "hud_prompt": "Ligne imaginaire à 0° latitude ?",
+    "explanation_flash": "L'Équateur sépare hémisphère Nord et Sud !",
+    "targets": [
+      {
+        "label": "Équateur",
+        "is_correct": true
+      },
+      {
+        "label": "Tropique",
+        "is_correct": false
+      },
+      {
+        "label": "Méridien",
+        "is_correct": false
+      },
+      {
+        "label": "Pôle Nord",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "HGS_6E_028",
+    "subject": "histoire_geo_sciences",
+    "skill_code": "SCI_SOL",
+    "elo_difficulty": 940,
+    "hud_prompt": "Planète la plus proche Soleil ?",
+    "explanation_flash": "Ordre : Mercure, Vénus, Terre, Mars !",
+    "targets": [
+      {
+        "label": "Mercure",
+        "is_correct": true
+      },
+      {
+        "label": "Vénus",
+        "is_correct": false
+      },
+      {
+        "label": "Mars",
+        "is_correct": false
+      },
+      {
+        "label": "Terre",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "HGS_6E_029",
+    "subject": "histoire_geo_sciences",
+    "skill_code": "SCI_SOL",
+    "elo_difficulty": 860,
+    "hud_prompt": "Surnommée « planète rouge » ?",
+    "explanation_flash": "Mars est rouge à cause de l'oxyde de fer !",
+    "targets": [
+      {
+        "label": "Mars",
+        "is_correct": true
+      },
+      {
+        "label": "Jupiter",
+        "is_correct": false
+      },
+      {
+        "label": "Saturne",
+        "is_correct": false
+      },
+      {
+        "label": "Vénus",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "HGS_6E_030",
+    "subject": "histoire_geo_sciences",
+    "skill_code": "SCI_SOL",
+    "elo_difficulty": 900,
+    "hud_prompt": "Plus grosse planète du système ?",
+    "explanation_flash": "Jupiter est la plus grande géante gazeuse !",
+    "targets": [
+      {
+        "label": "Jupiter",
+        "is_correct": true
+      },
+      {
+        "label": "Saturne",
+        "is_correct": false
+      },
+      {
+        "label": "Uranus",
+        "is_correct": false
+      },
+      {
+        "label": "Neptune",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "HGS_6E_031",
+    "subject": "histoire_geo_sciences",
+    "skill_code": "SCI_SOL",
+    "elo_difficulty": 860,
+    "hud_prompt": "Célèbre pour ses anneaux ?",
+    "explanation_flash": "Saturne possède les anneaux les plus visibles !",
+    "targets": [
+      {
+        "label": "Saturne",
+        "is_correct": true
+      },
+      {
+        "label": "Mars",
+        "is_correct": false
+      },
+      {
+        "label": "Mercure",
+        "is_correct": false
+      },
+      {
+        "label": "Vénus",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "HGS_6E_032",
+    "subject": "histoire_geo_sciences",
+    "skill_code": "SCI_SOL",
+    "elo_difficulty": 840,
+    "hud_prompt": "Étoile au centre du système ?",
+    "explanation_flash": "Le Soleil est une étoile, pas une planète !",
+    "targets": [
+      {
+        "label": "Le Soleil",
+        "is_correct": true
+      },
+      {
+        "label": "La Lune",
+        "is_correct": false
+      },
+      {
+        "label": "Mars",
+        "is_correct": false
+      },
+      {
+        "label": "Étoile Polaire",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "HGS_6E_033",
+    "subject": "histoire_geo_sciences",
+    "skill_code": "SCI_SOL",
+    "elo_difficulty": 920,
+    "hud_prompt": "Planètes autour du Soleil ?",
+    "explanation_flash": "Depuis 2006, il y a 8 planètes officielles !",
+    "targets": [
+      {
+        "label": "8 planètes",
+        "is_correct": true
+      },
+      {
+        "label": "7 planètes",
+        "is_correct": false
+      },
+      {
+        "label": "9 planètes",
+        "is_correct": false
+      },
+      {
+        "label": "10 planètes",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "HGS_6E_034",
+    "subject": "histoire_geo_sciences",
+    "skill_code": "SCI_MAT",
+    "elo_difficulty": 840,
+    "hud_prompt": "État de la glace ?",
+    "explanation_flash": "La glace est de l'eau à l'état solide !",
+    "targets": [
+      {
+        "label": "Solide",
+        "is_correct": true
+      },
+      {
+        "label": "Liquide",
+        "is_correct": false
+      },
+      {
+        "label": "Gazeux",
+        "is_correct": false
+      },
+      {
+        "label": "Plasma",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "HGS_6E_035",
+    "subject": "histoire_geo_sciences",
+    "skill_code": "SCI_MAT",
+    "elo_difficulty": 1080,
+    "hud_prompt": "Passage liquide vers gaz ?",
+    "explanation_flash": "De liquide à gaz, c'est la vaporisation !",
+    "targets": [
+      {
+        "label": "Vaporisation",
+        "is_correct": true
+      },
+      {
+        "label": "Fusion",
+        "is_correct": false
+      },
+      {
+        "label": "Solidification",
+        "is_correct": false
+      },
+      {
+        "label": "Liquéfaction",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "HGS_6E_036",
+    "subject": "histoire_geo_sciences",
+    "skill_code": "SCI_MAT",
+    "elo_difficulty": 1020,
+    "hud_prompt": "Passage solide vers liquide ?",
+    "explanation_flash": "La glace qui fond réalise une fusion !",
+    "targets": [
+      {
+        "label": "Fusion",
+        "is_correct": true
+      },
+      {
+        "label": "Solidification",
+        "is_correct": false
+      },
+      {
+        "label": "Évaporation",
+        "is_correct": false
+      },
+      {
+        "label": "Condensation",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "HGS_6E_037",
+    "subject": "histoire_geo_sciences",
+    "skill_code": "SCI_MAT",
+    "elo_difficulty": 880,
+    "hud_prompt": "Ébullition de l'eau pure ?",
+    "explanation_flash": "L'eau bout à 100 °C sous pression normale !",
+    "targets": [
+      {
+        "label": "100 °C",
+        "is_correct": true
+      },
+      {
+        "label": "0 °C",
+        "is_correct": false
+      },
+      {
+        "label": "50 °C",
+        "is_correct": false
+      },
+      {
+        "label": "200 °C",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "HGS_6E_038",
+    "subject": "histoire_geo_sciences",
+    "skill_code": "SCI_VIV",
+    "elo_difficulty": 1020,
+    "hud_prompt": "Qui produit sa propre matière ?",
+    "explanation_flash": "Les plantes sont les producteurs primaires !",
+    "targets": [
+      {
+        "label": "Végétal vert",
+        "is_correct": true
+      },
+      {
+        "label": "Carnivore",
+        "is_correct": false
+      },
+      {
+        "label": "Herbivore",
+        "is_correct": false
+      },
+      {
+        "label": "Décomposeur",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "HGS_6E_039",
+    "subject": "histoire_geo_sciences",
+    "skill_code": "SCI_VIV",
+    "elo_difficulty": 880,
+    "hud_prompt": "Animal mangeant des plantes ?",
+    "explanation_flash": "Un herbivore se nourrit uniquement de végétaux !",
+    "targets": [
+      {
+        "label": "Herbivore",
+        "is_correct": true
+      },
+      {
+        "label": "Carnivore",
+        "is_correct": false
+      },
+      {
+        "label": "Décomposeur",
+        "is_correct": false
+      },
+      {
+        "label": "Prédateur",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "HGS_6E_040",
+    "subject": "histoire_geo_sciences",
+    "skill_code": "SCI_VIV",
+    "elo_difficulty": 1040,
+    "hud_prompt": "Recycle les feuilles mortes ?",
+    "explanation_flash": "Vers et champignons sont des décomposeurs !",
+    "targets": [
+      {
+        "label": "Décomposeur",
+        "is_correct": true
+      },
+      {
+        "label": "Producteur",
+        "is_correct": false
+      },
+      {
+        "label": "Carnivore",
+        "is_correct": false
+      },
+      {
+        "label": "Frugivore",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_ORG_019",
+    "subject": "vie_au_college",
+    "skill_code": "COL_EDT",
+    "elo_difficulty": 1050,
+    "hud_prompt": "Tu as cours en Salle 204 : quel étage ?",
+    "explanation_flash": "Astuce Collège : Salle 204 = 2ème étage, porte 04 !",
+    "targets": [
+      {
+        "label": "2e étage",
+        "is_correct": true
+      },
+      {
+        "label": "Rez-de-chaussée",
+        "is_correct": false
+      },
+      {
+        "label": "4e étage",
+        "is_correct": false
+      },
+      {
+        "label": "Sous-sol",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_ORG_001",
+    "subject": "vie_au_college",
+    "skill_code": "COL_EDT",
+    "elo_difficulty": 920,
+    "hud_prompt": "Salle 108 : quel étage ?",
+    "explanation_flash": "Le premier chiffre 1 indique le 1er étage !",
+    "targets": [
+      {
+        "label": "1er étage",
+        "is_correct": true
+      },
+      {
+        "label": "2e étage",
+        "is_correct": false
+      },
+      {
+        "label": "Rez-de-chaussée",
+        "is_correct": false
+      },
+      {
+        "label": "3e étage",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_ORG_002",
+    "subject": "vie_au_college",
+    "skill_code": "COL_EDT",
+    "elo_difficulty": 940,
+    "hud_prompt": "Salle 003 : quel niveau ?",
+    "explanation_flash": "Le chiffre 0 ou R indique le rez-de-chaussée !",
+    "targets": [
+      {
+        "label": "Rez-de-chaussée",
+        "is_correct": true
+      },
+      {
+        "label": "1er étage",
+        "is_correct": false
+      },
+      {
+        "label": "2e étage",
+        "is_correct": false
+      },
+      {
+        "label": "3e étage",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_ORG_003",
+    "subject": "vie_au_college",
+    "skill_code": "COL_EDT",
+    "elo_difficulty": 940,
+    "hud_prompt": "Salle 312 : quel étage ?",
+    "explanation_flash": "312 commence par 3 = 3e étage !",
+    "targets": [
+      {
+        "label": "3e étage",
+        "is_correct": true
+      },
+      {
+        "label": "1er étage",
+        "is_correct": false
+      },
+      {
+        "label": "2e étage",
+        "is_correct": false
+      },
+      {
+        "label": "Rez-de-chaussée",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_ORG_004",
+    "subject": "vie_au_college",
+    "skill_code": "COL_EDT",
+    "elo_difficulty": 980,
+    "hud_prompt": "Emploi du temps : Semaine A/B ?",
+    "explanation_flash": "Certains cours ont lieu une semaine sur deux (A ou B) !",
+    "targets": [
+      {
+        "label": "Alternance hebdo",
+        "is_correct": true
+      },
+      {
+        "label": "Même semaine",
+        "is_correct": false
+      },
+      {
+        "label": "Vacances",
+        "is_correct": false
+      },
+      {
+        "label": "Week-end",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_ORG_005",
+    "subject": "vie_au_college",
+    "skill_code": "COL_EDT",
+    "elo_difficulty": 900,
+    "hud_prompt": "Sigle « SVT » signifie ?",
+    "explanation_flash": "SVT = Sciences de la Vie et de la Terre !",
+    "targets": [
+      {
+        "label": "Sciences Vie Terre",
+        "is_correct": true
+      },
+      {
+        "label": "Sport Vitesse",
+        "is_correct": false
+      },
+      {
+        "label": "Salle Vidéo",
+        "is_correct": false
+      },
+      {
+        "label": "Soutien Travail",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_ORG_006",
+    "subject": "vie_au_college",
+    "skill_code": "COL_EDT",
+    "elo_difficulty": 860,
+    "hud_prompt": "Sigle « EPS » signifie ?",
+    "explanation_flash": "EPS = Éducation Physique et Sportive !",
+    "targets": [
+      {
+        "label": "Sport",
+        "is_correct": true
+      },
+      {
+        "label": "Français",
+        "is_correct": false
+      },
+      {
+        "label": "Histoire",
+        "is_correct": false
+      },
+      {
+        "label": "Maths",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_ORG_007",
+    "subject": "vie_au_college",
+    "skill_code": "COL_EDT",
+    "elo_difficulty": 900,
+    "hud_prompt": "Sigle « CDI » désigne ?",
+    "explanation_flash": "CDI = Centre de Documentation et d'Information !",
+    "targets": [
+      {
+        "label": "Bibliothèque",
+        "is_correct": true
+      },
+      {
+        "label": "Cantine",
+        "is_correct": false
+      },
+      {
+        "label": "Infirmerie",
+        "is_correct": false
+      },
+      {
+        "label": "Gymnase",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_ORG_008",
+    "subject": "vie_au_college",
+    "skill_code": "COL_EDT",
+    "elo_difficulty": 940,
+    "hud_prompt": "Sigle « HG-EMC » désigne ?",
+    "explanation_flash": "Histoire-Géographie et Enseignement Moral et Civique !",
+    "targets": [
+      {
+        "label": "Histoire-Géo",
+        "is_correct": true
+      },
+      {
+        "label": "Anglais",
+        "is_correct": false
+      },
+      {
+        "label": "Musique",
+        "is_correct": false
+      },
+      {
+        "label": "Chimie",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_ORG_009",
+    "subject": "vie_au_college",
+    "skill_code": "COL_EDT",
+    "elo_difficulty": 820,
+    "hud_prompt": "Lieu où l'on déjeune ?",
+    "explanation_flash": "On déjeune au self / à la cantine !",
+    "targets": [
+      {
+        "label": "La cantine",
+        "is_correct": true
+      },
+      {
+        "label": "Le CDI",
+        "is_correct": false
+      },
+      {
+        "label": "Vie scolaire",
+        "is_correct": false
+      },
+      {
+        "label": "Secrétariat",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_ORG_010",
+    "subject": "vie_au_college",
+    "skill_code": "COL_EDT",
+    "elo_difficulty": 1020,
+    "hud_prompt": "Cours en « M1 » le matin ?",
+    "explanation_flash": "M1 signifie 1ère heure du Matin (souvent 8h) !",
+    "targets": [
+      {
+        "label": "1ère heure",
+        "is_correct": true
+      },
+      {
+        "label": "Dernière heure",
+        "is_correct": false
+      },
+      {
+        "label": "Récréation",
+        "is_correct": false
+      },
+      {
+        "label": "Midi",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_ORG_011",
+    "subject": "vie_au_college",
+    "skill_code": "COL_EDT",
+    "elo_difficulty": 1040,
+    "hud_prompt": "Cours en « S1 » l'après-midi ?",
+    "explanation_flash": "S1 = 1ère heure du Soir / après-midi !",
+    "targets": [
+      {
+        "label": "1ère heure aprem",
+        "is_correct": true
+      },
+      {
+        "label": "Matin tôt",
+        "is_correct": false
+      },
+      {
+        "label": "Soirée",
+        "is_correct": false
+      },
+      {
+        "label": "Samedi",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_ORG_012",
+    "subject": "vie_au_college",
+    "skill_code": "COL_ADU",
+    "elo_difficulty": 940,
+    "hud_prompt": "Qui gère absences et retards ?",
+    "explanation_flash": "Le CPE dirige la Vie Scolaire (absences, retards) !",
+    "targets": [
+      {
+        "label": "Le CPE",
+        "is_correct": true
+      },
+      {
+        "label": "Le cuisinier",
+        "is_correct": false
+      },
+      {
+        "label": "Le gardien",
+        "is_correct": false
+      },
+      {
+        "label": "Le jardinier",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_ORG_013",
+    "subject": "vie_au_college",
+    "skill_code": "COL_ADU",
+    "elo_difficulty": 920,
+    "hud_prompt": "Qui dirige tout le collège ?",
+    "explanation_flash": "Au collège, le chef d'établissement est le Principal !",
+    "targets": [
+      {
+        "label": "Le Principal",
+        "is_correct": true
+      },
+      {
+        "label": "Le CPE",
+        "is_correct": false
+      },
+      {
+        "label": "L'infirmier",
+        "is_correct": false
+      },
+      {
+        "label": "Le délégué",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_ORG_014",
+    "subject": "vie_au_college",
+    "skill_code": "COL_ADU",
+    "elo_difficulty": 960,
+    "hud_prompt": "Qui aide au CDI ?",
+    "explanation_flash": "Le professeur documentaliste gère le CDI et les livres !",
+    "targets": [
+      {
+        "label": "Documentaliste",
+        "is_correct": true
+      },
+      {
+        "label": "Principal",
+        "is_correct": false
+      },
+      {
+        "label": "Infirmier",
+        "is_correct": false
+      },
+      {
+        "label": "Surveillant",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_ORG_015",
+    "subject": "vie_au_college",
+    "skill_code": "COL_ADU",
+    "elo_difficulty": 900,
+    "hud_prompt": "Référent de ta classe ?",
+    "explanation_flash": "Le Professeur Principal suit ta classe toute l'année !",
+    "targets": [
+      {
+        "label": "Prof Principal",
+        "is_correct": true
+      },
+      {
+        "label": "Documentaliste",
+        "is_correct": false
+      },
+      {
+        "label": "Principal",
+        "is_correct": false
+      },
+      {
+        "label": "Gestionnaire",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_ORG_016",
+    "subject": "vie_au_college",
+    "skill_code": "COL_ADU",
+    "elo_difficulty": 840,
+    "hud_prompt": "Où aller si blessure ?",
+    "explanation_flash": "L'infirmerie accueille les élèves blessés ou malades !",
+    "targets": [
+      {
+        "label": "Infirmerie",
+        "is_correct": true
+      },
+      {
+        "label": "CDI",
+        "is_correct": false
+      },
+      {
+        "label": "Gymnase",
+        "is_correct": false
+      },
+      {
+        "label": "Cantine",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_ORG_017",
+    "subject": "vie_au_college",
+    "skill_code": "COL_ADU",
+    "elo_difficulty": 920,
+    "hud_prompt": "Où déposer billet d'absence ?",
+    "explanation_flash": "Les billets d'absence se déposent à la Vie Scolaire !",
+    "targets": [
+      {
+        "label": "Vie scolaire",
+        "is_correct": true
+      },
+      {
+        "label": "Cantine",
+        "is_correct": false
+      },
+      {
+        "label": "Gymnase",
+        "is_correct": false
+      },
+      {
+        "label": "Laboratoire",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_ORG_018",
+    "subject": "vie_au_college",
+    "skill_code": "COL_ADU",
+    "elo_difficulty": 880,
+    "hud_prompt": "Élève élu représentant classe ?",
+    "explanation_flash": "Deux délégués représentent la classe au conseil !",
+    "targets": [
+      {
+        "label": "Délégué",
+        "is_correct": true
+      },
+      {
+        "label": "Surveillant",
+        "is_correct": false
+      },
+      {
+        "label": "CPE",
+        "is_correct": false
+      },
+      {
+        "label": "Principal",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_ORG_020",
+    "subject": "vie_au_college",
+    "skill_code": "COL_ADU",
+    "elo_difficulty": 1020,
+    "hud_prompt": "Qui encadre la cour ?",
+    "explanation_flash": "Les AED (assistants d'éducation) surveillent cour et permanence !",
+    "targets": [
+      {
+        "label": "Les AED",
+        "is_correct": true
+      },
+      {
+        "label": "Les maires",
+        "is_correct": false
+      },
+      {
+        "label": "Les facteurs",
+        "is_correct": false
+      },
+      {
+        "label": "Les pilotes",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_ORG_021",
+    "subject": "vie_au_college",
+    "skill_code": "COL_SAC",
+    "elo_difficulty": 860,
+    "hud_prompt": "Quand préparer son cartable ?",
+    "explanation_flash": "Préparer son sac la veille évite les oublis du matin !",
+    "targets": [
+      {
+        "label": "La veille",
+        "is_correct": true
+      },
+      {
+        "label": "Dans le bus",
+        "is_correct": false
+      },
+      {
+        "label": "Pendant cours",
+        "is_correct": false
+      },
+      {
+        "label": "À la récré",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_ORG_022",
+    "subject": "vie_au_college",
+    "skill_code": "COL_SAC",
+    "elo_difficulty": 900,
+    "hud_prompt": "Pour alléger son sac ?",
+    "explanation_flash": "Laisse les gros manuels inutiles dans ton casier !",
+    "targets": [
+      {
+        "label": "Utiliser casier",
+        "is_correct": true
+      },
+      {
+        "label": "Tout garder",
+        "is_correct": false
+      },
+      {
+        "label": "Courir vite",
+        "is_correct": false
+      },
+      {
+        "label": "Enlever stylos",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_ORG_023",
+    "subject": "vie_au_college",
+    "skill_code": "COL_SAC",
+    "elo_difficulty": 880,
+    "hud_prompt": "Carnet toujours dans sac ?",
+    "explanation_flash": "Le carnet de correspondance sert de lien avec les parents !",
+    "targets": [
+      {
+        "label": "Correspondance",
+        "is_correct": true
+      },
+      {
+        "label": "Album photo",
+        "is_correct": false
+      },
+      {
+        "label": "BD",
+        "is_correct": false
+      },
+      {
+        "label": "Console",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_ORG_024",
+    "subject": "vie_au_college",
+    "skill_code": "COL_SAC",
+    "elo_difficulty": 840,
+    "hud_prompt": "Où noter ses devoirs ?",
+    "explanation_flash": "On note tous les devoirs dans son agenda ou cahier de texte !",
+    "targets": [
+      {
+        "label": "L'agenda",
+        "is_correct": true
+      },
+      {
+        "label": "La main",
+        "is_correct": false
+      },
+      {
+        "label": "La table",
+        "is_correct": false
+      },
+      {
+        "label": "Le mur",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_ORG_025",
+    "subject": "vie_au_college",
+    "skill_code": "COL_SAC",
+    "elo_difficulty": 840,
+    "hud_prompt": "Avant un cours d'EPS ?",
+    "explanation_flash": "Toujours prévoir baskets et tenue de sport pour l'EPS !",
+    "targets": [
+      {
+        "label": "Tenue sport",
+        "is_correct": true
+      },
+      {
+        "label": "Dictionnaire",
+        "is_correct": false
+      },
+      {
+        "label": "Compas",
+        "is_correct": false
+      },
+      {
+        "label": "Flûte",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_ORG_026",
+    "subject": "vie_au_college",
+    "skill_code": "COL_SAC",
+    "elo_difficulty": 880,
+    "hud_prompt": "En géométrie, indispensable ?",
+    "explanation_flash": "Règle, équerre et compas sont essentiels en géométrie !",
+    "targets": [
+      {
+        "label": "Règle et compas",
+        "is_correct": true
+      },
+      {
+        "label": "Pinceau",
+        "is_correct": false
+      },
+      {
+        "label": "Calculatrice",
+        "is_correct": false
+      },
+      {
+        "label": "Dictionnaire",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_ORG_027",
+    "subject": "vie_au_college",
+    "skill_code": "COL_SAC",
+    "elo_difficulty": 920,
+    "hud_prompt": "Clé oubliée pour cadenas ?",
+    "explanation_flash": "Garde toujours un double de clé du casier chez toi !",
+    "targets": [
+      {
+        "label": "Avoir un double",
+        "is_correct": true
+      },
+      {
+        "label": "Casser casier",
+        "is_correct": false
+      },
+      {
+        "label": "Pleurer",
+        "is_correct": false
+      },
+      {
+        "label": "Partir",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_ORG_028",
+    "subject": "vie_au_college",
+    "skill_code": "COL_SAC",
+    "elo_difficulty": 880,
+    "hud_prompt": "Poids idéal du cartable ?",
+    "explanation_flash": "Ne prendre que les affaires du jour protège ton dos !",
+    "targets": [
+      {
+        "label": "Le plus léger",
+        "is_correct": true
+      },
+      {
+        "label": "Le plus lourd",
+        "is_correct": false
+      },
+      {
+        "label": "20 kg",
+        "is_correct": false
+      },
+      {
+        "label": "Plein",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_ORG_029",
+    "subject": "vie_au_college",
+    "skill_code": "COL_CONS",
+    "elo_difficulty": 960,
+    "hud_prompt": "« Souligne puis recopie » ?",
+    "explanation_flash": "Consigne double : 1) souligner, 2) recopier !",
+    "targets": [
+      {
+        "label": "2 actions",
+        "is_correct": true
+      },
+      {
+        "label": "1 action",
+        "is_correct": false
+      },
+      {
+        "label": "3 actions",
+        "is_correct": false
+      },
+      {
+        "label": "4 actions",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_ORG_030",
+    "subject": "vie_au_college",
+    "skill_code": "COL_CONS",
+    "elo_difficulty": 960,
+    "hud_prompt": "« Entoure et barre l'intrus » ?",
+    "explanation_flash": "Il faut bien réaliser les deux étapes dans l'ordre !",
+    "targets": [
+      {
+        "label": "2 actions",
+        "is_correct": true
+      },
+      {
+        "label": "1 action",
+        "is_correct": false
+      },
+      {
+        "label": "3 actions",
+        "is_correct": false
+      },
+      {
+        "label": "Aucune",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_ORG_031",
+    "subject": "vie_au_college",
+    "skill_code": "COL_CONS",
+    "elo_difficulty": 980,
+    "hud_prompt": "« Justifie ta réponse » signifie ?",
+    "explanation_flash": "Justifier = prouver ou expliquer sa réponse !",
+    "targets": [
+      {
+        "label": "Expliquer pourquoi",
+        "is_correct": true
+      },
+      {
+        "label": "Répondre vite",
+        "is_correct": false
+      },
+      {
+        "label": "Recopier titre",
+        "is_correct": false
+      },
+      {
+        "label": "Effacer",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_ORG_032",
+    "subject": "vie_au_college",
+    "skill_code": "COL_CONS",
+    "elo_difficulty": 940,
+    "hud_prompt": "« Ordre croissant » ?",
+    "explanation_flash": "Croissant = du plus petit vers le plus grand !",
+    "targets": [
+      {
+        "label": "Petit au grand",
+        "is_correct": true
+      },
+      {
+        "label": "Grand au petit",
+        "is_correct": false
+      },
+      {
+        "label": "Au hasard",
+        "is_correct": false
+      },
+      {
+        "label": "Alphabétique",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_ORG_033",
+    "subject": "vie_au_college",
+    "skill_code": "COL_CONS",
+    "elo_difficulty": 940,
+    "hud_prompt": "« Ordre décroissant » ?",
+    "explanation_flash": "Décroissant = du plus grand au plus petit !",
+    "targets": [
+      {
+        "label": "Grand au petit",
+        "is_correct": true
+      },
+      {
+        "label": "Petit au grand",
+        "is_correct": false
+      },
+      {
+        "label": "Au hasard",
+        "is_correct": false
+      },
+      {
+        "label": "Par couleur",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_ORG_034",
+    "subject": "vie_au_college",
+    "skill_code": "COL_CONS",
+    "elo_difficulty": 920,
+    "hud_prompt": "« Cite deux exemples » ?",
+    "explanation_flash": "Citer = nommer précisément le nombre demandé !",
+    "targets": [
+      {
+        "label": "Donner 2 cas",
+        "is_correct": true
+      },
+      {
+        "label": "Tout recopier",
+        "is_correct": false
+      },
+      {
+        "label": "Dessiner",
+        "is_correct": false
+      },
+      {
+        "label": "Résumer",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_ORG_035",
+    "subject": "vie_au_college",
+    "skill_code": "COL_CONS",
+    "elo_difficulty": 860,
+    "hud_prompt": "« Lis avant d'écrire » ?",
+    "explanation_flash": "Toujours lire la consigne en entier avant d'agir !",
+    "targets": [
+      {
+        "label": "Lire d'abord",
+        "is_correct": true
+      },
+      {
+        "label": "Écrire vite",
+        "is_correct": false
+      },
+      {
+        "label": "Sauter question",
+        "is_correct": false
+      },
+      {
+        "label": "Deviner",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_ORG_036",
+    "subject": "vie_au_college",
+    "skill_code": "COL_CONS",
+    "elo_difficulty": 880,
+    "hud_prompt": "« Relis ton brouillon » sert à ?",
+    "explanation_flash": "La relecture repère étourderies et fautes d'accord !",
+    "targets": [
+      {
+        "label": "Corriger fautes",
+        "is_correct": true
+      },
+      {
+        "label": "Perdre temps",
+        "is_correct": false
+      },
+      {
+        "label": "Tout jeter",
+        "is_correct": false
+      },
+      {
+        "label": "Dormir",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_ORG_037",
+    "subject": "vie_au_college",
+    "skill_code": "COL_ADU",
+    "elo_difficulty": 860,
+    "hud_prompt": "En permanence, on doit ?",
+    "explanation_flash": "L'étude / permanence sert à faire ses devoirs au calme !",
+    "targets": [
+      {
+        "label": "Travailler calme",
+        "is_correct": true
+      },
+      {
+        "label": "Crier fort",
+        "is_correct": false
+      },
+      {
+        "label": "Courir",
+        "is_correct": false
+      },
+      {
+        "label": "Jouer ballon",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_ORG_038",
+    "subject": "vie_au_college",
+    "skill_code": "COL_SAC",
+    "elo_difficulty": 880,
+    "hud_prompt": "Devoir donné pour lundi ?",
+    "explanation_flash": "Anticiper les devoirs sur plusieurs jours évite le stress !",
+    "targets": [
+      {
+        "label": "Faire avant lundi",
+        "is_correct": true
+      },
+      {
+        "label": "Faire mardi",
+        "is_correct": false
+      },
+      {
+        "label": "Oublier",
+        "is_correct": false
+      },
+      {
+        "label": "En retard",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_ORG_039",
+    "subject": "vie_au_college",
+    "skill_code": "COL_EDT",
+    "elo_difficulty": 960,
+    "hud_prompt": "Salle 210 à 10h : où aller ?",
+    "explanation_flash": "Salle 210 = 2e étage, porte 10 !",
+    "targets": [
+      {
+        "label": "2e étage",
+        "is_correct": true
+      },
+      {
+        "label": "Rez-de-chaussée",
+        "is_correct": false
+      },
+      {
+        "label": "1er étage",
+        "is_correct": false
+      },
+      {
+        "label": "3e étage",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_ORG_040",
+    "subject": "vie_au_college",
+    "skill_code": "COL_ADU",
+    "elo_difficulty": 880,
+    "hud_prompt": "Pour emprunter un livre ?",
+    "explanation_flash": "Le CDI prête des livres gratuitement aux élèves !",
+    "targets": [
+      {
+        "label": "Aller au CDI",
+        "is_correct": true
+      },
+      {
+        "label": "Salle EPS",
+        "is_correct": false
+      },
+      {
+        "label": "Cantine",
+        "is_correct": false
+      },
+      {
+        "label": "Stade",
+        "is_correct": false
+      }
+    ]
+  }
+]
