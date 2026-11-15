@@ -590,6 +590,160 @@ export function createTarget3DModel(kind: 'drone' | 'crystal' | 'boss'): THREE.G
 }
 
 /**
+ * Construit un PNJ Chibi 3D stylisé pour le mode Exploration du Collège,
+ * teinté selon primaryHex / accentHex avec marqueur flottant doré `!` optionnel.
+ */
+export function createCampusNpc3DModel(
+  primaryHex: string,
+  accentHex: string,
+  hasQuestMarker: boolean
+): THREE.Group {
+  const root = new THREE.Group();
+  const bodyGroup = new THREE.Group();
+  root.add(bodyGroup);
+
+  const primaryColor = new THREE.Color(primaryHex);
+  const accentColor = new THREE.Color(accentHex);
+  const pantsColor = primaryColor.clone().lerp(new THREE.Color(0x0f172a), 0.55);
+  const hairColor = primaryColor.clone().lerp(new THREE.Color(0x1e293b), 0.65);
+
+  const limbs = addBaseChibiLimbs(
+    bodyGroup,
+    primaryColor.getHex(),
+    accentColor.getHex(),
+    pantsColor.getHex(),
+    accentColor.getHex(),
+    0xfed7aa
+  );
+
+  // Chevelure / coiffe stylisée et col accentué
+  const hair = new THREE.Mesh(
+    new THREE.SphereGeometry(0.47, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.54),
+    toonMat(hairColor.getHex())
+  );
+  hair.position.y = 0.05;
+  hair.castShadow = true;
+  limbs.headGroup.add(hair);
+
+  const collar = new THREE.Mesh(
+    new THREE.TorusGeometry(0.25, 0.055, 8, 18),
+    toonMat(accentColor.getHex(), accentColor.getHex(), 0.15)
+  );
+  collar.rotation.x = Math.PI / 2;
+  collar.position.y = 0.99;
+  bodyGroup.add(collar);
+
+  // Badge / tablette tenue par le PNJ
+  const tablet = new THREE.Mesh(
+    new THREE.BoxGeometry(0.18, 0.24, 0.05),
+    toonMat(accentColor.getHex(), accentColor.getHex(), 0.2)
+  );
+  tablet.position.set(0, -0.3, 0.16);
+  limbs.rightArm.add(tablet);
+
+  // Socle discret au sol
+  const pedestal = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.54, 0.6, 0.06, 22),
+    toonMat(0x1e293b)
+  );
+  pedestal.position.y = 0.03;
+  pedestal.receiveShadow = true;
+  root.add(pedestal);
+
+  const pedestalRing = new THREE.Mesh(
+    new THREE.RingGeometry(0.54, 0.63, 24),
+    new THREE.MeshBasicMaterial({
+      color: accentColor,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.78,
+    })
+  );
+  pedestalRing.rotation.x = -Math.PI / 2;
+  pedestalRing.position.y = 0.04;
+  root.add(pedestalRing);
+
+  root.userData.bodyGroup = bodyGroup;
+  root.userData.headGroup = limbs.headGroup;
+
+  if (hasQuestMarker) {
+    const questMarker = new THREE.Group();
+    questMarker.name = 'questMarker';
+    questMarker.position.set(0, 2.28, 0);
+
+    const goldMat = toonMat(0xfacc15, 0xf59e0b, 0.75);
+    const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.045, 0.42, 14), goldMat);
+    bar.position.y = 0.22;
+    questMarker.add(bar);
+
+    const dot = new THREE.Mesh(new THREE.SphereGeometry(0.09, 12, 12), goldMat);
+    dot.position.y = -0.1;
+    questMarker.add(dot);
+
+    root.add(questMarker);
+    root.userData.questMarker = questMarker;
+    root.userData.questMarkerBaseY = 2.28;
+  }
+
+  return root;
+}
+
+/**
+ * Construit une médaille / cristal doré flottant entouré d'un anneau lumineux cyan/or
+ * à collecter dans les salles du collège.
+ */
+export function createCampusBadge3DModel(): THREE.Group {
+  const group = new THREE.Group();
+  group.name = 'campusBadge';
+
+  const core = new THREE.Mesh(
+    new THREE.OctahedronGeometry(0.38, 0),
+    new THREE.MeshStandardMaterial({
+      color: 0xfacc15,
+      emissive: 0xf59e0b,
+      emissiveIntensity: 0.6,
+      roughness: 0.25,
+      metalness: 0.35,
+    })
+  );
+  core.position.y = 0.9;
+  core.scale.set(1, 1.25, 0.65);
+  core.castShadow = true;
+  group.add(core);
+
+  const medalRing = new THREE.Mesh(
+    new THREE.TorusGeometry(0.46, 0.055, 10, 24),
+    toonMat(0xfef08a, 0xfacc15, 0.45)
+  );
+  medalRing.position.y = 0.9;
+  group.add(medalRing);
+
+  const cyanAuraRing = new THREE.Mesh(
+    new THREE.TorusGeometry(0.62, 0.04, 8, 28),
+    toonMat(0x22d3ee, 0x06b6d4, 0.65)
+  );
+  cyanAuraRing.rotation.x = Math.PI / 2;
+  cyanAuraRing.position.y = 0.85;
+  group.add(cyanAuraRing);
+
+  const groundRing = new THREE.Mesh(
+    new THREE.RingGeometry(0.48, 0.68, 24),
+    new THREE.MeshBasicMaterial({
+      color: 0x38bdf8,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.65,
+    })
+  );
+  groundRing.rotation.x = -Math.PI / 2;
+  groundRing.position.y = 0.04;
+  group.add(groundRing);
+
+  group.userData.core = core;
+  return group;
+}
+
+/**
  * Libère proprement les géométries et matériaux d'un arbre Three.js.
  */
 export function disposeObject3D(root: THREE.Object3D): void {
