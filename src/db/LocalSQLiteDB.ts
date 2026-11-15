@@ -57,7 +57,7 @@ const STORAGE_KEY = 'brawl_college_sqlite_v1';
 const IDB_NAME = 'BrawlCollegeSQLiteDB';
 const IDB_STORE = 'sqlite_snapshots';
 const IDB_KEY = 'main_db';
-const MAX_BRAWLER_LEVEL = 10;
+const MAX_BRAWLER_LEVEL = 11;
 
 interface ISqliteInternalState {
   player_profile: IPlayerProfile;
@@ -629,6 +629,35 @@ export class LocalSQLiteDB {
       this.state.player_profile.parent_pin_hash = newPin;
       this.persist();
     }
+  }
+
+  /**
+   * Réinitialise complètement le profil élève, l'Elo, la télémétrie, les quêtes
+   * et les réglages locaux FTUE / RPG / Live-Ops / Safe-Space.
+   */
+  public resetProfileToDefault(): void {
+    this.state = createDefaultState();
+    if (typeof localStorage !== 'undefined') {
+      const keysToReset = [
+        'brawl_college_ftue_registered_v1',
+        'brawl_college_rpg_levels_v1',
+        'brawl_college_pass_v1',
+        'brawl_college_collector_album_v1',
+        'brawl_college_liveops_quests_v1',
+        'brawl_college_mood_weather_v1',
+        'brawl_college_prevention_topics_v1',
+        'brawl_college_sensory_profile_v1',
+        'brawl_college_tts_settings_v1',
+      ];
+      for (const key of keysToReset) {
+        try {
+          localStorage.removeItem(key);
+        } catch {
+          // Ignore storage restrictions
+        }
+      }
+    }
+    this.persist();
   }
 
   public getSkillMastery(skillCode: string): ISkillMastery | undefined {

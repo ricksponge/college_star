@@ -8,6 +8,7 @@ import type {
   StarrDropRarity,
   SubjectCategory,
 } from '../types/cctp';
+import { SpeechReader } from '../accessibility/SpeechReader';
 import { ARENA_EVENTS } from './ArenaScene';
 import { soundFX } from '../engine/SoundFX';
 import { RARITY_COLORS, TEXTURE_KEYS, TextureFactory } from '../engine/TextureFactory';
@@ -111,7 +112,13 @@ export class HUDScene extends Phaser.Scene {
 
   // Boutons utilitaires haut droite
   private muteBtn!: Phaser.GameObjects.Text;
+  private quitBtn!: Phaser.GameObjects.Text;
+  private hintBtn!: Phaser.GameObjects.Text;
+  private readBtn!: Phaser.GameObjects.Text;
   private starrShortcutBtn!: Phaser.GameObjects.Text;
+  private speechReader = new SpeechReader();
+  private lastQuestionPrompt = '';
+  private currentQuestion: IQuestion | null = null;
 
   // Modale Casier Mystère à 5 clics
   private starrOverlay!: Phaser.GameObjects.Container;
@@ -338,10 +345,28 @@ export class HUDScene extends Phaser.Scene {
   }
 
   private createUtilityButtons(): void {
-    this.muteBtn = this.add
-      .text(16, 14, '🔊 SON', {
+    this.quitBtn = this.add
+      .text(16, 14, '✖ QUITTER', {
         fontFamily: FONT_SUPERCELL,
-        fontSize: '15px',
+        fontSize: '14px',
+        color: '#fecaca',
+        backgroundColor: 'rgba(127, 29, 29, 0.9)',
+        padding: { left: 10, right: 10, top: 6, bottom: 6 },
+        stroke: '#020617',
+        strokeThickness: 4,
+      })
+      .setDepth(210)
+      .setInteractive({ useHandCursor: true });
+
+    this.quitBtn.on('pointerdown', () => {
+      this.speechReader.stop();
+      this.game.events.emit(ARENA_EVENTS.HUD_QUIT_REQUESTED);
+    });
+
+    this.muteBtn = this.add
+      .text(112, 14, '🔊 SON', {
+        fontFamily: FONT_SUPERCELL,
+        fontSize: '14px',
         color: '#f8fafc',
         backgroundColor: 'rgba(15, 23, 42, 0.85)',
         padding: { left: 10, right: 10, top: 6, bottom: 6 },
@@ -354,6 +379,44 @@ export class HUDScene extends Phaser.Scene {
     this.muteBtn.on('pointerdown', () => {
       const muted = soundFX.toggleMuted();
       this.muteBtn.setText(muted ? '🔇 MUET' : '🔊 SON');
+    });
+
+    this.hintBtn = this.add
+      .text(16, 52, '💡 INDICE', {
+        fontFamily: FONT_SUPERCELL,
+        fontSize: '14px',
+        color: '#fef08a',
+        backgroundColor: 'rgba(30, 58, 138, 0.9)',
+        padding: { left: 10, right: 10, top: 6, bottom: 6 },
+        stroke: '#020617',
+        strokeThickness: 4,
+      })
+      .setDepth(210)
+      .setInteractive({ useHandCursor: true });
+
+    this.hintBtn.on('pointerdown', () => {
+      this.game.events.emit(ARENA_EVENTS.HUD_HINT_REQUESTED);
+    });
+
+    this.readBtn = this.add
+      .text(112, 52, '🗣️ LIRE', {
+        fontFamily: FONT_SUPERCELL,
+        fontSize: '14px',
+        color: '#bae6fd',
+        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+        padding: { left: 10, right: 10, top: 6, bottom: 6 },
+        stroke: '#020617',
+        strokeThickness: 4,
+      })
+      .setDepth(210)
+      .setInteractive({ useHandCursor: true });
+
+    this.readBtn.on('pointerdown', () => {
+      if (this.currentQuestion) {
+        this.speechReader.speakQuestion(this.currentQuestion, true);
+      } else if (this.lastQuestionPrompt) {
+        this.speechReader.speakText(this.lastQuestionPrompt);
+      }
     });
 
     this.starrShortcutBtn = this.add
@@ -665,10 +728,13 @@ export class HUDScene extends Phaser.Scene {
 
   private bindArenaEvents(): void {
     const onQuestionChanged = (payload: { question: IQuestion; mode: IGameMode }) => {
+      this.currentQuestion = payload.question;
+      this.lastQuestionPrompt = payload.question.hud_prompt;
       const meta = SUBJECT_BADGE_MAP[payload.question.subject] ?? SUBJECT_BADGE_MAP.vie_au_college;
       this.subjectPillText.setText(meta.label);
       this.subjectPillText.setBackgroundColor(meta.color);
       this.questionPromptText.setText(payload.question.hud_prompt);
+      this.speechReader.speakQuestion(payload.question, false);
 
       gsap.fromTo(
         this.questionBanner,
@@ -715,19 +781,41 @@ export class HUDScene extends Phaser.Scene {
       });
     };
 
+    const onSensoryFreeze = (payload: { durationMs: number }) => {
+      this.flashToastBg.clear();
+      this.flashToastBg.fillStyle(0x1e3a8a, 0.94);
+      this.flashToastBg.lineStyle(3, 0x38bdf8, 1);
+      this.flashToastBg.fillRoundedRect(-250, -32, 500, 64, 14);
+      this.flashToastBg.strokeRoundedRect(-250, -32, 500, 64, 14);
+
+      this.flashToastText.setText('⏸️ PAUSE LECTURE (3s) — Lis calmement la consigne !');
+      this.flashToast.setVisible(true);
+
+      this.flashTimerEvent?.remove(false);
+      this.flashTimerEvent = this.time.delayedCall(Math.min(2800, payload.durationMs), () => {
+        this.flashToast.setVisible(false);
+      });
+    };
+
     const onMatchVictory = (payload: { suggestedRarity: StarrDropRarity }) => {
-      this.openStarrDropModal(payload.suggestedRarity);
+      this.speechReader.stop();
+      if (!this.game.registry.get('externalMatchEndUI')) {
+        this.openStarrDropModal(payload.suggestedRarity);
+      }
     };
 
     this.game.events.on(ARENA_EVENTS.ARENA_QUESTION_CHANGED, onQuestionChanged);
     this.game.events.on(ARENA_EVENTS.ARENA_STATS_UPDATED, onStatsUpdated);
     this.game.events.on(ARENA_EVENTS.ARENA_EXPLANATION_FLASH, onExplanationFlash);
+    this.game.events.on(ARENA_EVENTS.ARENA_SENSORY_FREEZE, onSensoryFreeze);
     this.game.events.on(ARENA_EVENTS.ARENA_MATCH_VICTORY, onMatchVictory);
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.speechReader.stop();
       this.game.events.off(ARENA_EVENTS.ARENA_QUESTION_CHANGED, onQuestionChanged);
       this.game.events.off(ARENA_EVENTS.ARENA_STATS_UPDATED, onStatsUpdated);
       this.game.events.off(ARENA_EVENTS.ARENA_EXPLANATION_FLASH, onExplanationFlash);
+      this.game.events.off(ARENA_EVENTS.ARENA_SENSORY_FREEZE, onSensoryFreeze);
       this.game.events.off(ARENA_EVENTS.ARENA_MATCH_VICTORY, onMatchVictory);
     });
   }
@@ -803,7 +891,10 @@ export class HUDScene extends Phaser.Scene {
     this.superBtnContainer.setPosition(width - 82, height - 92);
     this.gadgetBtnContainer.setPosition(width - 186, height - 68);
 
-    this.muteBtn.setPosition(16, 14);
+    this.quitBtn.setPosition(16, 14);
+    this.muteBtn.setPosition(112, 14);
+    this.hintBtn.setPosition(16, 52);
+    this.readBtn.setPosition(112, 52);
     this.starrShortcutBtn.setPosition(width - 16, 14);
 
     this.starrOverlay.setPosition(cx, height * 0.5);

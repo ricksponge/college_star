@@ -5,6 +5,7 @@ import type {
   SubjectCategory,
 } from '../types/cctp';
 import type { LocalSQLiteDB } from '../db/LocalSQLiteDB';
+import { ParentWellbeingAlert } from '../safespace/ParentWellbeingAlert';
 
 const SUBJECT_LABELS: Record<SubjectCategory, string> = {
   mathematiques: 'Maths',
@@ -311,6 +312,7 @@ export class ParentDashboard {
           <div style="display:flex; flex-wrap:wrap; gap:8px;">
             <button id="pd-export-sql" type="button" style="background:#1e293b; color:#facc15; border:1px solid #facc15; border-radius:8px; padding:7px 12px; cursor:pointer; font-weight:700; font-size:12px;">Exporter SQLite</button>
             <button id="pd-download-sql" type="button" style="background:#1e293b; color:#4ade80; border:1px solid #4ade80; border-radius:8px; padding:7px 12px; cursor:pointer; font-weight:700; font-size:12px;">⬇ Télécharger .sql</button>
+            <button id="pd-reset-profile" type="button" style="background:#7f1d1d; color:#fecaca; border:1px solid #ef4444; border-radius:8px; padding:7px 12px; cursor:pointer; font-weight:700; font-size:12px;">🗑️ Réinitialiser Profil</button>
             <button id="pd-close-btn" type="button" style="background:#334155; color:#fff; border:none; border-radius:8px; padding:7px 14px; cursor:pointer; font-weight:700;">Fermer</button>
           </div>
         </div>
@@ -405,6 +407,10 @@ export class ParentDashboard {
 
         ${this.buildCampusExplorationSectionHtml(questProgress)}
 
+        <div style="margin-bottom:16px;">
+          ${new ParentWellbeingAlert().renderWellbeingTabHtml()}
+        </div>
+
         <div style="background:#1e293b; border-radius:14px; padding:14px; border:1px solid #334155;">
           <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
             <h3 style="margin:0; font-size:14px; color:#e2e8f0;">Télémétrie Récente (${logs.length} derniers tirs)</h3>
@@ -474,6 +480,27 @@ export class ParentDashboard {
       });
 
       modal.querySelector('#pd-close-btn')?.addEventListener('click', closeDashboard);
+
+      let resetArmed = false;
+      const resetBtn = modal.querySelector<HTMLButtonElement>('#pd-reset-profile');
+      resetBtn?.addEventListener('click', () => {
+        if (!resetArmed) {
+          resetArmed = true;
+          resetBtn.textContent = '⚠️ Confirmer Reset Complet';
+          resetBtn.style.background = '#dc2626';
+          window.setTimeout(() => {
+            if (resetArmed && resetBtn.isConnected) {
+              resetArmed = false;
+              resetBtn.textContent = '🗑️ Réinitialiser Profil';
+              resetBtn.style.background = '#7f1d1d';
+            }
+          }, 4000);
+          return;
+        }
+        this.db.resetProfileToDefault();
+        closeDashboard();
+        window.location.reload();
+      });
 
       modal.querySelector('#pd-export-sql')?.addEventListener('click', () => {
         const pre = modal.querySelector<HTMLPreElement>('#pd-sql-preview');

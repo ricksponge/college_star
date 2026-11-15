@@ -139,14 +139,15 @@ export type GameModeId =
   | 'MATCH_DES_ACCORDS'
   | 'INTERRO_SURPRISE'
   | 'CHANGEMENT_DE_SALLE'
-  | 'CONSEIL_DE_CLASSE';
+  | 'CONSEIL_DE_CLASSE'
+  | 'LES_GARDIENS_DE_LA_RECRE';
 
 export type GameModeFormat = '3v3' | 'SOLO_10' | 'SOLO_COOP' | 'PVE_BOSS';
 
 export interface IGameMode {
   id: GameModeId;
-  /** Numéro du mode dans le CCTP (1 à 5) */
-  mode_number: 1 | 2 | 3 | 4 | 5;
+  /** Numéro du mode dans le CCTP (1 à 6) */
+  mode_number: 1 | 2 | 3 | 4 | 5 | 6;
   name: string;
   inspired_by: string;
   format: GameModeFormat;

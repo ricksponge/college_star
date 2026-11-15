@@ -125,6 +125,24 @@ export const MODE_ARENA_RULES: Record<GameModeId, IModeArenaRules> = {
     defaultSubject: 'anglais',
     bannerTag: '👑 BOSS PVE',
   },
+  LES_GARDIENS_DE_LA_RECRE: {
+    mode: {
+      id: 'LES_GARDIENS_DE_LA_RECRE',
+      mode_number: 6,
+      name: 'Les Gardiens de la Récré',
+      inspired_by: 'Coopération Bienveillante & Prévention',
+      format: '3v3',
+      duration_seconds: 120,
+      description: 'Dissipe les nuages de rumeurs et protège la cour avec des choix solidaires.',
+      victory_condition: 'Atteindre 12 gestes protecteurs et préserver le moral de la cour.',
+    },
+    objectiveTarget: 12,
+    targetSpeedFactor: 0.9,
+    primaryColorHex: 0x38bdf8,
+    accentColorHex: 0x4ade80,
+    defaultSubject: 'vie_au_college',
+    bannerTag: '🛡️ GARDIENS COOP',
+  },
 };
 
 export const PHASER_BRAWLERS: Record<BrawlerId, IBrawler> = {

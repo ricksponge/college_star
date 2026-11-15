@@ -55,6 +55,11 @@ const DEFAULT_MODE_SQUADS: Record<GameModeId, IExamSquadOpponent[]> = {
     { name: 'Giga-Fraction', title: 'Boss du Conseil', icon: '👑', accentColor: '#dc2626', powerRating: 1250 },
     { name: 'Mur Laser', title: 'Épreuve Ultime', icon: '🔺', accentColor: '#f97316', powerRating: 1180 },
   ],
+  LES_GARDIENS_DE_LA_RECRE: [
+    { name: 'Nuage Moquerie', title: 'Rumeur à Dissiper', icon: '☁️', accentColor: '#64748b', powerRating: 960 },
+    { name: 'Mur du Silence', title: 'Isolement', icon: '🧱', accentColor: '#38bdf8', powerRating: 990 },
+    { name: 'Rumeur Express', title: 'Propagation Numérique', icon: '📱', accentColor: '#818cf8', powerRating: 1010 },
+  ],
 };
 
 function escapeHtml(raw: string): string {

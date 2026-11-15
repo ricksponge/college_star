@@ -6,6 +6,12 @@ import type {
   SubjectCategory,
 } from '../types/cctp';
 import { INITIAL_QUESTIONS_200 } from '../data/questionsBank';
+import { PREVENTION_QUESTIONS_100 } from './PreventionQuestionBank';
+
+export const ALL_QUESTIONS_300: IQuestion[] = [
+  ...INITIAL_QUESTIONS_200,
+  ...PREVENTION_QUESTIONS_100,
+];
 import {
   computeTargetSpeedMultiplier,
   ELO_DEFAULT,
@@ -82,7 +88,7 @@ export class QuestionProvider {
   private readonly pendingReviewStages = new Map<string, 'J+1' | 'J+3'>();
   private consecutiveFailures = 0;
 
-  constructor(questions: IQuestion[] = INITIAL_QUESTIONS_200) {
+  constructor(questions: IQuestion[] = ALL_QUESTIONS_300) {
     this.questions = questions;
   }
 

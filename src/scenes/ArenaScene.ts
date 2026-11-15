@@ -7,7 +7,14 @@ import type {
   IQuestion,
   IQuestionTarget,
   StarrDropRarity,
+  SubjectCategory,
 } from '../types/cctp';
+import { AntiTiltGuard } from '../accessibility/AntiTiltGuard';
+import { SensoryProfile } from '../accessibility/SensoryProfile';
+import { AnswerDroneDirector, type IAnswerDroneEntity } from '../ai/AnswerDroneAI';
+import type { IIncomingProjectile, ISteeringEnvironment } from '../ai/SteeringBehaviors';
+import { KillstreakAnnouncer } from '../director/KillstreakAnnouncer';
+import { VictorySlowMo } from '../director/VictorySlowMo';
 import {
   computePhaserCombatImpact,
   FALLBACK_ARENA_QUESTIONS,
@@ -16,6 +23,14 @@ import {
   type IModeArenaRules,
 } from '../engine/SoundFX';
 import { TEXTURE_KEYS, TextureFactory } from '../engine/TextureFactory';
+import { GuardiansModeSession } from '../modes/Mode6Guardians';
+import {
+  GadgetSystem,
+  getDefaultGadgetForBrawler,
+  type SchoolGadgetId,
+} from '../rpg/GadgetSystem';
+import { StarPowerSystem } from '../rpg/StarPowerSystem';
+import { PREVENTION_QUESTIONS_100 } from '../services/PreventionQuestionBank';
 
 export const ISO_TILT_DEG = 50;
 export const ISO_Y_SCALE = Math.cos((ISO_TILT_DEG * Math.PI) / 180); // ~0.6428
@@ -28,9 +43,13 @@ export const ARENA_EVENTS = {
   HUD_GADGET_TRIGGER: 'hud:gadget-trigger',
   HUD_SWITCH_BRAWLER: 'hud:switch-brawler',
   HUD_SWITCH_MODE: 'hud:switch-mode',
+  HUD_QUIT_REQUESTED: 'hud:quit-requested',
+  HUD_HINT_REQUESTED: 'hud:hint-requested',
   ARENA_QUESTION_CHANGED: 'arena:question-changed',
   ARENA_STATS_UPDATED: 'arena:stats-updated',
   ARENA_EXPLANATION_FLASH: 'arena:explanation-flash',
+  ARENA_KILLSTREAK: 'arena:killstreak',
+  ARENA_SENSORY_FREEZE: 'arena:sensory-freeze',
   ARENA_MATCH_VICTORY: 'arena:match-victory',
 } as const;
 
@@ -38,8 +57,22 @@ export interface IArenaSceneInitData {
   brawlerId?: BrawlerId;
   brawlerLevel?: number;
   modeId?: GameModeId;
+  playerNickname?: string;
   questions?: IQuestion[];
-  onMatchFinished?: (result: { won: boolean; objectiveScore: number; modeId: GameModeId }) => void;
+  sensoryProfile?: SensoryProfile;
+  antiTiltGuard?: AntiTiltGuard;
+  selectedGadgetId?: SchoolGadgetId;
+  onQuitRequested?: () => void;
+  onHintRequested?: (question: IQuestion) => void;
+  onRequestNextQuestion?: (preferredSubject: SubjectCategory) => IQuestion | null;
+  onMatchFinished?: (result: {
+    won: boolean;
+    objectiveScore: number;
+    correctHits: number;
+    fastReflexHits: number;
+    missedQuestions: IQuestion[];
+    modeId: GameModeId;
+  }) => void;
   onAttemptRecorded?: (payload: {
     question: IQuestion;
     isCorrect: boolean;
@@ -144,6 +177,7 @@ interface ITargetRobotEntity {
   hpFill: Phaser.GameObjects.Graphics;
   labelBadge: Phaser.GameObjects.Text;
   target: IQuestionTarget;
+  aiId?: string;
   hp: number;
   maxHp: number;
   vx: number;
@@ -168,6 +202,22 @@ const AMMO_RELOAD_PER_SEC = 0.78;
 const SUPER_READY_GLOW_COLOR = 0xfacc15;
 const NORMAL_RING_COLOR = 0x38bdf8;
 
+const ARENA_STEERING_ENV: ISteeringEnvironment = {
+  bounds: { minX: 90, minY: 110, maxX: WORLD_WIDTH - 90, maxY: WORLD_HEIGHT - 110 },
+  obstacles: [
+    { id: 'wall_nw', x: 430, y: 310, radius: 44, kind: 'wall' },
+    { id: 'wall_ne', x: 1170, y: 310, radius: 44, kind: 'wall' },
+    { id: 'wall_sw', x: 430, y: 730, radius: 44, kind: 'wall' },
+    { id: 'wall_se', x: 1170, y: 730, radius: 44, kind: 'wall' },
+    { id: 'crate_n', x: 800, y: 245, radius: 40, kind: 'crate' },
+    { id: 'crate_s', x: 800, y: 795, radius: 40, kind: 'crate' },
+  ],
+  bushes: [
+    { id: 'bush_w', x: 250, y: 520, radius: 54 },
+    { id: 'bush_e', x: 1350, y: 520, radius: 54 },
+  ],
+};
+
 export class ArenaScene extends Phaser.Scene {
   private initData: IArenaSceneInitData = {};
   private brawler: IBrawler = ModeRulesConnector.getBrawler('TIMO');
@@ -177,6 +227,23 @@ export class ArenaScene extends Phaser.Scene {
   private questionCursor = 0;
   private currentQuestion: IQuestion = FALLBACK_ARENA_QUESTIONS[0];
   private questionShownAtMs = 0;
+
+  private sensoryProfile?: SensoryProfile;
+  private antiTiltGuard?: AntiTiltGuard;
+  private gadgetSystem = new GadgetSystem('GOMME_MAGIQUE');
+  private starPowerSystem = new StarPowerSystem();
+  private killstreakAnnouncer = new KillstreakAnnouncer();
+  private victorySlowMo = new VictorySlowMo();
+  private droneDirector = new AnswerDroneDirector();
+  private guardiansSession: GuardiansModeSession | null = null;
+  private droneAiEntities = new Map<string, IAnswerDroneEntity>();
+
+  private correctHitsCount = 0;
+  private fastReflexHitsCount = 0;
+  private missedQuestions: IQuestion[] = [];
+  private bonusSpeedUntilMs = 0;
+  private bonusShieldHp = 0;
+  private pendingSlowMoWon: boolean | null = null;
 
   private heroContainer!: Phaser.GameObjects.Container;
   private heroBody!: Phaser.Physics.Arcade.Body;
@@ -227,6 +294,7 @@ export class ArenaScene extends Phaser.Scene {
     SPACE: Phaser.Input.Keyboard.Key;
     E: Phaser.Input.Keyboard.Key;
     Q: Phaser.Input.Keyboard.Key;
+    H: Phaser.Input.Keyboard.Key;
   };
 
   constructor() {
@@ -240,16 +308,42 @@ export class ArenaScene extends Phaser.Scene {
     this.modeRules = ModeRulesConnector.getRules(
       this.initData.modeId ?? 'CHASSE_AUX_BONNES_NOTES'
     );
-    this.questionsPool =
+
+    const poolFromRegistry = this.registry.get('questionsPool300') as IQuestion[] | undefined;
+    const rawPool =
       this.initData.questions && this.initData.questions.length > 0
         ? this.initData.questions
-        : FALLBACK_ARENA_QUESTIONS;
+        : poolFromRegistry && poolFromRegistry.length > 0
+          ? poolFromRegistry
+          : FALLBACK_ARENA_QUESTIONS;
+
+    if (this.modeRules.mode.id === 'LES_GARDIENS_DE_LA_RECRE') {
+      this.questionsPool = [...PREVENTION_QUESTIONS_100, ...rawPool];
+      this.guardiansSession = new GuardiansModeSession();
+    } else {
+      this.questionsPool = rawPool;
+      this.guardiansSession = null;
+    }
+
+    this.sensoryProfile =
+      this.initData.sensoryProfile ??
+      (this.registry.get('sensoryProfile') as SensoryProfile | undefined);
+    this.antiTiltGuard = this.initData.antiTiltGuard ?? new AntiTiltGuard();
+    this.antiTiltGuard.reset();
+
+    this.gadgetSystem.resetForNewMatch(
+      this.initData.selectedGadgetId ?? getDefaultGadgetForBrawler(this.brawler.id)
+    );
+    this.killstreakAnnouncer.reset();
+    this.victorySlowMo.reset();
+    this.droneAiEntities.clear();
+    this.droneDirector.setCalmMode(Boolean(this.sensoryProfile?.getConfig().tsaSensoryComfort));
 
     this.maxHp = Math.round(this.brawler.base_hp * (1 + 0.08 * (this.brawlerLevel - 1)));
     this.hp = this.maxHp;
     this.ammo = this.brawler.max_ammo_bars;
     this.superPct = 0;
-    this.gadgetCharges = this.brawler.gadget.charges_per_match;
+    this.gadgetCharges = this.gadgetSystem.getHudSnapshot().remainingCharges;
     this.consecutiveHits = 0;
     this.comboMultiplier = 1.0;
     this.objectiveScore = 0;
@@ -260,6 +354,12 @@ export class ArenaScene extends Phaser.Scene {
     this.activeProjectiles = [];
     this.targetRobots = [];
     this.questionCursor = 0;
+    this.correctHitsCount = 0;
+    this.fastReflexHitsCount = 0;
+    this.missedQuestions = [];
+    this.bonusSpeedUntilMs = 0;
+    this.bonusShieldHp = 0;
+    this.pendingSlowMoWon = null;
   }
 
   public create(): void {
@@ -267,7 +367,8 @@ export class ArenaScene extends Phaser.Scene {
 
     this.physics.world.setBounds(48, 60, WORLD_WIDTH - 96, WORLD_HEIGHT - 120);
     this.cameras.main.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
-    this.cameras.main.setBackgroundColor('#081326');
+    const calmPalette = Boolean(this.sensoryProfile?.getConfig().calmColorPalette);
+    this.cameras.main.setBackgroundColor(calmPalette ? '#0f172a' : '#081326');
 
     this.buildIsometricFloor50();
     this.buildArenaWalls3D();
@@ -282,16 +383,39 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   public override update(time: number, delta: number): void {
+    const slowState = this.victorySlowMo.update(delta);
+    if (slowState.active) {
+      const targetZoom = 1 + (slowState.cameraZoom - 1) * 0.6;
+      this.cameras.main.setZoom(Phaser.Math.Linear(this.cameras.main.zoom, targetZoom, 0.14));
+      this.physics.world.timeScale = slowState.timeScale > 0 ? 1 / slowState.timeScale : 1;
+      if (!slowState.active) {
+        this.cameras.main.setZoom(1);
+        this.physics.world.timeScale = 1;
+      }
+      return;
+    } else if (this.pendingSlowMoWon !== null) {
+      const finalWon = this.pendingSlowMoWon;
+      this.pendingSlowMoWon = null;
+      this.cameras.main.setZoom(1);
+      this.physics.world.timeScale = 1;
+      this.finishMatch(finalWon);
+      return;
+    }
+
     if (this.matchEnded) {
       return;
     }
 
     const dtSec = Math.min(0.05, delta / 1000);
+    this.sensoryProfile?.updateFreezeTimer(delta);
+    this.gadgetSystem.update(delta);
+    this.guardiansSession?.tick(dtSec);
+
     this.updateMatchTimer(delta);
     this.updateHeroMovement(time, dtSec);
     this.updateAmmoAndVisuals(time, dtSec);
     this.updateAimConeAndGps(time);
-    this.updateTargetRobots(time);
+    this.updateTargetRobots(time, dtSec);
     this.updateProjectiles();
 
     if (time - this.lastStatsBroadcastAtMs >= 100) {
@@ -487,7 +611,14 @@ export class ArenaScene extends Phaser.Scene {
         SPACE: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE),
         E: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E),
         Q: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q),
+        H: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.H),
       };
+      this.keys.H.on('down', () => {
+        if (!this.matchEnded) {
+          this.revealCorrectUntilMs = Math.max(this.revealCorrectUntilMs, this.time.now + 4000);
+          this.initData.onHintRequested?.(this.currentQuestion);
+        }
+      });
     }
 
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
@@ -529,6 +660,16 @@ export class ArenaScene extends Phaser.Scene {
     const onSwitchMode = (payload: { modeId: GameModeId }) => {
       this.switchMode(payload.modeId);
     };
+    const onQuitRequested = () => {
+      this.matchEnded = true;
+      this.initData.onQuitRequested?.();
+    };
+    const onHintRequested = () => {
+      if (!this.matchEnded) {
+        this.revealCorrectUntilMs = Math.max(this.revealCorrectUntilMs, this.time.now + 4000);
+        this.initData.onHintRequested?.(this.currentQuestion);
+      }
+    };
 
     this.game.events.on(ARENA_EVENTS.HUD_MOVE_STICK, onMoveStick);
     this.game.events.on(ARENA_EVENTS.HUD_AIM_STICK, onAimStick);
@@ -537,6 +678,8 @@ export class ArenaScene extends Phaser.Scene {
     this.game.events.on(ARENA_EVENTS.HUD_GADGET_TRIGGER, onGadgetTrigger);
     this.game.events.on(ARENA_EVENTS.HUD_SWITCH_BRAWLER, onSwitchBrawler);
     this.game.events.on(ARENA_EVENTS.HUD_SWITCH_MODE, onSwitchMode);
+    this.game.events.on(ARENA_EVENTS.HUD_QUIT_REQUESTED, onQuitRequested);
+    this.game.events.on(ARENA_EVENTS.HUD_HINT_REQUESTED, onHintRequested);
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.game.events.off(ARENA_EVENTS.HUD_MOVE_STICK, onMoveStick);
@@ -546,6 +689,8 @@ export class ArenaScene extends Phaser.Scene {
       this.game.events.off(ARENA_EVENTS.HUD_GADGET_TRIGGER, onGadgetTrigger);
       this.game.events.off(ARENA_EVENTS.HUD_SWITCH_BRAWLER, onSwitchBrawler);
       this.game.events.off(ARENA_EVENTS.HUD_SWITCH_MODE, onSwitchMode);
+      this.game.events.off(ARENA_EVENTS.HUD_QUIT_REQUESTED, onQuitRequested);
+      this.game.events.off(ARENA_EVENTS.HUD_HINT_REQUESTED, onHintRequested);
     });
   }
 
@@ -562,7 +707,11 @@ export class ArenaScene extends Phaser.Scene {
     }
 
     if (this.timeRemainingSec <= 0) {
-      this.finishMatch(this.objectiveScore >= Math.ceil(this.modeRules.objectiveTarget * 0.5));
+      this.triggerSlowMoFinish(
+        this.objectiveScore >= Math.ceil(this.modeRules.objectiveTarget * 0.5),
+        this.heroContainer.x,
+        this.heroContainer.y
+      );
     }
   }
 
@@ -588,7 +737,8 @@ export class ArenaScene extends Phaser.Scene {
     if (mag > 0.05) {
       const nx = moveX / Math.max(1, mag);
       const ny = moveY / Math.max(1, mag);
-      const speed = this.brawler.speed_value * HERO_MOVE_SCALE;
+      const speedMult = time < this.bonusSpeedUntilMs ? 1.15 : 1.0;
+      const speed = this.brawler.speed_value * HERO_MOVE_SCALE * speedMult;
       this.heroBody.setVelocity(nx * speed, ny * speed * ISO_Y_SCALE);
 
       if (!this.stickAim.active) {
@@ -682,14 +832,75 @@ export class ArenaScene extends Phaser.Scene {
     }
   }
 
-  private updateTargetRobots(time: number): void {
-    const slowFactor = time < this.slowRobotsUntilMs ? 0.5 : 1.0;
+  private updateTargetRobots(time: number, dtSec: number = 1 / 60): void {
+    const sensoryMods = this.sensoryProfile?.getRuntimeModifiers();
+    const frozenBySensory = sensoryMods?.isDroneFrozenForReading ?? false;
+    const sensorySpeed = sensoryMods?.droneSpeedMultiplier ?? 1;
+    const antiTiltSpeed = this.antiTiltGuard?.getTargetSpeedMultiplier() ?? 1;
+    const gadgetSpeed = this.gadgetSystem.getTargetSpeedMultiplier();
+    const legacySlow = time < this.slowRobotsUntilMs ? 0.5 : 1.0;
+    const effectiveFactor = frozenBySensory
+      ? 0
+      : Math.min(legacySlow, gadgetSpeed) * sensorySpeed * antiTiltSpeed;
     const haloActive = time < this.revealCorrectUntilMs;
+
+    this.droneDirector.setCalmMode(Boolean(this.sensoryProfile?.getConfig().tsaSensoryComfort));
+    this.droneDirector.setSpeedMultiplier(Math.max(0.5, effectiveFactor));
+
+    for (const robot of this.targetRobots) {
+      if (robot.isDead || !robot.aiId) continue;
+      const ai = this.droneAiEntities.get(robot.aiId);
+      if (ai) {
+        ai.position.x = robot.container.x;
+        ai.position.y = robot.container.y;
+        ai.frozenMs = frozenBySensory ? 100 : 0;
+      }
+    }
+
+    const incoming: IIncomingProjectile[] = this.activeProjectiles
+      .filter((p) => p.sprite.active)
+      .map((p) => {
+        const b = p.sprite.body as Phaser.Physics.Arcade.Body | undefined;
+        return {
+          x: p.sprite.x,
+          y: p.sprite.y,
+          vx: b?.velocity.x ?? 0,
+          vy: b?.velocity.y ?? 0,
+          radius: 14,
+          isFriendlyToAgent: false,
+        };
+      });
+
+    this.droneDirector.update(
+      dtSec,
+      { x: this.heroContainer.x, y: this.heroContainer.y },
+      incoming,
+      { ...ARENA_STEERING_ENV, timeSec: time / 1000 }
+    );
 
     for (const robot of this.targetRobots) {
       if (robot.isDead) continue;
 
-      robot.body.setVelocity(robot.vx * slowFactor, robot.vy * ISO_Y_SCALE * slowFactor);
+      if (frozenBySensory) {
+        robot.body.setVelocity(0, 0);
+      } else {
+        const ai = robot.aiId ? this.droneAiEntities.get(robot.aiId) : undefined;
+        if (ai) {
+          robot.vx = ai.velocity.x;
+          robot.vy = ai.velocity.y;
+          robot.body.setVelocity(
+            robot.vx * effectiveFactor,
+            robot.vy * ISO_Y_SCALE * effectiveFactor
+          );
+          robot.sprite.setAlpha(ai.isHiddenInBush ? 0.48 : 1);
+        } else {
+          robot.body.setVelocity(
+            robot.vx * effectiveFactor,
+            robot.vy * ISO_Y_SCALE * effectiveFactor
+          );
+        }
+      }
+
       robot.sprite.y = -8 + Math.sin(time * 0.008 + robot.container.x * 0.01) * 4;
       robot.container.setDepth(robot.container.y);
 
@@ -818,11 +1029,48 @@ export class ArenaScene extends Phaser.Scene {
     });
 
     this.consecutiveHits += 1;
+    this.correctHitsCount += 1;
+    if (reactionTimeMs <= 2500) {
+      this.fastReflexHitsCount += 1;
+    }
     this.comboMultiplier = impact.combo_multiplier;
+    this.antiTiltGuard?.recordAttempt(true, this.currentQuestion.id);
+
+    const starFx = this.starPowerSystem.evaluateOnCombatHit({
+      brawlerId: this.brawler.id,
+      brawlerLevel: this.brawlerLevel,
+      isCorrect: true,
+      reactionTimeMs,
+      consecutiveCorrectHits: this.consecutiveHits,
+    });
+    if (starFx.triggered) {
+      if (starFx.ammoRefundBars > 0) {
+        this.ammo = Math.min(this.brawler.max_ammo_bars, this.ammo + starFx.ammoRefundBars);
+      }
+      if (starFx.healHp > 0) {
+        this.hp = Math.min(this.maxHp, this.hp + starFx.healHp);
+      }
+      if (starFx.bonusShieldHp > 0) {
+        this.bonusShieldHp += starFx.bonusShieldHp;
+      }
+      if (starFx.speedBoostDurationMs > 0) {
+        this.bonusSpeedUntilMs = this.time.now + starFx.speedBoostDurationMs;
+      }
+      if (starFx.bannerMessage) {
+        FloatingCombatText.spawn(
+          this,
+          this.heroContainer.x,
+          this.heroContainer.y - 108,
+          `${starFx.starPower.icon} ${starFx.starPower.name}`,
+          { color: '#c084fc', fontSize: 18, riseY: 36 }
+        );
+      }
+    }
 
     const prevSuper = this.superPct;
     if (!fromSuper) {
-      this.superPct = Math.min(100, this.superPct + impact.super_charge_gain_pct);
+      const superGain = impact.super_charge_gain_pct + (starFx.triggered ? starFx.bonusSuperChargePct : 0);
+      this.superPct = Math.min(100, this.superPct + superGain);
       if (prevSuper < 100 && this.superPct >= 100) {
         soundFX.playSuperReady();
         FloatingCombatText.spawn(this, this.heroContainer.x, this.heroContainer.y - 84, 'SUPER PRÊT !', {
@@ -833,14 +1081,38 @@ export class ArenaScene extends Phaser.Scene {
       }
     }
 
+    const streakOutcome = this.killstreakAnnouncer.registerCorrectHit();
+    if (streakOutcome.tierTriggered) {
+      const bannerText = `${streakOutcome.tierTriggered.badgeIcon} ${streakOutcome.tierTriggered.label}`;
+      this.game.events.emit(ARENA_EVENTS.ARENA_KILLSTREAK, {
+        streak: streakOutcome.state.streak,
+        bannerText,
+      });
+      FloatingCombatText.spawn(
+        this,
+        this.heroContainer.x,
+        this.heroContainer.y - 122,
+        bannerText,
+        { color: '#fbbf24', fontSize: 24, riseY: 50, scalePeak: 1.42 }
+      );
+    }
+
+    if (this.guardiansSession) {
+      this.guardiansSession.resolvePreventionScenario(true);
+    }
+
     soundFX.playHitCorrect(this.consecutiveHits);
     this.sparkEmitter.explode(24, robot.container.x, robot.container.y);
     this.starEmitter.explode(12, robot.container.x, robot.container.y);
-    this.cameras.main.shake(110, 0.0065);
+    const shakeScale = this.sensoryProfile?.getRuntimeModifiers().screenShakeScale ?? 1;
+    if (shakeScale > 0) {
+      this.cameras.main.shake(110, 0.0065 * shakeScale);
+    }
 
     const dmg = fromSuper ? impact.final_damage * 2 : impact.final_damage;
     robot.hp = Math.max(0, robot.hp - dmg);
     this.redrawRobotHp(robot);
+    this.redrawHeroOverheadBars();
 
     FloatingCombatText.spawn(this, robot.container.x, robot.container.y - 46, `-${dmg} !`, {
       color: '#fef08a',
@@ -874,11 +1146,13 @@ export class ArenaScene extends Phaser.Scene {
     // Validation instantanée d'objectif façon Brawl Stars
     const pointsGained = fromSuper ? this.brawler.super_ability.bonus_objective_points : 1;
     this.objectiveScore += pointsGained;
+    const hitX = robot.container.x;
+    const hitY = robot.container.y;
     this.destroyAllRobotsVisual();
 
     if (this.objectiveScore >= this.modeRules.objectiveTarget) {
       this.broadcastStats(true);
-      this.finishMatch(true);
+      this.triggerSlowMoFinish(true, hitX, hitY);
       return;
     }
 
@@ -903,35 +1177,71 @@ export class ArenaScene extends Phaser.Scene {
 
     this.consecutiveHits = 0;
     this.comboMultiplier = 1.0;
+    this.killstreakAnnouncer.registerError();
+    this.antiTiltGuard?.recordAttempt(false, this.currentQuestion.id);
 
-    // Flash bouclier rouge sur le robot fautif
-    robot.shieldOverlay.setVisible(true);
-    robot.shieldOverlay.setAlpha(1);
-    this.tweens.add({
-      targets: robot.shieldOverlay,
-      alpha: 0,
-      scale: 1.25,
-      duration: 420,
-      onComplete: () => {
-        robot.shieldOverlay.setVisible(false);
-        robot.shieldOverlay.setScale(1);
-      },
+    if (!this.missedQuestions.some((q) => q.id === this.currentQuestion.id)) {
+      this.missedQuestions.push(this.currentQuestion);
+    }
+
+    if (this.guardiansSession) {
+      this.guardiansSession.resolvePreventionScenario(false);
+    }
+
+    const starFx = this.starPowerSystem.evaluateOnCombatHit({
+      brawlerId: this.brawler.id,
+      brawlerLevel: this.brawlerLevel,
+      isCorrect: false,
+      reactionTimeMs,
+      consecutiveCorrectHits: 0,
     });
+
+    const sensoryMods = this.sensoryProfile?.getRuntimeModifiers();
+    const allowFlashes = sensoryMods?.allowFlashes ?? true;
+    if (allowFlashes) {
+      robot.shieldOverlay.setVisible(true);
+      robot.shieldOverlay.setAlpha(1);
+      this.tweens.add({
+        targets: robot.shieldOverlay,
+        alpha: 0,
+        scale: 1.25,
+        duration: 420,
+        onComplete: () => {
+          robot.shieldOverlay.setVisible(false);
+          robot.shieldOverlay.setScale(1);
+        },
+      });
+    }
 
     soundFX.playErrorShield();
     this.smokeEmitter.explode(10, robot.container.x, robot.container.y);
-    this.cameras.main.shake(185, 0.012);
+    const shakeScale = sensoryMods?.screenShakeScale ?? 1;
+    if (shakeScale > 0) {
+      this.cameras.main.shake(185, 0.012 * shakeScale);
+    }
+
+    const dmgFactor =
+      (this.antiTiltGuard?.getErrorDamageMultiplier() ?? 1) *
+      (1 - (starFx.errorDamageReductionPct ?? 0));
+    const finalPenaltyDmg = Math.max(40, Math.round(impact.error_penalty_damage * dmgFactor));
 
     if (now - this.lastErrorPenaltyAtMs > 650) {
       this.lastErrorPenaltyAtMs = now;
-      this.hp = Math.max(Math.round(this.maxHp * 0.2), this.hp - impact.error_penalty_damage);
+      if (this.bonusShieldHp > 0) {
+        const absorbed = Math.min(this.bonusShieldHp, finalPenaltyDmg);
+        this.bonusShieldHp -= absorbed;
+        const leftover = finalPenaltyDmg - absorbed;
+        this.hp = Math.max(Math.round(this.maxHp * 0.2), this.hp - leftover);
+      } else {
+        this.hp = Math.max(Math.round(this.maxHp * 0.2), this.hp - finalPenaltyDmg);
+      }
       this.redrawHeroOverheadBars();
 
       FloatingCombatText.spawn(
         this,
         this.heroContainer.x,
         this.heroContainer.y - 58,
-        `-${impact.error_penalty_damage} BOUCLIER!`,
+        `-${finalPenaltyDmg} BOUCLIER!`,
         { color: '#f87171', fontSize: 24 }
       );
     }
@@ -940,6 +1250,7 @@ export class ArenaScene extends Phaser.Scene {
       text: this.currentQuestion.explanation_flash,
       durationMs: impact.trigger_explanation_flash_ms,
       isError: true,
+      question: this.currentQuestion,
     });
 
     this.initData.onAttemptRecorded?.({
@@ -1013,34 +1324,57 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   private triggerGadgetAbility(): void {
-    if (this.matchEnded || this.gadgetCharges <= 0) {
+    if (this.matchEnded) {
       return;
     }
 
-    this.gadgetCharges -= 1;
-    soundFX.playGadgetCast();
-    this.playSquashStretch(1.18, 0.86, 160);
+    const candidates = this.targetRobots.map((r, i) => ({
+      id: r.aiId ?? `robot_${i}`,
+      label: r.target.label,
+      is_correct: r.target.is_correct,
+      active: !r.isDead,
+    }));
 
-    const durationMs = this.brawler.gadget.duration_sec * 1000;
-    if (this.brawler.id === 'ZACK') {
-      this.slowRobotsUntilMs = this.time.now + durationMs;
-    } else if (this.brawler.id === 'LEO') {
-      const decoy = this.targetRobots.find((r) => !r.isDead && !r.target.is_correct);
-      if (decoy) {
-        decoy.isDead = true;
-        this.smokeEmitter.explode(16, decoy.container.x, decoy.container.y);
-        decoy.container.destroy();
-      }
+    const result = this.gadgetSystem.activate(candidates, {
+      onRemoveWrongTarget: (targetId) => {
+        const victim = this.targetRobots.find(
+          (r, i) => !r.isDead && (r.aiId ?? `robot_${i}`) === targetId
+        );
+        if (victim) {
+          victim.isDead = true;
+          this.smokeEmitter.explode(16, victim.container.x, victim.container.y);
+          victim.container.destroy();
+        }
+      },
+      onApplySlowdown: (_speedMultiplier, durationMs) => {
+        this.slowRobotsUntilMs = Math.max(this.slowRobotsUntilMs, this.time.now + durationMs);
+      },
+      onHighlightCorrect: (_targetId, durationMs) => {
+        this.revealCorrectUntilMs = Math.max(this.revealCorrectUntilMs, this.time.now + durationMs);
+      },
+    });
+
+    if (!result.activated) {
+      if (this.gadgetCharges <= 0) return;
+      this.gadgetCharges -= 1;
+      const fallbackDurationMs = this.brawler.gadget.duration_sec * 1000;
+      this.revealCorrectUntilMs = this.time.now + fallbackDurationMs;
     } else {
-      this.revealCorrectUntilMs = this.time.now + durationMs;
+      this.gadgetCharges = result.remainingCharges;
     }
 
+    if (this.guardiansSession) {
+      this.guardiansSession.deploySolidarityShield();
+    }
+
+    soundFX.playGadgetCast();
+    this.playSquashStretch(1.18, 0.86, 160);
     this.healEmitter.explode(10, this.heroContainer.x, this.heroContainer.y);
     FloatingCombatText.spawn(
       this,
       this.heroContainer.x,
       this.heroContainer.y - 72,
-      this.brawler.gadget.name,
+      result.activated ? this.gadgetSystem.getSelectedGadget().name : this.brawler.gadget.name,
       { color: '#4ade80', fontSize: 23 }
     );
     this.broadcastStats(true);
@@ -1051,7 +1385,10 @@ export class ArenaScene extends Phaser.Scene {
     this.maxHp = Math.round(this.brawler.base_hp * (1 + 0.08 * (this.brawlerLevel - 1)));
     this.hp = this.maxHp;
     this.ammo = this.brawler.max_ammo_bars;
-    this.gadgetCharges = this.brawler.gadget.charges_per_match;
+    this.gadgetSystem.resetForNewMatch(
+      this.initData.selectedGadgetId ?? getDefaultGadgetForBrawler(brawlerId)
+    );
+    this.gadgetCharges = this.gadgetSystem.getHudSnapshot().remainingCharges;
     this.heroSprite.setTexture(TextureFactory.getBrawlerTextureKey(brawlerId));
     this.playSquashStretch(1.28, 0.78, 200);
     this.redrawHeroOverheadBars();
@@ -1063,6 +1400,8 @@ export class ArenaScene extends Phaser.Scene {
     this.objectiveScore = 0;
     this.timeRemainingSec = this.modeRules.mode.duration_seconds;
     this.matchEnded = false;
+    this.guardiansSession =
+      modeId === 'LES_GARDIENS_DE_LA_RECRE' ? new GuardiansModeSession() : null;
     this.loadNextQuestion(true);
     this.broadcastStats(true);
   }
@@ -1071,11 +1410,39 @@ export class ArenaScene extends Phaser.Scene {
     this.destroyAllRobotsVisual();
 
     const pool = this.questionsPool.length > 0 ? this.questionsPool : FALLBACK_ARENA_QUESTIONS;
-    if (!isFirst) {
-      this.questionCursor = (this.questionCursor + 1) % pool.length;
+    const subjectPref =
+      this.modeRules.mode.target_subject ??
+      this.modeRules.defaultSubject ??
+      this.brawler.favorite_subject;
+
+    const customQuestion = this.initData.onRequestNextQuestion?.(subjectPref);
+    if (customQuestion) {
+      this.currentQuestion = customQuestion;
+    } else if (this.antiTiltGuard?.isProtectionActive()) {
+      const pick = this.antiTiltGuard.selectNextQuestion(pool, 1000, subjectPref);
+      this.currentQuestion = pick.question;
+    } else {
+      if (!isFirst) {
+        this.questionCursor = (this.questionCursor + 1) % pool.length;
+      }
+      this.currentQuestion = pool[this.questionCursor];
     }
-    this.currentQuestion = pool[this.questionCursor];
+
     this.questionShownAtMs = this.time.now;
+
+    const freezeMs = this.sensoryProfile?.onNewQuestionDisplayed() ?? 0;
+    if (freezeMs > 0) {
+      this.game.events.emit(ARENA_EVENTS.ARENA_SENSORY_FREEZE, { durationMs: freezeMs });
+    }
+
+    const aiDrones = this.droneDirector.spawnFromQuestion(
+      this.currentQuestion,
+      ARENA_STEERING_ENV
+    );
+    this.droneAiEntities.clear();
+    for (const d of aiDrones) {
+      this.droneAiEntities.set(d.id, d);
+    }
 
     const targets = this.currentQuestion.targets.slice(0, 4);
     const spawnSpots = [
@@ -1088,7 +1455,7 @@ export class ArenaScene extends Phaser.Scene {
 
     targets.forEach((target, idx) => {
       const spot = spawnSpots[idx % spawnSpots.length];
-      this.spawnTargetRobot(target, idx, spot.x, spot.y);
+      this.spawnTargetRobot(target, idx, spot.x, spot.y, aiDrones[idx]?.id);
     });
 
     this.game.events.emit(ARENA_EVENTS.ARENA_QUESTION_CHANGED, {
@@ -1097,7 +1464,13 @@ export class ArenaScene extends Phaser.Scene {
     });
   }
 
-  private spawnTargetRobot(target: IQuestionTarget, index: number, x: number, y: number): void {
+  private spawnTargetRobot(
+    target: IQuestionTarget,
+    index: number,
+    x: number,
+    y: number,
+    aiId?: string
+  ): void {
     const shadow = this.add.image(0, 32, TEXTURE_KEYS.SHADOW_ELLIPSE).setScale(0.88);
     const haloRing = this.add.graphics();
     haloRing.lineStyle(5, 0xfacc15, 0.95);
@@ -1159,6 +1532,7 @@ export class ArenaScene extends Phaser.Scene {
       hpFill,
       labelBadge,
       target,
+      aiId,
       hp: 1000,
       maxHp: 1000,
       vx: Math.cos(moveAngle) * baseSpeed,
@@ -1268,9 +1642,40 @@ export class ArenaScene extends Phaser.Scene {
     });
   }
 
-  private finishMatch(won: boolean): void {
+  private triggerSlowMoFinish(won: boolean, focusX?: number, focusY?: number): void {
     if (this.matchEnded) return;
     this.matchEnded = true;
+    this.heroBody.setVelocity(0, 0);
+    this.pendingSlowMoWon = won;
+
+    FloatingCombatText.spawn(
+      this,
+      focusX ?? this.heroContainer.x,
+      (focusY ?? this.heroContainer.y) - 64,
+      won ? '🏆 COUP FINAL !' : '⏱️ FIN DU TEMPS !',
+      { color: won ? '#facc15' : '#38bdf8', fontSize: 32, scalePeak: 1.55 }
+    );
+
+    this.victorySlowMo.triggerFinalBlow({
+      focusX: focusX ?? this.heroContainer.x,
+      focusY: focusY ?? this.heroContainer.y,
+      victory: won,
+      label: won ? 'VICTOIRE ÉCLATANTE !' : 'FIN DU TEMPS !',
+      onPodiumReady: () => {
+        if (this.pendingSlowMoWon !== null) {
+          const finalWon = this.pendingSlowMoWon;
+          this.pendingSlowMoWon = null;
+          this.cameras.main.setZoom(1);
+          this.physics.world.timeScale = 1;
+          this.finishMatch(finalWon);
+        }
+      },
+    });
+  }
+
+  private finishMatch(won: boolean): void {
+    this.matchEnded = true;
+    this.pendingSlowMoWon = null;
     this.heroBody.setVelocity(0, 0);
 
     const suggestedRarity: StarrDropRarity =
@@ -1285,6 +1690,9 @@ export class ArenaScene extends Phaser.Scene {
     this.game.events.emit(ARENA_EVENTS.ARENA_MATCH_VICTORY, {
       won,
       objectiveScore: this.objectiveScore,
+      correctHits: this.correctHitsCount,
+      fastReflexHits: this.fastReflexHitsCount,
+      missedQuestions: this.missedQuestions,
       mode: this.modeRules.mode,
       brawler: this.brawler,
       suggestedRarity,
@@ -1293,6 +1701,9 @@ export class ArenaScene extends Phaser.Scene {
     this.initData.onMatchFinished?.({
       won,
       objectiveScore: this.objectiveScore,
+      correctHits: this.correctHitsCount,
+      fastReflexHits: this.fastReflexHitsCount,
+      missedQuestions: this.missedQuestions,
       modeId: this.modeRules.mode.id,
     });
   }

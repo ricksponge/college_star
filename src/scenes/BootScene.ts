@@ -1,10 +1,17 @@
 import Phaser from 'phaser';
+import { SensoryProfile } from '../accessibility/SensoryProfile';
+import { preloadSkinThumbnailDataUrls } from '../art/BrawlerSvgGenerator';
 import { TextureFactory } from '../engine/TextureFactory';
+import { TouchLock } from '../pwa/TouchLock';
+import { ALL_QUESTIONS_300 } from '../services/QuestionProvider';
 import { ArenaScene, type IArenaSceneInitData } from './ArenaScene';
 import { HUDScene } from './HUDScene';
+import { LobbyScene } from './LobbyScene';
 
 export interface IBootSceneInitData extends IArenaSceneInitData {
   autoLaunchHud?: boolean;
+  startInLobby?: boolean;
+  touchLock?: TouchLock;
 }
 
 const LILITA_FONT_URL =
@@ -54,8 +61,22 @@ export class BootScene extends Phaser.Scene {
 
     updateProgress(0.25);
 
-    // Préchauffe toutes les textures HD dans le cache GPU WebGL
+    // Préchauffe toutes les textures HD GPU + SVG HD + base de 300 questions (200 scolaires + 100 prévention)
     TextureFactory.generateAll(this);
+    preloadSkinThumbnailDataUrls();
+
+    const pool300 =
+      this.initData.questions && this.initData.questions.length > 0
+        ? this.initData.questions
+        : ALL_QUESTIONS_300;
+    this.initData.questions = pool300;
+    this.registry.set('questionsPool300', pool300);
+
+    const sensoryProfile = this.initData.sensoryProfile ?? new SensoryProfile();
+    this.initData.sensoryProfile = sensoryProfile;
+    this.registry.set('sensoryProfile', sensoryProfile);
+
+    this.initData.touchLock?.attach();
     updateProgress(0.7);
 
     void this.ensureGoogleFontLoaded().finally(() => {
@@ -67,6 +88,14 @@ export class BootScene extends Phaser.Scene {
 
       this.time.delayedCall(90, () => {
         if (!this.scene.isActive('BootScene')) {
+          return;
+        }
+        if (this.initData.startInLobby) {
+          this.scene.start('LobbyScene', {
+            brawlerId: this.initData.brawlerId,
+            modeId: this.initData.modeId,
+            playerNickname: this.initData.playerNickname,
+          });
           return;
         }
         this.scene.start('ArenaScene', this.initData);
@@ -136,7 +165,7 @@ export function createPhaserBrawlGame(
         debug: false,
       },
     },
-    scene: [new BootScene(initData), ArenaScene, HUDScene],
+    scene: [new BootScene(initData), LobbyScene, ArenaScene, HUDScene],
   };
 
   return new Phaser.Game(config);

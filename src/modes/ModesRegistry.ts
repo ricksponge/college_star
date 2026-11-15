@@ -4,13 +4,15 @@ import { MatchAccordsSession, MODE_MATCH_DES_ACCORDS } from './Mode2MatchAccords
 import { InterroSurpriseSession, MODE_INTERRO_SURPRISE } from './Mode3InterroSurprise';
 import { ChangementSalleSession, MODE_CHANGEMENT_DE_SALLE } from './Mode4ChangementSalle';
 import { ConseilClasseSession, MODE_CONSEIL_DE_CLASSE } from './Mode5ConseilClasse';
+import { GuardiansModeSession, MODE_GUARDIANS_OF_RECRE } from './Mode6Guardians';
 
 export type ModeSession =
   | ChasseNotesSession
   | MatchAccordsSession
   | InterroSurpriseSession
   | ChangementSalleSession
-  | ConseilClasseSession;
+  | ConseilClasseSession
+  | GuardiansModeSession;
 
 export const ALL_GAME_MODES: IGameMode[] = [
   MODE_CHASSE_AUX_BONNES_NOTES,
@@ -18,6 +20,7 @@ export const ALL_GAME_MODES: IGameMode[] = [
   MODE_INTERRO_SURPRISE,
   MODE_CHANGEMENT_DE_SALLE,
   MODE_CONSEIL_DE_CLASSE,
+  MODE_GUARDIANS_OF_RECRE,
 ];
 
 export function getGameModeById(id: GameModeId): IGameMode {
@@ -36,6 +39,8 @@ export function createModeSession(id: GameModeId): ModeSession {
       return new ChangementSalleSession();
     case 'CONSEIL_DE_CLASSE':
       return new ConseilClasseSession();
+    case 'LES_GARDIENS_DE_LA_RECRE':
+      return new GuardiansModeSession();
   }
 }
 
@@ -116,6 +121,18 @@ const MODE_QUICK_GUIDES: Record<GameModeId, IModeQuickGuide> = {
       '3. Enchaîne les tirs et ton Super pour vaincre le Boss !',
     ],
     recommendedBrawler: 'TIMO',
+  },
+  LES_GARDIENS_DE_LA_RECRE: {
+    modeId: 'LES_GARDIENS_DE_LA_RECRE',
+    icon: '🛡️',
+    shortTag: '🛡️ GARDIENS COOP',
+    oneLineGoal: 'Dissipe les nuages de rumeurs et protège les élèves avec des choix solidaires !',
+    howToWinSteps: [
+      '1. Choisis le réflexe d’écoute, d’entraide ou d’inclusion neuro-diversité.',
+      '2. Dissipe les nuages gris avant qu’ils ne touchent un camarade.',
+      '3. Active le Bouclier Solidaire d’équipe pour sécuriser la cour !',
+    ],
+    recommendedBrawler: 'MAYA',
   },
 };
 
