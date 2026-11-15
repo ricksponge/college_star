@@ -1,14 +1,23 @@
 import './styles/brawl-theme.css';
-import type { BrawlerId, GameModeId, IGameMode, IQuestion } from './types/cctp';
+import type { BrawlerId, GameModeId, IGameMode, IQuestion, SubjectCategory } from './types/cctp';
 import { LocalSQLiteDB } from './db/LocalSQLiteDB';
+import { CampusEngine } from './engine/CampusEngine';
 import { GameEngine, type IMatchSummary } from './engine/GameEngine';
 import { getAllBrawlers, getBrawlerById } from './entities/Brawlers';
-import { ALL_GAME_MODES, getGameModeById, getHourlyRotatedMode } from './modes/ModesRegistry';
+import {
+  ALL_GAME_MODES,
+  CAMPUS_WORLD_DATA,
+  getGameModeById,
+  getHourlyRotatedMode,
+  getRoomById,
+} from './modes/ModesRegistry';
 import { ELO_DEFAULT } from './services/EloEngine';
 import { QuestionProvider } from './services/QuestionProvider';
+import { QuestService } from './services/QuestService';
 import { soundManager } from './services/SoundManager';
 import { ParentDashboard } from './ui/ParentDashboard';
 import { LobbyBrawlerPreview3D } from './ui/LobbyBrawlerPreview3D';
+import { QuestJournalModal } from './ui/QuestJournalModal';
 import { renderTrophyRoadHtml, StarrDropModal } from './ui/StarrDropModal';
 
 const SUBJECT_NAMES: Record<string, string> = {
@@ -44,14 +53,19 @@ class BrawlCollegeApp {
   private readonly root: HTMLElement;
   private readonly db = new LocalSQLiteDB();
   private readonly questionProvider = new QuestionProvider();
+  private readonly questService = new QuestService(this.db);
   private readonly starrDropModal = new StarrDropModal(this.db);
   private readonly parentDashboard = new ParentDashboard(this.db);
+  private readonly questJournalModal = new QuestJournalModal(this.db, this.questService);
 
   private selectedModeId: GameModeId = getHourlyRotatedMode().id;
   private matchCounter = 0;
   private activeEngine: GameEngine | null = null;
+  private activeCampusEngine: CampusEngine | null = null;
   private lobbyPreview3D: LobbyBrawlerPreview3D | null = null;
   private lobbyBannerMsg: string | null = null;
+  private readonly collectedCampusBadgeIds = new Set<string>();
+  private returnToCampusAfterMatch = false;
 
   constructor(root: HTMLElement) {
     this.root = root;
@@ -66,8 +80,11 @@ class BrawlCollegeApp {
   private renderLobby(): void {
     this.activeEngine?.stop();
     this.activeEngine = null;
+    this.activeCampusEngine?.stop();
+    this.activeCampusEngine = null;
     this.lobbyPreview3D?.dispose();
     this.lobbyPreview3D = null;
+    this.returnToCampusAfterMatch = false;
 
     const profile = this.db.getPlayerProfile();
     const brawlers = getAllBrawlers();
@@ -90,6 +107,16 @@ class BrawlCollegeApp {
     const starsProgress = stars % 3;
     const isMuted = soundManager.isMuted();
 
+    const allQuestsWithStatus = this.questService.getAllQuestsWithStatus();
+    const totalQuestsCount = allQuestsWithStatus.length;
+    const completedQuestsCount = allQuestsWithStatus.filter(
+      (entry) => entry.progress.status === 'COMPLETED' || entry.progress.status === 'CLAIMED'
+    ).length;
+    const activeQuestInfo = this.questService.getActiveQuest();
+    const activeQuestTargetRoom = activeQuestInfo
+      ? getRoomById(activeQuestInfo.activeObjective.target_room_id)
+      : null;
+
     this.root.innerHTML = `
       <div class="brawl-bg" style="min-height:100dvh; padding:14px 16px;">
         <div class="lobby-shell" style="max-width:1200px; margin:0 auto; display:flex; flex-direction:column; gap:14px;">
@@ -106,6 +133,9 @@ class BrawlCollegeApp {
               <div class="brawl-outline-text" style="background:#0b1129; border:2.5px solid #090d16; padding:7px 12px; border-radius:11px; font-size:13px; color:#22b8ff; box-shadow:0 3px 0 #090d16;">⭐ ${starsProgress}/3</div>
               <button id="btn-starr-drop" class="brawl-btn brawl-btn-sm ${profile.starr_drops_available > 0 ? 'brawl-btn-yellow brawl-pulse' : ''}" ${profile.starr_drops_available === 0 ? 'disabled' : ''}>
                 🎁 Casiers (${profile.starr_drops_available})
+              </button>
+              <button id="btn-quest-journal" class="brawl-btn brawl-btn-sm brawl-btn-green">
+                📜 Quêtes (${completedQuestsCount}/${totalQuestsCount})
               </button>
               <button id="btn-parent-dash" class="brawl-btn brawl-btn-sm brawl-btn-blue">
                 🔒 Carnet Parent
@@ -127,6 +157,36 @@ class BrawlCollegeApp {
                 </div>`
               : ''
           }
+
+          <!-- Mode Aventure M4 : Carte Ouverte 3D du Collège, Quêtes & Missions -->
+          <section class="brawl-card" style="padding:14px 18px; background:linear-gradient(135deg, rgba(30,58,138,0.9), rgba(15,23,42,0.95)); border-color:#38bdf8;">
+            <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:14px;">
+              <div style="flex:1; min-width:260px;">
+                <div class="brawl-outline-text" style="font-size:12px; color:#38bdf8; letter-spacing:0.8px;">🏫 MODE AVENTURE • CARTE OUVERTE 3D (2400×1800)</div>
+                <h2 class="brawl-outline-text" style="margin:2px 0 6px; font-size:20px; color:#ffd426;">EXPLORER LE COLLÈGE &amp; QUÊTES (${completedQuestsCount}/${totalQuestsCount})</h2>
+                ${
+                  activeQuestInfo
+                    ? `<div style="font-size:13px; color:#e2e8f0; line-height:1.45;">
+                        <span style="color:#fde047; font-weight:900;">📜 Quête active : ${activeQuestInfo.quest.title}</span><br/>
+                        Objectif : <strong>${activeQuestInfo.activeObjective.description}</strong> (${Math.min(activeQuestInfo.progress.current_count, activeQuestInfo.activeObjective.required_count)}/${activeQuestInfo.activeObjective.required_count})${
+                          activeQuestTargetRoom
+                            ? ` • <span style="color:#7dd3fc; font-weight:800;">📍 ${activeQuestTargetRoom.name} (${activeQuestTargetRoom.floor_label})</span>`
+                            : ''
+                        }
+                      </div>`
+                    : `<div style="font-size:13px; color:#86efac; font-weight:800;">🏆 Toutes les quêtes du collège sont accomplies (${completedQuestsCount}/${totalQuestsCount}) !</div>`
+                }
+              </div>
+              <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
+                <button id="btn-explore-campus" class="brawl-btn brawl-btn-lg brawl-btn-yellow">
+                  🗺️ ENTRER DANS LE COLLÈGE (${selectedBrawler.name.toUpperCase()})
+                </button>
+                <button id="btn-open-quests-card" class="brawl-btn brawl-btn-lg brawl-btn-blue">
+                  📜 CARNET DE QUÊTES
+                </button>
+              </div>
+            </div>
+          </section>
 
           <!-- Route vers la 6ème -->
           ${renderTrophyRoadHtml(profile.trophies, claimedMilestones)}
@@ -379,14 +439,306 @@ class BrawlCollegeApp {
       this.renderLobby();
     });
 
+    // Carnet de Quêtes & Mode Exploration du Collège (M4)
+    const openQuestsFromLobby = (): void => {
+      this.questJournalModal.open({
+        onClose: () => this.renderLobby(),
+        onStartCampusExploration: () => {
+          this.lobbyBannerMsg = null;
+          this.startCampusExploration(selectedBrawler.id);
+        },
+        onQuestSelected: () => {},
+      });
+    };
+    this.root.querySelector('#btn-quest-journal')?.addEventListener('click', openQuestsFromLobby);
+    this.root.querySelector('#btn-open-quests-card')?.addEventListener('click', openQuestsFromLobby);
+    this.root.querySelector('#btn-explore-campus')?.addEventListener('click', () => {
+      this.lobbyBannerMsg = null;
+      this.startCampusExploration(selectedBrawler.id);
+    });
+
     // Lancer le combat 60 FPS
     this.root.querySelector('#btn-play-match')?.addEventListener('click', () => {
       this.lobbyBannerMsg = null;
+      this.returnToCampusAfterMatch = false;
       this.startMatch(selectedBrawler.id, selectedMode);
     });
   }
 
+  private bindPointerTap(el: Element | null, handler: () => void): void {
+    if (!el) return;
+    el.addEventListener('pointerdown', (ev) => {
+      ev.stopPropagation();
+      ev.preventDefault();
+      handler();
+    });
+  }
+
+  private computeSubjectAvgElo(subject?: SubjectCategory): number {
+    const allSkills = this.db.getAllSkillMasteries();
+    const filtered = subject
+      ? allSkills.filter((s) => s.subject_category === subject)
+      : allSkills;
+    if (filtered.length === 0) return ELO_DEFAULT;
+    return Math.round(filtered.reduce((acc, s) => acc + s.elo_rating, 0) / filtered.length);
+  }
+
+  private pickAdaptiveQuestion(
+    preferredSubject: SubjectCategory | undefined,
+    fallbackSubjects: SubjectCategory[],
+    currentMatchIndex: number,
+    guaranteeIntroMath = false
+  ): IQuestion {
+    if (guaranteeIntroMath) {
+      const firstQ = this.questionProvider.getQuestionById('MATH_MUL_001');
+      if (firstQ) return firstQ;
+    }
+
+    const chosenSubject =
+      preferredSubject ??
+      (Math.random() < 0.78 && fallbackSubjects.length > 0
+        ? fallbackSubjects[Math.floor(Math.random() * fallbackSubjects.length)]
+        : undefined);
+
+    const allSkills = this.db.getAllSkillMasteries();
+    const subjectSkills = chosenSubject
+      ? allSkills.filter((s) => s.subject_category === chosenSubject)
+      : allSkills;
+    const weakestSkill = [...subjectSkills].sort((a, b) => a.elo_rating - b.elo_rating)[0];
+
+    return this.questionProvider.getNextQuestion({
+      subject: chosenSubject,
+      targetElo: this.computeSubjectAvgElo(chosenSubject),
+      currentMatchIndex,
+      preferSkillCode: weakestSkill?.skill_code,
+    });
+  }
+
+  private recordAdaptiveTelemetry(
+    question: IQuestion,
+    brawlerId: BrawlerId,
+    isCorrect: boolean,
+    reactionTimeMs: number,
+    currentMatchIndex: number
+  ): number {
+    const mastery = this.db.getSkillMastery(question.skill_code);
+    const currentElo = mastery?.elo_rating ?? ELO_DEFAULT;
+    const eloResult = this.questionProvider.registerAttempt(
+      question,
+      currentElo,
+      isCorrect,
+      reactionTimeMs,
+      currentMatchIndex
+    );
+
+    this.db.recordCombatTelemetry(
+      {
+        question_id: question.id,
+        brawler_used: brawlerId,
+        is_hit_correct: isCorrect,
+        reaction_time_ms: reactionTimeMs,
+      },
+      {
+        skill_code: question.skill_code,
+        subject_category: question.subject,
+        new_elo: eloResult.new_elo,
+      }
+    );
+    this.db.setSpacedRepetitionEntries(this.questionProvider.serializeSpacedQueue());
+    return eloResult.new_elo;
+  }
+
+  private startCampusExploration(brawlerId: BrawlerId): void {
+    this.activeEngine?.stop();
+    this.activeEngine = null;
+    this.activeCampusEngine?.stop();
+    this.activeCampusEngine = null;
+    this.lobbyPreview3D?.dispose();
+    this.lobbyPreview3D = null;
+    this.returnToCampusAfterMatch = false;
+
+    this.matchCounter += 1;
+    const currentMatchIndex = this.matchCounter;
+    const brawler = getBrawlerById(brawlerId);
+    const brawlerLevel = this.db.getBrawlerLevel(brawlerId);
+    const initialAvgElo = this.computeSubjectAvgElo(brawler.favorite_subject);
+
+    this.root.innerHTML = `
+      <div class="arena-container">
+        <canvas id="campus-canvas" style="display:block; width:100%; height:100%;"></canvas>
+
+        <!-- Boutons haut gauche sous HUD -->
+        <div style="position:absolute; top:68px; left:14px; display:flex; flex-wrap:wrap; gap:8px; z-index:10;">
+          <button id="btn-campus-lobby" class="brawl-btn brawl-btn-sm">
+            🏠 Lobby
+          </button>
+          <button id="btn-campus-quests" class="brawl-btn brawl-btn-sm brawl-btn-blue">
+            📜 Quêtes
+          </button>
+          <button id="btn-campus-interact" class="brawl-btn brawl-btn-sm">
+            💬 Parler / Défi
+          </button>
+          <button id="btn-campus-challenge" class="brawl-btn brawl-btn-sm brawl-btn-green">
+            🎯 Défi Salle
+          </button>
+          <button id="btn-campus-mute" class="brawl-btn brawl-btn-sm" title="Son">
+            ${soundManager.isMuted() ? '🔇' : '🔊'}
+          </button>
+        </div>
+
+        <!-- Aide commandes Exploration Collège -->
+        <div style="position:absolute; bottom:14px; left:16px; background:rgba(9,13,22,0.84); border:2px solid #090d16; padding:6px 12px; border-radius:11px; font-size:11px; font-weight:700; color:#e2e8f0; pointer-events:none;">
+          🕹️ Gauche / ZQSD : Bouger • 🎯 Droite / Clic : Tirer • 💬 Entrée : Parler PNJ • 🟡 Espace : Super • 🟢 E : Gadget
+        </div>
+
+        <!-- Boutons tactiles Super (Jaune) & Gadget (Vert) -->
+        <div style="position:absolute; right:20px; bottom:20px; display:flex; align-items:flex-end; gap:14px; z-index:10;">
+          <button id="btn-campus-gadget" class="brawl-btn brawl-btn-green" style="width:72px; height:72px; padding:0; border-radius:999px; flex-direction:column; gap:1px; font-size:11px;">
+            <span>GADGET</span><span id="campus-gadget-count-badge" style="font-size:14px;">3</span>
+          </button>
+          <button id="btn-campus-super" class="brawl-btn" style="width:90px; height:90px; padding:0; border-radius:999px; flex-direction:column; gap:2px; font-size:13px;">
+            <span>SUPER</span><span id="campus-super-pct-badge" style="font-size:15px;">0%</span>
+          </button>
+        </div>
+      </div>
+    `;
+
+    const canvas = this.root.querySelector<HTMLCanvasElement>('#campus-canvas');
+    if (!canvas) return;
+
+    const btnInteract = this.root.querySelector<HTMLButtonElement>('#btn-campus-interact');
+    const btnSuper = this.root.querySelector<HTMLButtonElement>('#btn-campus-super');
+    const btnGadget = this.root.querySelector<HTMLButtonElement>('#btn-campus-gadget');
+    const superPctBadge = this.root.querySelector<HTMLElement>('#campus-super-pct-badge');
+    const gadgetBadge = this.root.querySelector<HTMLElement>('#campus-gadget-count-badge');
+
+    const campusEngine = new CampusEngine({
+      canvas,
+      brawler,
+      world: CAMPUS_WORLD_DATA,
+      questService: this.questService,
+      brawlerLevel,
+      targetSpeedMultiplier: this.questionProvider.getTargetSpeedMultiplier(initialAvgElo),
+      initialCollectedBadgeIds: Array.from(this.collectedCampusBadgeIds),
+      requestNextQuestion: (subject?: SubjectCategory) =>
+        this.pickAdaptiveQuestion(
+          subject,
+          brawler.secondary_subject
+            ? [brawler.favorite_subject, brawler.secondary_subject]
+            : [brawler.favorite_subject],
+          currentMatchIndex,
+          false
+        ),
+      onHitTelemetry: ({ question, isCorrect, reactionTimeMs, impact }) => {
+        if (isCorrect) {
+          soundManager.playHitCorrect(impact.combo_multiplier);
+        } else {
+          soundManager.playHitError();
+        }
+        const newElo = this.recordAdaptiveTelemetry(
+          question,
+          brawlerId,
+          isCorrect,
+          reactionTimeMs,
+          currentMatchIndex
+        );
+        this.db.recordQuestProgress({
+          correctHits: isCorrect ? 1 : 0,
+          fastReflexHits: isCorrect && reactionTimeMs <= 2500 ? 1 : 0,
+        });
+        campusEngine.setTargetSpeedMultiplier(
+          this.questionProvider.getTargetSpeedMultiplier(newElo)
+        );
+      },
+      onHudStateChange: (hud) => {
+        if (btnInteract) {
+          if (hud.nearbyNpc) {
+            btnInteract.textContent = `💬 Parler : ${hud.nearbyNpc.name}`;
+            btnInteract.classList.add('brawl-btn-yellow', 'brawl-pulse');
+          } else {
+            btnInteract.textContent = '💬 Parler / Défi';
+            btnInteract.classList.remove('brawl-btn-yellow', 'brawl-pulse');
+          }
+        }
+        if (superPctBadge) {
+          superPctBadge.textContent = `${hud.superGaugePct}%`;
+        }
+        if (btnSuper) {
+          const ready = hud.superGaugePct >= 100;
+          btnSuper.classList.toggle('brawl-btn-yellow', ready);
+          btnSuper.classList.toggle('brawl-pulse', ready);
+          btnSuper.style.boxShadow = ready
+            ? '0 5px 0 #090d16, 0 0 28px rgba(250,204,21,0.9)'
+            : '0 5px 0 #090d16';
+        }
+        if (gadgetBadge) {
+          gadgetBadge.textContent = `${hud.gadgetCharges}`;
+        }
+        if (btnGadget) {
+          btnGadget.style.opacity = hud.gadgetCharges > 0 ? '1' : '0.45';
+        }
+      },
+      onQuestStepAdvanced: (result) => {
+        if (result.questCompleted) {
+          soundManager.playStarrDropReveal('EPIQUE');
+        } else if (result.objectiveCompleted) {
+          soundManager.playSuperReady();
+        }
+      },
+      onBadgeCollected: (coinsGranted, badge) => {
+        if (badge) {
+          this.collectedCampusBadgeIds.add(badge.id);
+        }
+        const p = this.db.getPlayerProfile();
+        this.db.updatePlayerProfile({ coins: p.coins + Math.max(0, coinsGranted) });
+        soundManager.playStarrDropTap(3, true);
+      },
+      onNpcArenaRequested: (npc) => {
+        if (!npc.linked_arena_mode) return;
+        const linkedMode = getGameModeById(npc.linked_arena_mode);
+        campusEngine.stop();
+        this.activeCampusEngine = null;
+        this.returnToCampusAfterMatch = true;
+        this.startMatch(brawlerId, linkedMode);
+      },
+    });
+
+    this.activeCampusEngine = campusEngine;
+    campusEngine.start();
+
+    this.bindPointerTap(btnSuper, () => campusEngine.triggerSuperFromUI());
+    this.bindPointerTap(btnGadget, () => campusEngine.triggerGadgetFromUI());
+    this.bindPointerTap(btnInteract, () => campusEngine.triggerInteractFromUI());
+    this.bindPointerTap(this.root.querySelector('#btn-campus-challenge'), () =>
+      campusEngine.spawnChallengeInCurrentRoom()
+    );
+    this.bindPointerTap(this.root.querySelector('#btn-campus-quests'), () => {
+      this.questJournalModal.open({
+        onClose: () => campusEngine.refreshQuestOverlay(),
+        onQuestSelected: () => campusEngine.refreshQuestOverlay(),
+      });
+    });
+
+    const campusMuteBtn = this.root.querySelector<HTMLButtonElement>('#btn-campus-mute');
+    this.bindPointerTap(campusMuteBtn, () => {
+      const mutedNow = soundManager.toggleMute();
+      if (campusMuteBtn) {
+        campusMuteBtn.textContent = mutedNow ? '🔇' : '🔊';
+      }
+    });
+
+    this.bindPointerTap(this.root.querySelector('#btn-campus-lobby'), () => {
+      campusEngine.stop();
+      this.activeCampusEngine = null;
+      this.renderLobby();
+    });
+  }
+
   private startMatch(brawlerId: BrawlerId, mode: IGameMode): void {
+    this.activeEngine?.stop();
+    this.activeEngine = null;
+    this.activeCampusEngine?.stop();
+    this.activeCampusEngine = null;
     this.lobbyPreview3D?.dispose();
     this.lobbyPreview3D = null;
     this.matchCounter += 1;
@@ -439,46 +791,7 @@ class BrawlCollegeApp {
     const superPctBadge = this.root.querySelector<HTMLElement>('#super-pct-badge');
     const gadgetBadge = this.root.querySelector<HTMLElement>('#gadget-count-badge');
 
-    const getAdaptiveQuestion = (): IQuestion => {
-      // Sur la toute première question de Timo en Maths, garantir 7x8=56 pour validation US-01
-      if (currentMatchIndex === 1 && brawlerId === 'TIMO') {
-        const firstQ = this.questionProvider.getQuestionById('MATH_MUL_001');
-        if (firstQ) return firstQ;
-      }
-      const chosenSubject =
-        mode.target_subject ??
-        (Math.random() < 0.78
-          ? candidateSubjects[Math.floor(Math.random() * candidateSubjects.length)]
-          : undefined);
-      const allSkills = this.db.getAllSkillMasteries();
-      const subjectSkills = chosenSubject
-        ? allSkills.filter((s) => s.subject_category === chosenSubject)
-        : allSkills;
-      const weakestSkill = [...subjectSkills].sort((a, b) => a.elo_rating - b.elo_rating)[0];
-      const avgElo =
-        subjectSkills.length > 0
-          ? Math.round(
-              subjectSkills.reduce((acc, s) => acc + s.elo_rating, 0) / subjectSkills.length
-            )
-          : ELO_DEFAULT;
-
-      return this.questionProvider.getNextQuestion({
-        subject: chosenSubject,
-        targetElo: avgElo,
-        currentMatchIndex,
-        preferSkillCode: weakestSkill?.skill_code,
-      });
-    };
-
-    const initialMasteries = this.db
-      .getAllSkillMasteries()
-      .filter((s) => s.subject_category === preferredSubject);
-    const initialAvgElo =
-      initialMasteries.length > 0
-        ? Math.round(
-            initialMasteries.reduce((acc, s) => acc + s.elo_rating, 0) / initialMasteries.length
-          )
-        : ELO_DEFAULT;
+    const initialAvgElo = this.computeSubjectAvgElo(preferredSubject);
 
     const engine = new GameEngine({
       canvas,
@@ -486,35 +799,23 @@ class BrawlCollegeApp {
       mode,
       brawlerLevel,
       targetSpeedMultiplier: this.questionProvider.getTargetSpeedMultiplier(initialAvgElo),
-      requestNextQuestion: getAdaptiveQuestion,
+      requestNextQuestion: () =>
+        this.pickAdaptiveQuestion(
+          mode.target_subject,
+          candidateSubjects,
+          currentMatchIndex,
+          currentMatchIndex === 1 && brawlerId === 'TIMO'
+        ),
       onHitTelemetry: ({ question, isCorrect, reactionTimeMs }) => {
-        const mastery = this.db.getSkillMastery(question.skill_code);
-        const currentElo = mastery?.elo_rating ?? ELO_DEFAULT;
-        const eloResult = this.questionProvider.registerAttempt(
+        const newElo = this.recordAdaptiveTelemetry(
           question,
-          currentElo,
+          brawlerId,
           isCorrect,
           reactionTimeMs,
           currentMatchIndex
         );
-
-        this.db.recordCombatTelemetry(
-          {
-            question_id: question.id,
-            brawler_used: brawlerId,
-            is_hit_correct: isCorrect,
-            reaction_time_ms: reactionTimeMs,
-          },
-          {
-            skill_code: question.skill_code,
-            subject_category: question.subject,
-            new_elo: eloResult.new_elo,
-          }
-        );
-        this.db.setSpacedRepetitionEntries(this.questionProvider.serializeSpacedQueue());
-
         engine.setTargetSpeedMultiplier(
-          this.questionProvider.getTargetSpeedMultiplier(eloResult.new_elo)
+          this.questionProvider.getTargetSpeedMultiplier(newElo)
         );
       },
       onHudStateChange: (hud) => {
@@ -544,27 +845,22 @@ class BrawlCollegeApp {
     this.activeEngine = engine;
     engine.start();
 
-    const bindPointerTap = (el: Element | null, handler: () => void): void => {
-      if (!el) return;
-      el.addEventListener('pointerdown', (ev) => {
-        ev.stopPropagation();
-        ev.preventDefault();
-        handler();
-      });
-    };
-
-    bindPointerTap(btnSuper, () => engine.triggerSuperFromUI());
-    bindPointerTap(btnGadget, () => engine.triggerGadgetFromUI());
+    this.bindPointerTap(btnSuper, () => engine.triggerSuperFromUI());
+    this.bindPointerTap(btnGadget, () => engine.triggerGadgetFromUI());
     const matchMuteBtn = this.root.querySelector<HTMLButtonElement>('#btn-match-mute');
-    bindPointerTap(matchMuteBtn, () => {
+    this.bindPointerTap(matchMuteBtn, () => {
       const mutedNow = soundManager.toggleMute();
       if (matchMuteBtn) {
         matchMuteBtn.textContent = mutedNow ? '🔇' : '🔊';
       }
     });
-    bindPointerTap(this.root.querySelector('#btn-quit-match'), () => {
+    this.bindPointerTap(this.root.querySelector('#btn-quit-match'), () => {
       engine.stop();
-      this.renderLobby();
+      if (this.returnToCampusAfterMatch) {
+        this.startCampusExploration(brawlerId);
+      } else {
+        this.renderLobby();
+      }
     });
   }
 
@@ -604,6 +900,7 @@ class BrawlCollegeApp {
           </div>`
         : '';
 
+    const canReturnCampus = this.returnToCampusAfterMatch;
     const overlay = document.createElement('div');
     overlay.className = 'brawl-modal-overlay';
 
@@ -639,12 +936,19 @@ class BrawlCollegeApp {
                  </div>`
               : ''
           }
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <div style="display:grid; grid-template-columns:${canReturnCampus ? 'repeat(3, 1fr)' : '1fr 1fr'}; gap:10px;">
             <button id="btn-replay-match" class="brawl-btn brawl-btn-lg brawl-btn-yellow" style="width:100%;">
               🔄 REJOUER
             </button>
+            ${
+              canReturnCampus
+                ? `<button id="btn-return-campus" class="brawl-btn brawl-btn-lg brawl-btn-green" style="width:100%;">
+                    🏫 COLLÈGE
+                  </button>`
+                : ''
+            }
             <button id="btn-back-lobby" class="brawl-btn brawl-btn-lg brawl-btn-blue" style="width:100%;">
-              RETOUR AU LOBBY
+              LOBBY
             </button>
           </div>
         </div>
@@ -654,6 +958,11 @@ class BrawlCollegeApp {
     overlay.querySelector('#btn-replay-match')?.addEventListener('click', () => {
       overlay.remove();
       this.startMatch(summary.brawlerId, getGameModeById(summary.modeId));
+    });
+
+    overlay.querySelector('#btn-return-campus')?.addEventListener('click', () => {
+      overlay.remove();
+      this.startCampusExploration(summary.brawlerId);
     });
 
     overlay.querySelector('#btn-back-lobby')?.addEventListener('click', () => {
