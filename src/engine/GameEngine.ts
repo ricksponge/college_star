@@ -730,6 +730,7 @@ export class GameEngine {
   }
 
   private updateTargets(dt: number, dtMs: number): void {
+    const nowSec = performance.now() * 0.001;
     for (const target of this.targets) {
       if (target.hp <= 0) continue;
       if (target.highlightedMs > 0) target.highlightedMs = Math.max(0, target.highlightedMs - dtMs);
@@ -746,8 +747,39 @@ export class GameEngine {
         tSpeedScale *= 0.5;
       }
 
-      target.x += target.vx * tSpeedScale * dt;
-      target.y += target.vy * tSpeedScale * dt;
+      // Déplacement fluide sinusoïdal + évitement anticipé des murs et bordures
+      const phase = target.phaseOffset ?? 0;
+      const swayY = Math.sin(nowSec * 3.1 + phase) * 28;
+      const swayX = Math.cos(nowSec * 2.1 + phase) * 14;
+
+      let avoidX = 0;
+      let avoidY = 0;
+      for (const obs of this.obstacles) {
+        if (obs.kind !== 'wall' && obs.kind !== 'desk') continue;
+        const cx = Math.max(obs.x, Math.min(target.x, obs.x + obs.width));
+        const cy = Math.max(obs.y, Math.min(target.y, obs.y + obs.height));
+        const dx = target.x - cx;
+        const dy = target.y - cy;
+        const dist = Math.hypot(dx, dy);
+        const safeDist = target.radius + 36;
+        if (dist < safeDist) {
+          const strength = ((safeDist - dist) / safeDist) * 220;
+          if (dist > 0.01) {
+            avoidX += (dx / dist) * strength;
+            avoidY += (dy / dist) * strength;
+          } else {
+            avoidY -= strength;
+          }
+        }
+      }
+
+      if (target.x < 105) avoidX += (105 - target.x) * 3.5;
+      if (target.x > ARENA_WIDTH - 105) avoidX -= (target.x - (ARENA_WIDTH - 105)) * 3.5;
+      if (target.y < 125) avoidY += (125 - target.y) * 3.5;
+      if (target.y > ARENA_HEIGHT * 0.58) avoidY -= (target.y - ARENA_HEIGHT * 0.58) * 3.5;
+
+      target.x += (target.vx + swayX + avoidX) * tSpeedScale * dt;
+      target.y += (target.vy + swayY + avoidY) * tSpeedScale * dt;
 
       if (target.x < 70 || target.x > ARENA_WIDTH - 70) {
         target.vx *= -1;
@@ -1382,6 +1414,22 @@ export class GameEngine {
         targetKilled ? 0xfacc15 : 0x38e54d,
         targetKilled ? 18 : 12
       );
+      this.renderer.spawnStarExplosion(
+        target.x,
+        target.y,
+        targetKilled ? '#facc15' : '#4ade80'
+      );
+      this.renderer.spawnFloatingDamage(target.x, target.y, impact.final_damage, targetKilled);
+      if (this.consecutiveCorrectHits >= 2) {
+        this.renderer.spawnFloatingCombo(
+          this.playerX,
+          this.playerY,
+          this.consecutiveCorrectHits,
+          this.comboMultiplier
+        );
+      }
+      this.renderer.triggerScreenShake(targetKilled ? 7 : 4, 180);
+      soundManager.playImpact(targetKilled);
       soundManager.playHitCorrect(this.comboMultiplier);
       if (!wasSuperReady && this.superSystem.getSuperGaugePct() >= 100) {
         soundManager.playSuperReady();
@@ -1436,7 +1484,11 @@ export class GameEngine {
     this.currentHintText = rawFlash.length > 96 ? `${rawFlash.slice(0, 93)}...` : rawFlash;
 
     this.renderer.spawnHitBurst(target.x, target.y, 0x38bdf8, 14);
+    this.renderer.spawnRedErrorSmoke(target.x, target.y);
+    this.renderer.triggerScreenShake(9, 260);
+    this.renderer.spawnFloatingCorrection(target.x, target.y, rawFlash);
     soundManager.playHitError();
+    soundManager.playPenaltyBuzzer();
     proj.isRebounding = true;
     proj.vx = -proj.vx * 0.65;
     proj.vy = -proj.vy * 0.65;
@@ -1587,6 +1639,8 @@ export class GameEngine {
       const speedX = (idx % 2 === 0 ? 1 : -1) * (42 + idx * 11);
       const speedY = idx % 2 === 0 ? 22 : -22;
 
+      const badgeLetter = (['A', 'B', 'C', 'D'][idx % 4] as 'A' | 'B' | 'C' | 'D');
+
       return {
         id: `${this.currentQuestion.id}_${idx}`,
         x,
@@ -1603,6 +1657,8 @@ export class GameEngine {
         slowedMs: 0,
         isCrystal: this.mode.id === 'CHASSE_AUX_BONNES_NOTES',
         isBoss: this.mode.id === 'CONSEIL_DE_CLASSE' && idx === 0,
+        badgeLetter,
+        phaseOffset: idx * 1.35,
       };
     });
 
@@ -1753,6 +1809,9 @@ export class GameEngine {
           frozen: t.frozenMs > 0,
           slowed: t.slowedMs > 0,
           hitFlashMs: this.targetHitFlashMs.get(t.id) ?? 0,
+          badgeLetter: t.badgeLetter,
+          vx: t.vx,
+          vy: t.vy,
         })),
       projectiles: this.projectiles,
       obstacles: this.obstacles,

@@ -31,6 +31,7 @@ import {
 } from './IsometricRenderer';
 import { SuperSystem, type ITargetEntity } from './SuperSystem';
 import { TwinStickController } from './TwinStickController';
+import { soundManager } from '../services/SoundManager';
 
 export interface ICampusBadgeSpawn {
   id: string;
@@ -687,6 +688,7 @@ export class CampusEngine {
       );
       const speedX = (idx % 2 === 0 ? 1 : -1) * (36 + idx * 9);
       const speedY = idx % 2 === 0 ? 22 : -22;
+      const badgeLetter = (['A', 'B', 'C', 'D'][idx % 4] as 'A' | 'B' | 'C' | 'D');
 
       return {
         id: `${this.currentQuestion!.id}_${idx}_${Math.round(this.questionShownAtMs)}`,
@@ -702,6 +704,8 @@ export class CampusEngine {
         highlightedMs: 0,
         frozenMs: 0,
         slowedMs: 0,
+        badgeLetter,
+        phaseOffset: idx * 1.35,
       };
     });
   }
@@ -755,6 +759,7 @@ export class CampusEngine {
   private updateTargets(dt: number, dtMs: number): void {
     if (!this.activeWaveBounds) return;
 
+    const nowSec = performance.now() * 0.001;
     const bounds = this.activeWaveBounds;
     const marginX = Math.min(54, bounds.width * 0.18);
     const marginY = Math.min(54, bounds.height * 0.2);
@@ -780,10 +785,33 @@ export class CampusEngine {
         tSpeedScale *= 0.5;
       }
 
+      const phase = target.phaseOffset ?? 0;
+      const swayX = Math.cos(nowSec * 2.1 + phase) * 14;
+      const swayY = Math.sin(nowSec * 3.1 + phase) * 24;
+
+      let avoidX = 0;
+      let avoidY = 0;
+      for (const obs of this.world.obstacles) {
+        if (obs.kind !== 'wall' && obs.kind !== 'desk') continue;
+        const cx = Math.max(obs.x, Math.min(target.x, obs.x + obs.width));
+        const cy = Math.max(obs.y, Math.min(target.y, obs.y + obs.height));
+        const dx = target.x - cx;
+        const dy = target.y - cy;
+        const dist = Math.hypot(dx, dy);
+        const safeDist = target.radius + 26;
+        if (dist < safeDist) {
+          const strength = ((safeDist - dist) / safeDist) * 180;
+          if (dist > 0.01) {
+            avoidX += (dx / dist) * strength;
+            avoidY += (dy / dist) * strength;
+          }
+        }
+      }
+
       const prevX = target.x;
       const prevY = target.y;
-      target.x += target.vx * tSpeedScale * dt;
-      target.y += target.vy * tSpeedScale * dt;
+      target.x += (target.vx + swayX + avoidX) * tSpeedScale * dt;
+      target.y += (target.vy + swayY + avoidY) * tSpeedScale * dt;
 
       if (target.x < minX || target.x > maxX) {
         target.vx *= -1;
@@ -932,6 +960,7 @@ export class CampusEngine {
   }
 
   private spawnPlayerProjectiles(angle: number): void {
+    soundManager.playShoot(this.brawler.id);
     const count = this.brawler.basic_attack.projectiles_count;
     const speed = this.brawler.id === 'TIMO' ? 680 : this.brawler.id === 'ZACK' ? 760 : 580;
     const color =
@@ -1055,13 +1084,38 @@ export class CampusEngine {
     });
 
     if (target.isCorrect) {
+      const wasSuperReady = this.superSystem.getSuperGaugePct() >= 100;
       target.hp = Math.max(0, target.hp - impact.final_damage);
       this.lastDamageDealt = impact.final_damage;
       this.consecutiveCorrectHits += 1;
       this.comboMultiplier = impact.combo_multiplier;
       this.superSystem.addSuperCharge(impact.super_charge_gain_pct);
 
-      if (target.hp <= 0) {
+      const targetKilled = target.hp <= 0;
+      this.renderer.spawnHitBurst(
+        target.x,
+        target.y,
+        targetKilled ? 0xfacc15 : 0x38e54d,
+        targetKilled ? 18 : 12
+      );
+      this.renderer.spawnStarExplosion(target.x, target.y, targetKilled ? '#facc15' : '#4ade80');
+      this.renderer.spawnFloatingDamage(target.x, target.y, impact.final_damage, targetKilled);
+      if (this.consecutiveCorrectHits >= 2) {
+        this.renderer.spawnFloatingCombo(
+          this.playerX,
+          this.playerY,
+          this.consecutiveCorrectHits,
+          this.comboMultiplier
+        );
+      }
+      this.renderer.triggerScreenShake(targetKilled ? 7 : 4, 180);
+      soundManager.playImpact(targetKilled);
+      soundManager.playHitCorrect(this.comboMultiplier);
+      if (!wasSuperReady && this.superSystem.getSuperGaugePct() >= 100) {
+        soundManager.playSuperReady();
+      }
+
+      if (targetKilled) {
         this.objectiveScore += 1;
         this.questionsSolved += 1;
         const roomId = this.currentRoomId;
@@ -1109,6 +1163,13 @@ export class CampusEngine {
     }
 
     // Cible erronée : rebond métallique, reset combo, pénalité 12% PV_max + bulle corrective
+    this.renderer.spawnHitBurst(target.x, target.y, 0x38bdf8, 14);
+    this.renderer.spawnRedErrorSmoke(target.x, target.y);
+    this.renderer.spawnFloatingCorrection(target.x, target.y, this.currentQuestion.explanation_flash);
+    this.renderer.triggerScreenShake(9, 260);
+    soundManager.playHitError();
+    soundManager.playPenaltyBuzzer();
+
     proj.isRebounding = true;
     proj.vx = -proj.vx * 0.65;
     proj.vy = -proj.vy * 0.65;
@@ -1158,6 +1219,9 @@ export class CampusEngine {
       this.turretRemainingMs = result.durationMs;
     }
 
+    this.renderer.spawnSuperShockwave(this.playerX, this.playerY, 0xfacc15);
+    soundManager.playSuperCast();
+
     if (result.eliminatedTargetIds.length > 0 && this.currentQuestion) {
       this.objectiveScore += result.bonusObjectivePoints;
       this.questionsSolved += 1;
@@ -1198,6 +1262,8 @@ export class CampusEngine {
       this.gadgetCompassPos = result.compassTargetPos;
       this.gadgetCompassRemainingMs = result.durationMs;
     }
+
+    soundManager.playGadget();
 
     this.flashBubble = {
       text: `🟢 ${result.gadgetName} (${result.remainingCharges} restants)`,
@@ -1363,6 +1429,9 @@ export class CampusEngine {
           isBoss: t.isBoss,
           frozen: t.frozenMs > 0,
           slowed: t.slowedMs > 0,
+          badgeLetter: t.badgeLetter,
+          vx: t.vx,
+          vy: t.vy,
         })),
       projectiles: this.projectiles,
       obstacles: this.world.obstacles,

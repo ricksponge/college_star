@@ -114,7 +114,7 @@ export function renderTrophyRoadHtml(
 
 /**
  * Composant Casier Mystère (Starr Drop) :
- * - Ouverture en 4 tapotements (taps_count = 4) + clic de collecte (5ème clic)
+ * - Ouverture en 5 tapotements (taps_count = 5) + clic de collecte (6ème clic)
  * - Probabilité de montée en rareté : Rare -> Super Rare -> Épique -> Légendaire
  * - Crédite immédiatement SQLite en Pièces, Trophées, Points de Savoir et Skins/Badges (100% sans Pay-to-Win).
  */
@@ -173,7 +173,7 @@ export class StarrDropModal {
       case 'RARE':
         return {
           final_rarity: 'RARE',
-          taps_count: 4,
+          taps_count: 5,
           coins_granted: 50,
           trophies_granted: 15,
           knowledge_points_granted: 20,
@@ -182,7 +182,7 @@ export class StarrDropModal {
       case 'SUPER_RARE':
         return {
           final_rarity: 'SUPER_RARE',
-          taps_count: 4,
+          taps_count: 5,
           coins_granted: 110,
           trophies_granted: 30,
           knowledge_points_granted: 45,
@@ -192,7 +192,7 @@ export class StarrDropModal {
       case 'EPIQUE':
         return {
           final_rarity: 'EPIQUE',
-          taps_count: 4,
+          taps_count: 5,
           coins_granted: 200,
           trophies_granted: 50,
           knowledge_points_granted: 80,
@@ -202,7 +202,7 @@ export class StarrDropModal {
       case 'LEGENDAIRE':
         return {
           final_rarity: 'LEGENDAIRE',
-          taps_count: 4,
+          taps_count: 5,
           coins_granted: 400,
           trophies_granted: 80,
           knowledge_points_granted: 150,
@@ -219,21 +219,35 @@ export class StarrDropModal {
     }
 
     const overlay = document.createElement('div');
+    overlay.className = 'brawl-modal-overlay';
     overlay.style.cssText =
-      'position:fixed; inset:0; background:rgba(2,6,23,0.88); display:flex; align-items:center; justify-content:center; z-index:9999; font-family:system-ui,sans-serif;';
+      'position:fixed; inset:0; background:radial-gradient(circle at center, rgba(15,23,42,0.92), rgba(2,6,23,0.97)); display:flex; align-items:center; justify-content:center; z-index:9999; overflow:hidden;';
+
+    const bgRays = document.createElement('div');
+    bgRays.className = 'sd-rays-rotating';
+    bgRays.style.cssText = 'width:150vmax; height:150vmax; opacity:0.32; --sd-ray-color:#22c55e;';
+    overlay.appendChild(bgRays);
 
     const card = document.createElement('div');
+    card.className = 'brawl-modal-panel sd-modal-stage';
     card.style.cssText =
-      'position:relative; overflow:hidden; width:min(440px, 92vw); background:#0f172a; border:3px solid #facc15; border-radius:20px; padding:24px; text-align:center; color:#ffffff; box-shadow:0 20px 60px rgba(0,0,0,0.65);';
+      'position:relative; z-index:2; width:min(470px, 92vw); background:linear-gradient(180deg,#1e293b 0%,#0f172a 100%); border-radius:26px; padding:26px 24px; text-align:center; color:#ffffff;';
     overlay.appendChild(card);
 
     let floatTimeout: number | null = null;
+    let openRevealTimeout: number | null = null;
     const clearTimers = (): void => {
       if (floatTimeout !== null) {
         window.clearTimeout(floatTimeout);
         floatTimeout = null;
       }
+      if (openRevealTimeout !== null) {
+        window.clearTimeout(openRevealTimeout);
+        openRevealTimeout = null;
+      }
     };
+
+    const MAX_TAPS = 5;
 
     const startDropSequence = (): void => {
       clearTimers();
@@ -244,34 +258,38 @@ export class StarrDropModal {
       let taps = 0;
       let rarity: StarrDropRarity = 'RARE';
       let reward: IStarrDropReward | null = null;
+      let isOpening = false;
       const initialStyle = RARITY_STYLES[rarity];
+      bgRays.style.setProperty('--sd-ray-color', initialStyle.color);
+      card.style.borderColor = initialStyle.color;
 
       card.innerHTML = `
-        <div id="sd-flash-layer" style="pointer-events:none; position:absolute; inset:0; border-radius:18px;
-             background:radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(250,204,21,0.35) 45%, transparent 75%); opacity:0;"></div>
-        <div style="position:relative; z-index:1;">
-          <div style="font-size:13px; letter-spacing:1px; color:#94a3b8; font-weight:700;">CASIER MYSTÈRE (STARR DROP)</div>
-          <h2 id="sd-rarity-badge" style="margin:8px 0 4px; color:${initialStyle.color}; font-size:26px; font-weight:900; transition:color 0.2s;">${initialStyle.label}</h2>
-          <p id="sd-status-text" style="margin:0 0 22px; color:#cbd5e1; font-size:14px;">Tapote encore <strong>4</strong> fois pour ouvrir le casier !</p>
+        <div id="sd-card-rays" class="sd-rays-rotating" style="--sd-ray-color:${initialStyle.color}; opacity:0.42;"></div>
+        <div id="sd-flash-layer" style="pointer-events:none; position:absolute; inset:0; border-radius:22px;
+             background:radial-gradient(circle, rgba(255,255,255,0.92) 0%, rgba(250,204,21,0.45) 45%, transparent 75%); opacity:0; z-index:3;"></div>
+        <div class="sd-content-layer">
+          <div class="brawl-outline-text" style="font-size:13px; letter-spacing:1.2px; color:#e2e8f0;">CASIER MYSTÈRE • STARR DROP</div>
+          <h2 id="sd-rarity-badge" class="brawl-outline-text" style="margin:6px 0 4px; color:${initialStyle.color}; font-size:32px; transition:color 0.25s, transform 0.2s;">★ ${initialStyle.label} ★</h2>
+          <p id="sd-status-text" style="margin:0 0 16px; color:#cbd5e1; font-size:14px; font-weight:700;">Tapote encore <strong>${MAX_TAPS}</strong> fois pour ouvrir !</p>
           <div style="position:relative; display:inline-flex; align-items:center; justify-content:center;">
-            <div id="sd-upgrade-float" style="pointer-events:none; position:absolute; top:-28px; left:50%; transform:translateX(-50%);
-                 white-space:nowrap; font-size:13px; font-weight:900; color:#fef08a; text-shadow:0 2px 10px rgba(0,0,0,0.9);
-                 opacity:0; transition:opacity 0.2s, transform 0.25s;"></div>
-            <button id="sd-tap-btn" type="button" style="width:154px; height:154px; border-radius:24px; border:4px solid ${initialStyle.color};
-                    background:${initialStyle.bg}; box-shadow:${initialStyle.glow}; color:#fff; font-size:58px; cursor:pointer;
-                    transform:scale(1); transition:transform 0.15s, border-color 0.2s, box-shadow 0.2s; touch-action:manipulation;">
+            <div id="sd-upgrade-float" class="brawl-outline-text" style="pointer-events:none; position:absolute; top:-28px; left:50%; transform:translateX(-50%);
+                 white-space:nowrap; font-size:16px; color:#fef08a; opacity:0; transition:opacity 0.2s, transform 0.25s; z-index:4;"></div>
+            <button id="sd-tap-btn" type="button" class="sd-locker-hero" style="border-color:#090d16;
+                    background:${initialStyle.bg}; box-shadow:0 8px 0 #090d16, ${initialStyle.glow}; color:#fff; font-size:66px;">
               🎒
             </button>
           </div>
-          <div id="sd-progress-dots" style="margin-top:18px; display:flex; justify-content:center; gap:8px;">
-            <span data-dot="0" style="width:14px; height:14px; border-radius:999px; background:#334155; display:inline-block; transition:background 0.15s, transform 0.15s;"></span>
-            <span data-dot="1" style="width:14px; height:14px; border-radius:999px; background:#334155; display:inline-block; transition:background 0.15s, transform 0.15s;"></span>
-            <span data-dot="2" style="width:14px; height:14px; border-radius:999px; background:#334155; display:inline-block; transition:background 0.15s, transform 0.15s;"></span>
-            <span data-dot="3" style="width:14px; height:14px; border-radius:999px; background:#334155; display:inline-block; transition:background 0.15s, transform 0.15s;"></span>
+          <div id="sd-progress-dots" class="sd-tap-dots">
+            <span data-dot="0" class="sd-tap-dot" style="background:#334155;"></span>
+            <span data-dot="1" class="sd-tap-dot" style="background:#334155;"></span>
+            <span data-dot="2" class="sd-tap-dot" style="background:#334155;"></span>
+            <span data-dot="3" class="sd-tap-dot" style="background:#334155;"></span>
+            <span data-dot="4" class="sd-tap-dot" style="background:#334155;"></span>
           </div>
         </div>
       `;
 
+      const cardRays = card.querySelector<HTMLElement>('#sd-card-rays');
       const tapBtn = card.querySelector<HTMLButtonElement>('#sd-tap-btn');
       const rarityBadge = card.querySelector<HTMLElement>('#sd-rarity-badge');
       const statusText = card.querySelector<HTMLElement>('#sd-status-text');
@@ -284,56 +302,60 @@ export class StarrDropModal {
       const renderRewardView = (finalReward: IStarrDropReward): void => {
         clearTimers();
         const style = RARITY_STYLES[finalReward.final_rarity];
+        bgRays.style.setProperty('--sd-ray-color', style.color);
+        bgRays.style.opacity = '0.48';
+
         const remaining = this.db.getPlayerProfile().starr_drops_available;
         const badgeLine = finalReward.unlocked_badge_or_skin
-          ? `<div style="margin-top:8px; padding:8px; border-radius:10px; background:rgba(250,204,21,0.16); color:#fef08a; font-weight:700;">🏅 ${finalReward.unlocked_badge_or_skin}</div>`
+          ? `<div style="margin-top:10px; padding:10px; border-radius:14px; border:2.5px solid #090d16; background:rgba(250,204,21,0.22); color:#fef08a; font-weight:800;">🏅 ${finalReward.unlocked_badge_or_skin}</div>`
           : '';
         const secretTipLine = finalReward.secret_tip_6e
-          ? `<div style="margin-top:8px; padding:10px 12px; border-radius:10px; background:rgba(56,189,248,0.14); border:1px solid rgba(56,189,248,0.4); color:#e0f2fe; font-size:12px; line-height:1.4; text-align:left;"><strong style="color:#7dd3fc;">🗝️ Secret de 6ème :</strong> ${finalReward.secret_tip_6e}</div>`
+          ? `<div style="margin-top:10px; padding:10px 12px; border-radius:14px; background:rgba(15,23,42,0.85); border:2.5px solid #090d16; color:#e0f2fe; font-size:12.5px; line-height:1.4; text-align:left;"><strong style="color:#7dd3fc;">🗝️ Secret de 6ème :</strong> ${finalReward.secret_tip_6e}</div>`
           : '';
         const nextBtnHtml =
           remaining > 0
-            ? `<button id="sd-next-btn" type="button" class="pulse-glow" style="margin-top:14px; width:100%; padding:12px; border-radius:12px; border:none;
-                      background:linear-gradient(135deg, #38bdf8, #2563eb); color:#ffffff; font-weight:900; font-size:15px; cursor:pointer;">
+            ? `<button id="sd-next-btn" type="button" class="brawl-btn brawl-btn-blue" style="margin-top:14px; width:100%; padding:12px; font-size:16px; cursor:pointer;">
                  🎁 OUVRIR LE SUIVANT (${remaining})
                </button>`
             : '';
 
         card.innerHTML = `
-          <div class="sd-flash-burst" style="pointer-events:none; position:absolute; inset:0; border-radius:18px;
-               background:radial-gradient(circle, rgba(255,255,255,0.85) 0%, ${style.color}44 50%, transparent 75%);"></div>
-          <div style="position:relative; z-index:1;">
-            <div style="font-size:13px; color:#94a3b8; font-weight:700;">CASIER DÉVERROUILLÉ !</div>
-            <h2 style="margin:6px 0 12px; color:${style.color}; font-size:28px; font-weight:900;">★ ${style.label} ★</h2>
+          <div class="sd-rays-rotating" style="--sd-ray-color:${style.color}; opacity:0.55;"></div>
+          <div class="sd-flash-burst" style="pointer-events:none; position:absolute; inset:0; border-radius:22px;
+               background:radial-gradient(circle, rgba(255,255,255,0.92) 0%, ${style.color}55 50%, transparent 78%); z-index:3;"></div>
+          <div class="sd-content-layer sd-reward-pop">
+            <div class="brawl-outline-text" style="font-size:13px; color:#cbd5e1; letter-spacing:1px;">CASIER DÉVERROUILLÉ !</div>
+            <h2 class="brawl-outline-text" style="margin:6px 0 14px; color:${style.color}; font-size:34px;">★ ${style.label} ★</h2>
             <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:12px;">
-              <div style="background:#1e293b; padding:10px; border-radius:12px;">
-                <div style="font-size:20px; font-weight:900; color:#facc15;">+${finalReward.coins_granted}</div>
-                <div style="font-size:12px; color:#cbd5e1;">Pièces 🪙</div>
+              <div style="background:#1e293b; border:3px solid #090d16; box-shadow:0 4px 0 #090d16; padding:10px; border-radius:14px;">
+                <div class="brawl-outline-text" style="font-size:22px; color:#facc15;">+${finalReward.coins_granted}</div>
+                <div style="font-size:12px; color:#cbd5e1; font-weight:700;">Pièces 🪙</div>
               </div>
-              <div style="background:#1e293b; padding:10px; border-radius:12px;">
-                <div style="font-size:20px; font-weight:900; color:#38bdf8;">+${finalReward.trophies_granted}</div>
-                <div style="font-size:12px; color:#cbd5e1;">Trophées 🏆</div>
+              <div style="background:#1e293b; border:3px solid #090d16; box-shadow:0 4px 0 #090d16; padding:10px; border-radius:14px;">
+                <div class="brawl-outline-text" style="font-size:22px; color:#38bdf8;">+${finalReward.trophies_granted}</div>
+                <div style="font-size:12px; color:#cbd5e1; font-weight:700;">Trophées 🏆</div>
               </div>
-              <div style="background:#1e293b; padding:10px; border-radius:12px;">
-                <div style="font-size:20px; font-weight:900; color:#4ade80;">+${finalReward.knowledge_points_granted}</div>
-                <div style="font-size:12px; color:#cbd5e1;">Savoir 📖</div>
+              <div style="background:#1e293b; border:3px solid #090d16; box-shadow:0 4px 0 #090d16; padding:10px; border-radius:14px;">
+                <div class="brawl-outline-text" style="font-size:22px; color:#4ade80;">+${finalReward.knowledge_points_granted}</div>
+                <div style="font-size:12px; color:#cbd5e1; font-weight:700;">Savoir 📖</div>
               </div>
             </div>
             ${badgeLine}
             ${secretTipLine}
             ${nextBtnHtml}
-            <button id="sd-claim-btn" type="button" style="margin-top:${remaining > 0 ? '10px' : '16px'}; width:100%; padding:12px; border-radius:12px; border:none;
-                    background:#facc15; color:#0f172a; font-weight:900; font-size:16px; cursor:pointer;">
+            <button id="sd-claim-btn" type="button" class="brawl-btn brawl-btn-yellow" style="margin-top:${remaining > 0 ? '10px' : '16px'}; width:100%; padding:14px; font-size:18px; cursor:pointer;">
               RÉCUPÉRER ET CONTINUER
             </button>
           </div>
         `;
 
         card.querySelector<HTMLButtonElement>('#sd-next-btn')?.addEventListener('click', () => {
+          soundManager.playUiClick();
           startDropSequence();
         });
 
         card.querySelector<HTMLButtonElement>('#sd-claim-btn')?.addEventListener('click', () => {
+          soundManager.playUiClick();
           clearTimers();
           overlay.remove();
           onCompleted?.(finalReward);
@@ -341,66 +363,91 @@ export class StarrDropModal {
       };
 
       const handleTap = (): void => {
-        if (taps >= 4) {
+        if (isOpening || taps >= MAX_TAPS) {
           return;
         }
         taps += 1;
         const prevRarity = rarity;
         rarity = this.rollUpgradeRarity(rarity);
         const upgraded = rarity !== prevRarity;
+        const style = RARITY_STYLES[rarity];
 
         soundManager.playStarrDropTap(taps, upgraded);
+        soundManager.vibrate(upgraded ? [24, 18, 42] : 18 + taps * 4);
 
-        if (taps < 4) {
-          const style = RARITY_STYLES[rarity];
-          const remainingTaps = 4 - taps;
+        // Mettre à jour les rayons lumineux rotatifs et la jauge à chaque clic (1 à 5)
+        bgRays.style.setProperty('--sd-ray-color', style.color);
+        if (cardRays) {
+          cardRays.style.setProperty('--sd-ray-color', style.color);
+          cardRays.style.opacity = `${Math.min(0.75, 0.38 + taps * 0.07)}`;
+        }
+        if (rarityBadge) {
+          rarityBadge.textContent = `★ ${style.label} ★`;
+          rarityBadge.style.color = style.color;
+        }
 
-          if (rarityBadge) {
-            rarityBadge.textContent = style.label;
-            rarityBadge.style.color = style.color;
+        tapBtn.style.background = style.bg;
+        tapBtn.style.boxShadow = `0 8px 0 #090d16, ${style.glow}`;
+        tapBtn.style.transform = `scale(${1 + taps * 0.045})`;
+
+        // Déclencher une vraie secousse visible sur chaque clic
+        tapBtn.classList.remove('is-shaking', 'sd-shaking');
+        void tapBtn.offsetWidth;
+        tapBtn.classList.add('is-shaking');
+
+        dots.forEach((dot, idx) => {
+          const filled = idx < taps;
+          dot.style.background = filled ? style.color : '#334155';
+          dot.classList.toggle('is-filled', filled);
+        });
+
+        if (upgraded && upgradeFloat) {
+          const prevLabel = RARITY_STYLES[prevRarity].label;
+          upgradeFloat.textContent = `✨ ${prevLabel} ➔ ${style.label} !`;
+          upgradeFloat.style.color = style.color;
+          upgradeFloat.style.opacity = '1';
+          upgradeFloat.style.transform = 'translateX(-50%) translateY(-10px) scale(1.08)';
+          if (floatTimeout !== null) {
+            window.clearTimeout(floatTimeout);
           }
+          floatTimeout = window.setTimeout(() => {
+            upgradeFloat.style.opacity = '0';
+            upgradeFloat.style.transform = 'translateX(-50%) translateY(0) scale(1)';
+          }, 850);
+        }
+
+        if (upgraded && flashLayer) {
+          flashLayer.classList.remove('sd-flash-burst');
+          void flashLayer.offsetWidth;
+          flashLayer.classList.add('sd-flash-burst');
+        }
+
+        if (taps < MAX_TAPS) {
+          const remainingTaps = MAX_TAPS - taps;
           if (statusText) {
-            statusText.innerHTML = `Tapote encore <strong>${remainingTaps}</strong> fois pour ouvrir le casier !`;
-          }
-
-          tapBtn.style.borderColor = style.color;
-          tapBtn.style.background = style.bg;
-          tapBtn.style.boxShadow = style.glow;
-          tapBtn.style.transform = `scale(${1 + taps * 0.05})`;
-
-          tapBtn.classList.remove('sd-shaking');
-          void tapBtn.offsetWidth;
-          tapBtn.classList.add('sd-shaking');
-
-          dots.forEach((dot, idx) => {
-            dot.style.background = idx < taps ? style.color : '#334155';
-            dot.style.transform = idx < taps ? 'scale(1.15)' : 'scale(1)';
-          });
-
-          if (upgraded) {
-            const prevLabel = RARITY_STYLES[prevRarity].label;
-            if (upgradeFloat) {
-              upgradeFloat.textContent = `✨ ${prevLabel} ➔ ${style.label} !`;
-              upgradeFloat.style.color = style.color;
-              upgradeFloat.style.opacity = '1';
-              upgradeFloat.style.transform = 'translateX(-50%) translateY(-8px)';
-              clearTimers();
-              floatTimeout = window.setTimeout(() => {
-                upgradeFloat.style.opacity = '0';
-                upgradeFloat.style.transform = 'translateX(-50%) translateY(0)';
-              }, 900);
-            }
-            if (flashLayer) {
-              flashLayer.classList.remove('sd-flash-burst');
-              void flashLayer.offsetWidth;
-              flashLayer.classList.add('sd-flash-burst');
-            }
+            statusText.innerHTML =
+              remainingTaps === 1
+                ? `Dernier coup ! <strong>1</strong> clic pour éclater le casier !`
+                : `Tapote encore <strong>${remainingTaps}</strong> fois pour ouvrir !`;
           }
         } else {
+          isOpening = true;
+          if (statusText) {
+            statusText.innerHTML = `<strong>OUVERTURE !</strong>`;
+          }
+          if (flashLayer) {
+            flashLayer.classList.remove('sd-flash-burst');
+            void flashLayer.offsetWidth;
+            flashLayer.classList.add('sd-flash-burst');
+          }
           reward = this.buildReward(rarity);
           this.applyReward(reward);
-          soundManager.playStarrDropReveal(reward.final_rarity);
-          renderRewardView(reward);
+          const finalReward = reward;
+          openRevealTimeout = window.setTimeout(() => {
+            soundManager.playStarrDropReveal(finalReward.final_rarity);
+            soundManager.vibrate([30, 25, 65]);
+            renderRewardView(finalReward);
+          }, 260);
         }
       };
 

@@ -17,6 +17,8 @@ export interface ITargetEntity {
   slowedMs: number;
   isCrystal?: boolean;
   isBoss?: boolean;
+  badgeLetter?: 'A' | 'B' | 'C' | 'D';
+  phaseOffset?: number;
 }
 
 export interface ISuperExecutionResult {

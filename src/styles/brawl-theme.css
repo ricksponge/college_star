@@ -24,8 +24,8 @@
   --brawl-text: #f8fafc;
   --brawl-text-muted: #cbd5e1;
 
-  --brawl-font-display: 'Arial Black', 'Trebuchet MS', 'Segoe UI Black', Impact, system-ui, sans-serif;
-  --brawl-font-ui: 'Trebuchet MS', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --brawl-font-display: 'Lilita One', 'Fredoka', 'Arial Black', Impact, system-ui, sans-serif;
+  --brawl-font-ui: 'Fredoka', 'Trebuchet MS', 'Segoe UI', system-ui, -apple-system, sans-serif;
 }
 
 .brawl-bg,
@@ -1089,3 +1089,400 @@
   color: #052e16;
 }
 
+
+
+/* ==========================================================================
+   M4 STUDIO POLISH & MOBILE GAME FEEL (Supercell Style UI)
+   ========================================================================== */
+
+body {
+  font-family: var(--brawl-font-ui);
+}
+
+.brawl-title,
+.brawl-outline-text,
+.brawl-btn,
+.brawl-stat-pill,
+.brawl-hero-name,
+.brawl-mode-title {
+  font-family: var(--brawl-font-display);
+  letter-spacing: 0.03em;
+}
+
+.brawl-outline-text,
+.brawl-title {
+  -webkit-text-stroke: 2px #090d16;
+  paint-order: stroke fill;
+  text-shadow:
+    -2px -2px 0 #090d16,
+     2px -2px 0 #090d16,
+    -2px  2px 0 #090d16,
+     2px  2px 0 #090d16,
+     0px  4px 0 #090d16,
+     0px  7px 12px rgba(0, 0, 0, 0.55);
+}
+
+.brawl-stat-pill {
+  border: 3px solid #090d16;
+  box-shadow: 0 4px 0 #090d16, inset 0 2px 0 rgba(255, 255, 255, 0.25);
+  border-radius: 14px;
+  padding: 6px 12px;
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.96) 0%, rgba(15, 23, 42, 0.98) 100%);
+  text-shadow:
+    -1.5px -1.5px 0 #090d16,
+     1.5px -1.5px 0 #090d16,
+    -1.5px  1.5px 0 #090d16,
+     1.5px  1.5px 0 #090d16,
+     0px    2px   0 #090d16;
+}
+
+.brawl-card {
+  border: 3.5px solid #090d16;
+  box-shadow: 0 8px 0 #090d16, 0 16px 32px rgba(2, 6, 23, 0.6);
+}
+
+@keyframes brawlBtnBounce {
+  0% {
+    transform: translateY(4px) scale(0.94, 1.04);
+  }
+  55% {
+    transform: translateY(-2px) scale(1.04, 0.96);
+  }
+  100% {
+    transform: translateY(0) scale(1, 1);
+  }
+}
+
+.brawl-btn {
+  position: relative;
+  border: 3.5px solid #090d16;
+  border-radius: 16px;
+  text-shadow:
+    -1.5px -1.5px 0 #090d16,
+     1.5px -1.5px 0 #090d16,
+    -1.5px  1.5px 0 #090d16,
+     1.5px  1.5px 0 #090d16,
+     0px    3px   0 #090d16;
+  box-shadow:
+    inset 0 3px 0 rgba(255, 255, 255, 0.42),
+    inset 0 -3px 0 rgba(0, 0, 0, 0.25),
+    0 6px 0 #090d16,
+    0 10px 18px rgba(0, 0, 0, 0.45);
+  transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.14s ease, box-shadow 0.12s ease;
+  overflow: hidden;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.brawl-btn::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 6px;
+  right: 6px;
+  height: 36%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.36) 0%, rgba(255, 255, 255, 0) 100%);
+  border-radius: 10px 10px 6px 6px;
+  pointer-events: none;
+}
+
+.brawl-btn:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.03);
+  filter: brightness(1.08);
+}
+
+.brawl-btn:active:not(:disabled) {
+  transform: translateY(5px) scale(0.95, 0.91);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.22),
+    0 1px 0 #090d16,
+    0 3px 8px rgba(0, 0, 0, 0.45);
+}
+
+.brawl-btn-yellow {
+  background: linear-gradient(180deg, #fde047 0%, #facc15 48%, #f59e0b 100%);
+  color: #ffffff;
+  box-shadow:
+    inset 0 4px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -4px 0 #b45309,
+    0 6px 0 #090d16,
+    0 10px 22px rgba(245, 158, 11, 0.4);
+}
+
+.brawl-play-cta {
+  background: linear-gradient(180deg, #fef08a 0%, #facc15 35%, #f97316 100%) !important;
+  color: #ffffff !important;
+  border: 4px solid #090d16 !important;
+  border-radius: 20px !important;
+  font-size: clamp(22px, 2.4vw, 30px) !important;
+  letter-spacing: 0.05em;
+  padding: 16px 22px !important;
+  min-height: 70px;
+  box-shadow:
+    inset 0 5px 0 rgba(255, 255, 255, 0.65),
+    inset 0 -5px 0 #c2410c,
+    0 8px 0 #090d16,
+    0 14px 30px rgba(249, 115, 22, 0.52) !important;
+}
+
+.brawl-play-cta:active:not(:disabled) {
+  transform: translateY(6px) scale(0.96, 0.92) !important;
+  box-shadow:
+    inset 0 3px 0 rgba(255, 255, 255, 0.35),
+    0 2px 0 #090d16,
+    0 4px 10px rgba(249, 115, 22, 0.45) !important;
+}
+
+@keyframes brawlHeroBreathe {
+  0%,
+  100% {
+    transform: translateY(0px) scale(1, 1);
+  }
+  50% {
+    transform: translateY(-6px) scale(1.022, 0.985);
+  }
+}
+
+.brawl-hero-stage {
+  position: relative;
+  border: 3.5px solid #090d16;
+  box-shadow: 0 10px 0 #090d16, 0 20px 38px rgba(0, 0, 0, 0.58);
+  background: radial-gradient(circle at 50% 42%, rgba(56, 189, 248, 0.28) 0%, rgba(30, 58, 138, 0.52) 48%, rgba(15, 23, 42, 0.96) 100%);
+}
+
+.brawl-hero-3d-wrap {
+  animation: brawlHeroBreathe 3.2s ease-in-out infinite;
+  transform-origin: center bottom;
+}
+
+.brawl-hero-pedestal-ring {
+  position: absolute;
+  bottom: 84px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 210px;
+  height: 44px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(250, 204, 21, 0.45) 0%, rgba(56, 189, 248, 0.25) 55%, rgba(0, 0, 0, 0) 75%);
+  border: 2px solid rgba(250, 204, 21, 0.55);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.brawl-mode-card-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 16px;
+  border: 3px solid #090d16;
+  cursor: pointer;
+  color: #f8fafc;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.25),
+    0 5px 0 #090d16;
+  transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.12s ease, filter 0.14s ease;
+}
+
+.brawl-mode-card-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+}
+
+.brawl-mode-card-btn:active {
+  transform: translateY(4px) scale(0.97, 0.94);
+  box-shadow: 0 1px 0 #090d16;
+}
+
+.brawl-mode-illus-badge {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 2.5px solid #090d16;
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.35), 0 3px 0 #090d16;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+
+@keyframes sdRaysSpin {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes sdChestShakeHard {
+  0% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  16% {
+    transform: translate(-11px, -8px) scale(1.12, 0.88) rotate(-9deg);
+  }
+  34% {
+    transform: translate(11px, -4px) scale(0.92, 1.1) rotate(9deg);
+  }
+  52% {
+    transform: translate(-8px, 3px) scale(1.08, 0.93) rotate(-6deg);
+  }
+  74% {
+    transform: translate(6px, -2px) scale(0.97, 1.05) rotate(4deg);
+  }
+  100% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+}
+
+@keyframes sdChestIdleFloat {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-7px) scale(1.03, 0.98);
+  }
+}
+
+@keyframes sdRewardPop {
+  0% {
+    transform: scale(0.35) rotate(-6deg);
+    opacity: 0;
+  }
+  65% {
+    transform: scale(1.08) rotate(2deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.sd-modal-stage {
+  position: relative;
+  overflow: hidden;
+  border: 4px solid #090d16 !important;
+  box-shadow: 0 14px 0 #090d16, 0 28px 60px rgba(0, 0, 0, 0.85) !important;
+}
+
+.sd-rays-rotating {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 960px;
+  height: 960px;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.45;
+  background: repeating-conic-gradient(
+    from 0deg,
+    var(--sd-ray-color, #22c55e) 0deg 14deg,
+    transparent 14deg 30deg
+  );
+  -webkit-mask-image: radial-gradient(circle, rgba(0, 0, 0, 1) 12%, rgba(0, 0, 0, 0.65) 45%, rgba(0, 0, 0, 0) 72%);
+  mask-image: radial-gradient(circle, rgba(0, 0, 0, 1) 12%, rgba(0, 0, 0, 0.65) 45%, rgba(0, 0, 0, 0) 72%);
+  animation: sdRaysSpin 11s linear infinite;
+  transition: background 0.35s ease, opacity 0.35s ease;
+}
+
+.sd-content-layer {
+  position: relative;
+  z-index: 2;
+}
+
+.sd-locker-hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 170px;
+  height: 170px;
+  margin: 12px auto 16px;
+  border-radius: 32px;
+  border: 4px solid #090d16;
+  cursor: pointer;
+  user-select: none;
+  animation: sdChestIdleFloat 2.1s ease-in-out infinite;
+  transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.14s ease;
+}
+
+.sd-locker-hero.is-shaking {
+  animation: sdChestShakeHard 0.34s cubic-bezier(0.36, 0.07, 0.19, 0.97) !important;
+}
+
+.sd-tap-dots {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.sd-tap-dot {
+  width: 24px;
+  height: 12px;
+  border-radius: 999px;
+  border: 2.5px solid #090d16;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s ease;
+}
+
+.sd-tap-dot.is-filled {
+  transform: scale(1.12);
+}
+
+.sd-reward-pop {
+  animation: sdRewardPop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.brawl-mode-pill {
+  border: 3px solid #090d16 !important;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.22),
+    0 5px 0 #090d16 !important;
+  border-radius: 16px !important;
+  transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.12s ease, filter 0.14s ease !important;
+}
+
+.brawl-mode-pill:hover {
+  transform: translateY(-2px) scale(1.015);
+  filter: brightness(1.08);
+}
+
+.brawl-mode-pill:active {
+  transform: translateY(4px) scale(0.96, 0.94);
+  box-shadow: 0 1px 0 #090d16 !important;
+}
+
+.brawl-mode-pill.active {
+  border-color: #facc15 !important;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.4),
+    0 5px 0 #090d16,
+    0 0 18px rgba(250, 204, 21, 0.45) !important;
+}
+
+.brawl-hero-chip {
+  border: 3px solid #090d16 !important;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.25),
+    0 4px 0 #090d16 !important;
+  border-radius: 14px !important;
+  transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.12s ease !important;
+}
+
+.brawl-hero-chip:active {
+  transform: translateY(3px) scale(0.94);
+  box-shadow: 0 1px 0 #090d16 !important;
+}
+
+.brawl-hero-chip.active {
+  border-color: #facc15 !important;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.45),
+    0 4px 0 #090d16,
+    0 0 16px rgba(250, 204, 21, 0.45) !important;
+}

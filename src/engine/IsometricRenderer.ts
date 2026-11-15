@@ -11,6 +11,13 @@ import {
 } from '../entities/Brawler3DModel';
 import { buildArenaEnvironment3D, updateArenaEnvironment3D } from './ArenaEnvironment3D';
 import { ParticleSystem3D } from './ParticleSystem3D';
+import { ParticleSystem } from './ParticleSystem';
+import { CameraController } from './CameraController';
+import { FloatingTextSystem } from './FloatingText';
+import {
+  drawBrawlerCanvasSprite,
+  drawExamDroneCanvasSprite,
+} from '../entities/BrawlerCanvasRenderer';
 
 export const ISO_ANGLE_DEG = 50;
 export const ISO_ANGLE_RAD = (ISO_ANGLE_DEG * Math.PI) / 180;
@@ -51,6 +58,9 @@ export interface IRenderTarget {
   frozen?: boolean;
   slowed?: boolean;
   hitFlashMs?: number;
+  badgeLetter?: 'A' | 'B' | 'C' | 'D';
+  vx?: number;
+  vy?: number;
 }
 
 export interface IRenderProjectile {
@@ -207,8 +217,13 @@ export class IsometricRenderer {
   private readonly ctx: CanvasRenderingContext2D;
   private cameraX = 0;
   private cameraY = 0;
-  private cameraInitialized = false;
+  private baseZoom = 1;
   private zoom = 1;
+
+  private readonly particleSystem2D = new ParticleSystem();
+  private readonly cameraController = new CameraController();
+  private readonly floatingTextSystem = new FloatingTextSystem();
+  private projTrailCooldownMs = 0;
 
   // Sous-système 3D Three.js
   private webglReady = false;
@@ -362,11 +377,52 @@ export class IsometricRenderer {
       wy * WORLD_SCALE_3D,
       colorHex
     );
+    this.cameraController.triggerSuperZoom(1.11, 560);
+    this.cameraController.screenShake(10, 320);
+    this.particleSystem2D.spawnStarExplosion(wx, wy, '#facc15');
+  }
+
+  public triggerScreenShake(intensity: number, durationMs = 220): void {
+    this.cameraController.screenShake(intensity, durationMs);
+  }
+
+  public triggerSuperZoom(peakScale = 1.11, durationMs = 560): void {
+    this.cameraController.triggerSuperZoom(peakScale, durationMs);
+  }
+
+  public spawnStarExplosion(wx: number, wy: number, accentColor = '#facc15'): void {
+    this.particleSystem2D.spawnStarExplosion(wx, wy, accentColor);
+  }
+
+  public spawnRedErrorSmoke(wx: number, wy: number): void {
+    this.particleSystem2D.spawnRedErrorSmoke(wx, wy);
+  }
+
+  public spawnProjectileTrail(wx: number, wy: number, color: string, isLobbed = false): void {
+    this.particleSystem2D.spawnProjectileTrail(wx, wy, color, isLobbed);
+  }
+
+  public spawnFloatingDamage(wx: number, wy: number, damage: number, isCritical = false): void {
+    this.floatingTextSystem.spawnDamage(wx, wy, damage, isCritical);
+  }
+
+  public spawnFloatingCombo(wx: number, wy: number, streak: number, multiplier: number): void {
+    this.floatingTextSystem.spawnComboBonus(wx, wy, streak, multiplier);
+  }
+
+  public spawnFloatingCorrection(wx: number, wy: number, explanation: string): void {
+    this.floatingTextSystem.spawnCorrection(wx, wy, explanation);
+  }
+
+  public spawnFloatingInfo(wx: number, wy: number, text: string, color = '#fde047'): void {
+    this.floatingTextSystem.spawn({ x: wx, y: wy - 20, text, color, kind: 'info' });
   }
 
   public dispose(): void {
     this.particleSystem?.dispose();
     this.particleSystem = null;
+    this.particleSystem2D.clear();
+    this.floatingTextSystem.clear();
     if (this.playerRig && this.scene) {
       this.scene.remove(this.playerRig.root);
       disposeObject3D(this.playerRig.root);
@@ -430,7 +486,8 @@ export class IsometricRenderer {
       this.canvas.style.height = `${targetH}px`;
     }
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    this.zoom = Math.min(targetW / 960, targetH / 540);
+    this.baseZoom = Math.min(targetW / 960, targetH / 540);
+    this.zoom = this.baseZoom;
 
     if (this.webglReady && this.webglRenderer) {
       this.webglRenderer.setPixelRatio(dpr);
@@ -499,28 +556,22 @@ export class IsometricRenderer {
     const cssH = this.canvas.clientHeight || 540;
     const nowMs = performance.now();
     const dtMs = Math.max(1, nowMs - this.lastRenderMs);
+    const dtSec = Math.min(0.05, dtMs / 1000);
     this.lastRenderMs = nowMs;
     this.currentTimeSec = nowMs / 1000;
 
-    // Caméra verrouillée sur le joueur avec léger lissage (instantanée à la première frame)
-    if (!this.cameraInitialized) {
-      this.cameraX = state.player.x;
-      this.cameraY = state.player.y;
-      this.cameraInitialized = true;
-    } else {
-      this.cameraX += (state.player.x - this.cameraX) * 0.18;
-      this.cameraY += (state.player.y - this.cameraY) * 0.18;
-    }
-
-    // Tremblement de caméra sur impact / erreur / super
+    // Tremblement de caméra hérité (rétrocompatibilité) + CameraController lerp / zoom Super
     const shakeAmp = state.shakeIntensity ?? 0;
     if (shakeAmp > 0.05) {
-      this.shakeOffsetX = (Math.random() - 0.5) * 2 * shakeAmp;
-      this.shakeOffsetY = (Math.random() - 0.5) * 2 * shakeAmp;
-    } else {
-      this.shakeOffsetX = 0;
-      this.shakeOffsetY = 0;
+      this.cameraController.screenShake(shakeAmp, 150);
     }
+
+    const camState = this.cameraController.update(state.player.x, state.player.y, dtSec);
+    this.cameraX = camState.x;
+    this.cameraY = camState.y;
+    this.shakeOffsetX = camState.shakeOffsetX;
+    this.shakeOffsetY = camState.shakeOffsetY;
+    this.zoom = this.baseZoom * camState.zoom;
 
     const movedDist = Math.hypot(
       state.player.x - this.prevPlayerX,
@@ -535,13 +586,33 @@ export class IsometricRenderer {
     }
 
     this.dustSpawnCooldownMs = Math.max(0, this.dustSpawnCooldownMs - dtMs);
-    if (this.webglReady && movedDist > 0.45 && this.dustSpawnCooldownMs <= 0) {
-      this.particleSystem?.spawnDustTrail(
-        state.player.x * WORLD_SCALE_3D,
-        state.player.y * WORLD_SCALE_3D
-      );
+    if (movedDist > 0.45 && this.dustSpawnCooldownMs <= 0) {
+      this.particleSystem2D.spawnFootstepDust(state.player.x, state.player.y);
+      if (this.webglReady) {
+        this.particleSystem?.spawnDustTrail(
+          state.player.x * WORLD_SCALE_3D,
+          state.player.y * WORLD_SCALE_3D
+        );
+      }
       this.dustSpawnCooldownMs = 85;
     }
+
+    // Traînées de projectiles 2.5D à 60 FPS
+    this.projTrailCooldownMs = Math.max(0, this.projTrailCooldownMs - dtMs);
+    if (state.projectiles.length > 0 && this.projTrailCooldownMs <= 0) {
+      for (const proj of state.projectiles) {
+        this.particleSystem2D.spawnProjectileTrail(
+          proj.x,
+          proj.y,
+          proj.color,
+          Boolean(proj.isLobbed)
+        );
+      }
+      this.projTrailCooldownMs = 28;
+    }
+
+    this.particleSystem2D.update(dtSec);
+    this.floatingTextSystem.update(dtSec);
 
     const ctx = this.ctx;
     ctx.clearRect(0, 0, cssW, cssH);
@@ -973,10 +1044,18 @@ export class IsometricRenderer {
       this.drawTargetOverlay(target, labelOffsets.get(target.id) ?? 0);
     }
     this.drawPlayerOverlay(state.player);
+    this.particleSystem2D.render(
+      this.ctx,
+      (wx, wy) => this.worldToScreen(wx, wy, 10),
+      this.zoom
+    );
     this.drawActiveBubbles(state);
+    this.floatingTextSystem.render(this.ctx, (wx, wy) => this.worldToScreen(wx, wy, 56));
   }
 
   private drawSharedWorldOverlays(state: IRenderFrameState): void {
+    this.drawPlayerGroundAura(state.player);
+
     if (state.shrinkRadius !== undefined) {
       this.drawShrinkZone(state.arenaWidth * 0.5, state.arenaHeight * 0.5, state.shrinkRadius);
     }
@@ -1010,6 +1089,59 @@ export class IsometricRenderer {
     if (state.compassTargetPos) {
       this.drawCompassArrow(state.player, state.compassTargetPos);
     }
+  }
+
+  private drawPlayerGroundAura(player: IRenderPlayer): void {
+    if (player.isRespawning) return;
+    const ctx = this.ctx;
+    const feet = this.worldToScreen(player.x, player.y, 2);
+    const superReady = player.superGaugePct >= 100;
+    const palette = BRAWLER_COLORS[player.brawlerId];
+
+    ctx.save();
+    if (superReady) {
+      const pulse = 0.5 + 0.5 * Math.sin(this.currentTimeSec * 8.5);
+      const rx = (34 + pulse * 6) * this.zoom;
+      const ry = rx * ISO_Y_SCALE;
+
+      const auraGrad = ctx.createRadialGradient(feet.x, feet.y, rx * 0.2, feet.x, feet.y, rx * 1.15);
+      auraGrad.addColorStop(0, 'rgba(250, 204, 21, 0.35)');
+      auraGrad.addColorStop(0.7, 'rgba(250, 204, 21, 0.16)');
+      auraGrad.addColorStop(1, 'rgba(250, 204, 21, 0)');
+      ctx.fillStyle = auraGrad;
+      ctx.beginPath();
+      ctx.ellipse(feet.x, feet.y, rx * 1.15, ry * 1.15, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = '#facc15';
+      ctx.lineWidth = (3.6 + pulse * 1.4) * this.zoom;
+      ctx.beginPath();
+      ctx.ellipse(feet.x, feet.y, rx, ry, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.save();
+      ctx.translate(feet.x, feet.y);
+      ctx.scale(1, ISO_Y_SCALE);
+      ctx.rotate(this.currentTimeSec * 2.4);
+      ctx.strokeStyle = '#fef08a';
+      ctx.lineWidth = 2.6 * this.zoom;
+      ctx.setLineDash([10 * this.zoom, 8 * this.zoom]);
+      ctx.beginPath();
+      ctx.arc(0, 0, rx + 5 * this.zoom, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+    } else {
+      const rx = 28 * this.zoom;
+      const ry = rx * ISO_Y_SCALE;
+      ctx.strokeStyle = palette.primary;
+      ctx.globalAlpha = 0.45;
+      ctx.lineWidth = 2.4 * this.zoom;
+      ctx.beginPath();
+      ctx.ellipse(feet.x, feet.y, rx, ry, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.restore();
   }
 
   private computeTargetLabelOffsets(targets: IRenderTarget[]): Map<string, number> {
@@ -1075,12 +1207,14 @@ export class IsometricRenderer {
     const headPos = this.worldToScreen(target.x, target.y, target.isBoss ? 92 : 60);
     const displayLabel = target.highlighted ? `⭐ ${target.label}` : target.label;
     const fontSize = Math.max(14, Math.round(16 * this.zoom));
+    const badge = target.badgeLetter;
+    const badgeSpace = badge ? 26 * this.zoom : 0;
 
     ctx.save();
-    ctx.font = `900 ${fontSize}px system-ui, sans-serif`;
+    ctx.font = `900 ${fontSize}px 'Lilita One', 'Fredoka', system-ui, sans-serif`;
     const metrics = ctx.measureText(displayLabel);
-    const pillW = Math.max(68 * this.zoom, metrics.width + 28 * this.zoom);
-    const pillH = 30 * this.zoom;
+    const pillW = Math.max(72 * this.zoom, metrics.width + 28 * this.zoom + badgeSpace);
+    const pillH = 31 * this.zoom;
     const pillCenterY = headPos.y - pillH * 0.5 - 15 * this.zoom + labelOffsetY;
 
     let topColor = '#1e293b';
@@ -1127,9 +1261,44 @@ export class IsometricRenderer {
     );
     ctx.shadowBlur = 0;
 
+    if (badge) {
+      const badgeColors: Record<'A' | 'B' | 'C' | 'D', string> = {
+        A: '#0284c7',
+        B: '#7c3aed',
+        C: '#d97706',
+        D: '#db2777',
+      };
+      const badgeSize = 22 * this.zoom;
+      const badgeX = headPos.x - pillW * 0.5 + badgeSize * 0.68 + 4 * this.zoom;
+      ctx.fillStyle = badgeColors[badge];
+      ctx.strokeStyle = '#090d16';
+      ctx.lineWidth = 2.4 * this.zoom;
+      this.roundRect(
+        badgeX - badgeSize * 0.5,
+        pillCenterY - badgeSize * 0.5,
+        badgeSize,
+        badgeSize,
+        6 * this.zoom
+      );
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.font = `900 ${Math.max(12, Math.round(13.5 * this.zoom))}px 'Lilita One', 'Fredoka', system-ui, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      this.drawOutlinedText(badge, badgeX, pillCenterY + 0.5, '#ffffff', 2.8);
+    }
+
+    ctx.font = `900 ${fontSize}px 'Lilita One', 'Fredoka', system-ui, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    this.drawOutlinedText(displayLabel, headPos.x, pillCenterY + 0.5, '#ffffff', 3.5);
+    this.drawOutlinedText(
+      displayLabel,
+      headPos.x + (badge ? badgeSpace * 0.44 : 0),
+      pillCenterY + 0.5,
+      '#ffffff',
+      3.5
+    );
 
     // Barre de PV segmentée style Brawl Stars
     const hpRatio = Math.max(0, Math.min(1, target.hp / target.maxHp));
@@ -1206,20 +1375,20 @@ export class IsometricRenderer {
       );
     }
 
-    // Nom du héros au-dessus de la barre
-    ctx.font = `900 ${Math.max(11, Math.round(12 * this.zoom))}px system-ui, sans-serif`;
+    // Nom du héros au-dessus de la barre de PV verte segmentée & pastilles de munitions
+    ctx.font = `900 ${Math.max(12, Math.round(13.5 * this.zoom))}px 'Lilita One', 'Fredoka', system-ui, sans-serif`;
     const nameLabel = superReady ? `★ ${player.name}` : player.name;
     this.drawOutlinedText(
       nameLabel,
       headPos.x,
-      barY - 9 * this.zoom,
+      barY - 10 * this.zoom,
       superReady ? '#fde047' : '#f8fafc',
-      3
+      3.4
     );
 
     if (player.isStealthed) {
-      ctx.font = `900 ${Math.max(10, Math.round(10 * this.zoom))}px system-ui, sans-serif`;
-      this.drawOutlinedText('👻 FURTIF +20%', headPos.x, barY - 23 * this.zoom, '#67e8f9', 3);
+      ctx.font = `900 ${Math.max(10, Math.round(10.5 * this.zoom))}px 'Fredoka', system-ui, sans-serif`;
+      this.drawOutlinedText('🌿 CACHÉ', headPos.x, barY - 24 * this.zoom, '#86efac', 3);
     }
     if (player.isRespawning && (player.respawnRemainingMs ?? 0) > 0) {
       const sec = ((player.respawnRemainingMs ?? 0) / 1000).toFixed(1);
@@ -1241,7 +1410,11 @@ export class IsometricRenderer {
     if (state.campusRooms?.length) {
       this.drawCampusRooms2D(state.campusRooms);
     }
-    this.drawObstacles(state.obstacles);
+    // Murs et bureaux solides avant les personnages
+    this.drawObstacles(
+      state.obstacles.filter((o) => o.kind !== 'bush'),
+      state.player
+    );
     this.drawSharedWorldOverlays(state);
 
     if (state.turretPos) {
@@ -1262,11 +1435,23 @@ export class IsometricRenderer {
 
     this.drawPlayer2D(state.player);
 
+    // Buissons dessinés par-dessus pour masquer partiellement le héros caché à l'intérieur
+    this.drawObstacles(
+      state.obstacles.filter((o) => o.kind === 'bush'),
+      state.player
+    );
+
     for (const proj of state.projectiles) {
       this.drawProjectile2D(proj);
     }
 
+    this.particleSystem2D.render(
+      ctx,
+      (wx, wy) => this.worldToScreen(wx, wy, 10),
+      this.zoom
+    );
     this.drawActiveBubbles(state);
+    this.floatingTextSystem.render(ctx, (wx, wy) => this.worldToScreen(wx, wy, 56));
   }
 
   private drawArenaFloor(state: IRenderFrameState): void {
@@ -1277,35 +1462,128 @@ export class IsometricRenderer {
     const h = br.y - tl.y;
 
     ctx.save();
-    ctx.fillStyle = state.campusRooms
-      ? '#1e293b'
-      : state.modeId === 'MATCH_DES_ACCORDS'
-        ? '#166534'
-        : '#334155';
-    ctx.strokeStyle = '#fbbf24';
-    ctx.lineWidth = 4;
+    const isPitch = state.modeId === 'MATCH_DES_ACCORDS';
+    const isCampus = Boolean(state.campusRooms);
+    ctx.fillStyle = isCampus ? '#1e293b' : isPitch ? '#166534' : '#334155';
     ctx.fillRect(tl.x, tl.y, w, h);
+
+    // Sol carrelé cour de collège avec dallage alterné
+    const tileStep = isCampus ? 120 : 80;
+    const cols = Math.ceil(state.arenaWidth / tileStep);
+    const rows = Math.ceil(state.arenaHeight / tileStep);
+    for (let gx = 0; gx < cols; gx += 1) {
+      for (let gy = 0; gy < rows; gy += 1) {
+        if ((gx + gy) % 2 !== 0) continue;
+        const p1 = this.worldToScreen(gx * tileStep, gy * tileStep);
+        const p2 = this.worldToScreen(
+          Math.min(state.arenaWidth, (gx + 1) * tileStep),
+          Math.min(state.arenaHeight, (gy + 1) * tileStep)
+        );
+        ctx.fillStyle = isPitch
+          ? 'rgba(34, 197, 94, 0.16)'
+          : isCampus
+            ? 'rgba(148, 163, 184, 0.08)'
+            : 'rgba(148, 163, 184, 0.14)';
+        ctx.fillRect(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
+      }
+    }
+
+    // Lignes terrain de cour / tracé central
+    ctx.strokeStyle = isPitch ? 'rgba(255,255,255,0.28)' : 'rgba(226, 232, 240, 0.15)';
+    ctx.lineWidth = 2.5 * this.zoom;
+    const midLeft = this.worldToScreen(0, state.arenaHeight * 0.5);
+    const midRight = this.worldToScreen(state.arenaWidth, state.arenaHeight * 0.5);
+    ctx.beginPath();
+    ctx.moveTo(midLeft.x, midLeft.y);
+    ctx.lineTo(midRight.x, midRight.y);
+    ctx.stroke();
+
+    const center = this.worldToScreen(state.arenaWidth * 0.5, state.arenaHeight * 0.5);
+    ctx.beginPath();
+    ctx.ellipse(center.x, center.y, 74 * this.zoom, 74 * ISO_Y_SCALE * this.zoom, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Relief périphérique 50°
+    ctx.strokeStyle = '#090d16';
+    ctx.lineWidth = 8 * this.zoom;
+    ctx.strokeRect(tl.x, tl.y, w, h);
+    ctx.strokeStyle = '#fbbf24';
+    ctx.lineWidth = 3 * this.zoom;
     ctx.strokeRect(tl.x, tl.y, w, h);
     ctx.restore();
   }
 
-  private drawObstacles(obstacles: IRenderObstacle[]): void {
+  private drawObstacles(obstacles: IRenderObstacle[], player?: IRenderPlayer): void {
     const ctx = this.ctx;
     for (const obs of obstacles) {
       const tl = this.worldToScreen(obs.x, obs.y);
       const br = this.worldToScreen(obs.x + obs.width, obs.y + obs.height);
       const w = br.x - tl.x;
       const h = br.y - tl.y;
+
       ctx.save();
-      ctx.fillStyle =
-        obs.kind === 'bush'
-          ? '#15803d'
-          : obs.kind === 'safe_zone'
-            ? 'rgba(34, 197, 94, 0.45)'
-            : obs.kind === 'desk'
-              ? '#92400e'
-              : '#475569';
-      ctx.fillRect(tl.x, tl.y, w, h);
+      if (obs.kind === 'bush') {
+        const playerNear =
+          player &&
+          player.x >= obs.x - 24 &&
+          player.x <= obs.x + obs.width + 24 &&
+          player.y >= obs.y - 24 &&
+          player.y <= obs.y + obs.height + 24;
+        ctx.globalAlpha = playerNear ? 0.44 : 0.88;
+
+        ctx.fillStyle = 'rgba(9, 13, 22, 0.28)';
+        this.roundRect(tl.x + 3 * this.zoom, tl.y + 6 * this.zoom, w, h, 10 * this.zoom);
+        ctx.fill();
+
+        const bushGrad = ctx.createLinearGradient(tl.x, tl.y, tl.x, tl.y + h);
+        bushGrad.addColorStop(0, '#4ade80');
+        bushGrad.addColorStop(1, '#15803d');
+        ctx.fillStyle = bushGrad;
+        ctx.strokeStyle = '#090d16';
+        ctx.lineWidth = 2.6 * this.zoom;
+        this.roundRect(tl.x, tl.y, w, h, 12 * this.zoom);
+        ctx.fill();
+        ctx.stroke();
+
+        // Touffes de feuillage
+        ctx.fillStyle = 'rgba(134, 239, 172, 0.45)';
+        ctx.beginPath();
+        ctx.arc(tl.x + w * 0.28, tl.y + h * 0.36, Math.min(w, h) * 0.22, 0, Math.PI * 2);
+        ctx.arc(tl.x + w * 0.68, tl.y + h * 0.42, Math.min(w, h) * 0.2, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (obs.kind === 'safe_zone' || obs.kind === 'goal_left' || obs.kind === 'goal_right') {
+        ctx.fillStyle =
+          obs.kind === 'safe_zone'
+            ? 'rgba(34, 197, 94, 0.35)'
+            : obs.kind === 'goal_left'
+              ? 'rgba(37, 99, 235, 0.38)'
+              : 'rgba(234, 179, 8, 0.38)';
+        ctx.strokeStyle = '#090d16';
+        ctx.lineWidth = 2.6 * this.zoom;
+        this.roundRect(tl.x, tl.y, w, h, 10 * this.zoom);
+        ctx.fill();
+        ctx.stroke();
+      } else {
+        // Murs et bureaux avec ombre portée et face avant isométrique 50°
+        const depth = (obs.kind === 'desk' ? 14 : 20) * this.zoom;
+        ctx.fillStyle = 'rgba(9, 13, 22, 0.35)';
+        this.roundRect(tl.x + 5 * this.zoom, tl.y + 8 * this.zoom, w, h + depth * 0.45, 7 * this.zoom);
+        ctx.fill();
+
+        // Face avant extrudée
+        ctx.fillStyle = obs.kind === 'desk' ? '#78350f' : '#334155';
+        ctx.strokeStyle = '#090d16';
+        ctx.lineWidth = 2.6 * this.zoom;
+        this.roundRect(tl.x, tl.y, w, h + depth * 0.45, 7 * this.zoom);
+        ctx.fill();
+        ctx.stroke();
+
+        // Face supérieure lumineuse
+        ctx.fillStyle = obs.kind === 'desk' ? '#b45309' : '#64748b';
+        this.roundRect(tl.x, tl.y - depth * 0.35, w, h, 7 * this.zoom);
+        ctx.fill();
+        ctx.stroke();
+      }
       ctx.restore();
       if (obs.label) {
         this.drawObstacleLabelBadge(obs);
@@ -1403,6 +1681,41 @@ export class IsometricRenderer {
     }
 
     ctx.save();
+    // Cône translucide de visée au sol sous le héros (style Brawl Stars)
+    const coneSpan = player.brawlerId === 'MAYA' ? 0.34 : 0.14;
+    const coneRange = Math.min(effectiveRayRange, player.brawlerId === 'MAYA' ? 270 : 380);
+    const feetPt = this.worldToScreen(player.x, player.y, 4);
+    const coneLeft = this.worldToScreen(
+      player.x + Math.cos(angle - coneSpan) * coneRange,
+      player.y + Math.sin(angle - coneSpan) * coneRange,
+      4
+    );
+    const coneRight = this.worldToScreen(
+      player.x + Math.cos(angle + coneSpan) * coneRange,
+      player.y + Math.sin(angle + coneSpan) * coneRange,
+      4
+    );
+    const coneMid = this.worldToScreen(
+      player.x + Math.cos(angle) * coneRange,
+      player.y + Math.sin(angle) * coneRange,
+      4
+    );
+    const coneGrad = ctx.createLinearGradient(feetPt.x, feetPt.y, coneMid.x, coneMid.y);
+    if (cancelling) {
+      coneGrad.addColorStop(0, 'rgba(239, 68, 68, 0.32)');
+      coneGrad.addColorStop(1, 'rgba(239, 68, 68, 0.04)');
+    } else {
+      coneGrad.addColorStop(0, 'rgba(250, 204, 21, 0.3)');
+      coneGrad.addColorStop(1, 'rgba(254, 240, 138, 0.05)');
+    }
+    ctx.fillStyle = coneGrad;
+    ctx.beginPath();
+    ctx.moveTo(feetPt.x, feetPt.y);
+    ctx.lineTo(coneLeft.x, coneLeft.y);
+    ctx.quadraticCurveTo(coneMid.x, coneMid.y, coneRight.x, coneRight.y);
+    ctx.closePath();
+    ctx.fill();
+
     if (player.brawlerId === 'MAYA') {
       const origin = this.worldToScreen(player.x, player.y, 8);
       for (const offset of [-0.24, 0, 0.24]) {
@@ -1728,32 +2041,40 @@ export class IsometricRenderer {
     const ctx = this.ctx;
     const screen = this.worldToScreen(target.x, target.y, 12);
     const r = target.radius * this.zoom;
-    ctx.save();
-    ctx.fillStyle = target.isCrystal ? '#38bdf8' : target.isBoss ? '#dc2626' : '#f97316';
-    ctx.beginPath();
-    ctx.arc(screen.x, screen.y, r, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
+    drawExamDroneCanvasSprite(ctx, {
+      x: screen.x,
+      y: screen.y,
+      radius: r,
+      timeSec: this.currentTimeSec,
+      isBoss: target.isBoss,
+      isCrystal: target.isCrystal,
+      highlighted: target.highlighted,
+      frozen: target.frozen,
+      slowed: target.slowed,
+      hitFlash: (target.hitFlashMs ?? 0) > 0,
+      badgeLetter: target.badgeLetter,
+      aimVx: target.vx,
+    });
     this.drawTargetOverlay(target, labelOffsetY);
   }
 
   private drawPlayer2D(player: IRenderPlayer): void {
     const ctx = this.ctx;
     const screen = this.worldToScreen(player.x, player.y, 14);
-    const palette = BRAWLER_COLORS[player.brawlerId];
     const r = 24 * this.zoom;
-    ctx.save();
-    if (player.isStealthed || player.isRespawning) {
-      ctx.globalAlpha = 0.45;
-    }
-    ctx.fillStyle = palette.primary;
-    ctx.strokeStyle = palette.accent;
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.arc(screen.x, screen.y, r, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-    ctx.restore();
+    drawBrawlerCanvasSprite(ctx, {
+      x: screen.x,
+      y: screen.y,
+      radius: r,
+      brawlerId: player.brawlerId,
+      aimAngle: player.aimAngle,
+      isMoving: this.moveHoldMs > 0,
+      timeSec: this.currentTimeSec,
+      hasShield: player.shieldHp > 0 || player.errorShieldRemainingMs > 0,
+      isErrorShield: player.errorShieldRemainingMs > 0 && player.shieldHp <= 0,
+      superReady: player.superGaugePct >= 100,
+      tintOpacity: player.isStealthed || player.isRespawning ? 0.45 : 1,
+    });
     this.drawPlayerOverlay(player);
   }
 
@@ -2246,7 +2567,7 @@ export class IsometricRenderer {
       null,
       2.5
     );
-    ctx.font = '900 10px system-ui, sans-serif';
+    ctx.font = "900 10.5px 'Lilita One', 'Fredoka', system-ui, sans-serif";
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#090d16';
@@ -2259,13 +2580,13 @@ export class IsometricRenderer {
         : state.hudPrompt;
 
     // Texte principal de la question ou de l'objectif avec ajustement auto de taille
-    let promptSize = state.questBanner && isGenericOrEmpty ? 15 : 18;
-    ctx.font = `900 ${promptSize}px system-ui, sans-serif`;
+    let promptSize = state.questBanner && isGenericOrEmpty ? 16 : 19;
+    ctx.font = `900 ${promptSize}px 'Lilita One', 'Fredoka', system-ui, sans-serif`;
     const maxPromptW = bannerW - 34;
     const promptW = ctx.measureText(promptText).width;
     if (promptW > maxPromptW && promptW > 0) {
       promptSize = Math.max(11, Math.floor((promptSize * maxPromptW) / promptW));
-      ctx.font = `900 ${promptSize}px system-ui, sans-serif`;
+      ctx.font = `900 ${promptSize}px 'Lilita One', 'Fredoka', system-ui, sans-serif`;
     }
     this.drawOutlinedText(promptText, bannerCenterX, bannerCenterY + 3, '#fef9c3', 4.5);
 

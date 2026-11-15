@@ -403,9 +403,11 @@ class BrawlCollegeApp {
             </div>
 
             <div class="brawl-topbar-right">
-              <div class="brawl-stat-pill" style="color:#ffd426;" title="Pièces d'or">🪙 ${profile.coins}</div>
-              <div class="brawl-stat-pill" style="color:#c084fc;" title="Points de Savoir">📖 ${knowledgePoints}</div>
+              <div class="brawl-stat-pill" style="color:#ffd426;" title="Trophées de la Route vers la 6ème">🏆 ${profile.trophies}</div>
               <div class="brawl-stat-pill" style="color:#38bdf8;" title="Étoiles pour le prochain Casier">⭐ ${starsProgress}/3</div>
+              <div class="brawl-stat-pill" style="color:#4ade80;" title="Niveau Elo pédagogique moyen">🎯 Elo ${this.computeSubjectAvgElo()}</div>
+              <div class="brawl-stat-pill" style="color:#fbbf24;" title="Pièces d'or">🪙 ${profile.coins}</div>
+              <div class="brawl-stat-pill" style="color:#c084fc;" title="Points de Savoir">📖 ${knowledgePoints}</div>
 
               ${
                 totalClaimableCount > 0
@@ -540,7 +542,8 @@ class BrawlCollegeApp {
                     ${brawlerSubjectMeta.icon} ${brawlerSubjectMeta.short_label}
                   </span>
                 </div>
-                <div id="brawler-3d-preview" style="width:100%; height:100%;"></div>
+                <div id="brawler-3d-preview" style="width:100%; height:100%; position:relative; z-index:2;"></div>
+                <div class="brawl-hero-pedestal-ring"></div>
                 <div style="position:absolute; bottom:6px; left:0; right:0; text-align:center; font-size:10px; color:#cbd5e1; font-weight:700; pointer-events:none;">
                   👆 Glisse pour faire pivoter en 3D
                 </div>
@@ -621,10 +624,10 @@ class BrawlCollegeApp {
                     const subjMeta = m.target_subject ? getSubjectVisualMeta(m.target_subject) : null;
                     return `
                       <button data-mode-id="${m.id}" class="brawl-mode-pill ${active ? 'active' : ''}">
-                        <span class="brawl-mode-icon">${guide.icon}</span>
+                        <span class="brawl-mode-illus-badge" style="background:${subjMeta ? subjMeta.badge_bg : 'linear-gradient(135deg,#3b82f6,#1d4ed8)'}; border-color:#090d16;">${guide.icon}</span>
                         <div style="flex:1; min-width:0;">
                           <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap;">
-                            <strong style="font-size:13px; color:${active ? '#ffd426' : '#f8fafc'};">${m.name}</strong>
+                            <strong class="brawl-mode-title brawl-outline-text" style="font-size:15px; color:${active ? '#ffd426' : '#f8fafc'};">${m.name}</strong>
                             ${
                               isRecommended
                                 ? '<span class="brawl-recommend-badge">⭐ Conseillé</span>'
@@ -674,6 +677,7 @@ class BrawlCollegeApp {
     // Listeners Héros
     this.root.querySelectorAll<HTMLButtonElement>('[data-brawler-id]').forEach((btn) => {
       btn.addEventListener('click', () => {
+        soundManager.playUiClick();
         const bId = btn.dataset.brawlerId as BrawlerId | undefined;
         if (bId) {
           this.db.updatePlayerProfile({ selected_brawler: bId });
@@ -685,6 +689,7 @@ class BrawlCollegeApp {
     // Listeners Modes
     this.root.querySelectorAll<HTMLButtonElement>('[data-mode-id]').forEach((btn) => {
       btn.addEventListener('click', () => {
+        soundManager.playUiClick();
         const mId = btn.dataset.modeId as GameModeId | undefined;
         if (mId) {
           this.selectedModeId = mId;
@@ -695,6 +700,7 @@ class BrawlCollegeApp {
 
     // Route des Trophées
     this.root.querySelector('#btn-open-trophy-road')?.addEventListener('click', () => {
+      soundManager.playUiClick();
       this.openTrophyRoadModal();
     });
 
@@ -813,6 +819,7 @@ class BrawlCollegeApp {
 
     // Lancer le combat 60 FPS
     this.root.querySelector('#btn-play-match')?.addEventListener('click', () => {
+      soundManager.playUiClick();
       this.lobbyBannerMsg = null;
       this.returnToCampusAfterMatch = false;
       this.startMatch(selectedBrawler.id, selectedMode);

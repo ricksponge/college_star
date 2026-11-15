@@ -201,7 +201,7 @@ export interface ITelemetryLog {
 
 export interface IStarrDropReward {
   final_rarity: StarrDropRarity;
-  taps_count: 4;
+  taps_count: 4 | 5;
   coins_granted: number;
   trophies_granted: number;
   knowledge_points_granted: number;
