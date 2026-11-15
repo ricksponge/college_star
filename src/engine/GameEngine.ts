@@ -176,6 +176,7 @@ export class GameEngine {
       this.rafId = null;
     }
     this.controller.detach();
+    this.renderer.dispose();
     window.removeEventListener('resize', this.handleResize);
   }
 

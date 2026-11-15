@@ -6,6 +6,7 @@ import { ALL_GAME_MODES, getGameModeById, getHourlyRotatedMode } from './modes/M
 import { ELO_DEFAULT } from './services/EloEngine';
 import { QuestionProvider } from './services/QuestionProvider';
 import { ParentDashboard } from './ui/ParentDashboard';
+import { LobbyBrawlerPreview3D } from './ui/LobbyBrawlerPreview3D';
 import { renderTrophyRoadHtml, StarrDropModal } from './ui/StarrDropModal';
 
 const SUBJECT_NAMES: Record<string, string> = {
@@ -33,6 +34,7 @@ class BrawlCollegeApp {
   private selectedModeId: GameModeId = getHourlyRotatedMode().id;
   private matchCounter = 0;
   private activeEngine: GameEngine | null = null;
+  private lobbyPreview3D: LobbyBrawlerPreview3D | null = null;
 
   constructor(root: HTMLElement) {
     this.root = root;
@@ -46,6 +48,8 @@ class BrawlCollegeApp {
   private renderLobby(): void {
     this.activeEngine?.stop();
     this.activeEngine = null;
+    this.lobbyPreview3D?.dispose();
+    this.lobbyPreview3D = null;
 
     const profile = this.db.getPlayerProfile();
     const brawlers = getAllBrawlers();
@@ -107,10 +111,18 @@ class BrawlCollegeApp {
                 })
                 .join('')}
             </div>
-            <div style="margin-top:10px; background:#1e293b; border-radius:10px; padding:10px; font-size:12px; color:#cbd5e1;">
-              <div><strong>${selectedBrawler.name}</strong> (${selectedBrawler.archetype}) — Vitesse ${selectedBrawler.speed_value}</div>
-              <div style="margin-top:4px;">🎯 Tir : <em>${selectedBrawler.basic_attack.name}</em> (${selectedBrawler.basic_attack.projectiles_count}×${selectedBrawler.basic_attack.base_damage} dégâts)</div>
-              <div>🟡 Super : <em>${selectedBrawler.super_ability.name}</em> • 🟢 Gadget : <em>${selectedBrawler.gadget.name}</em></div>
+            <div style="margin-top:12px; display:grid; grid-template-columns:minmax(180px, 240px) 1fr; gap:12px; align-items:stretch;">
+              <div style="background:radial-gradient(circle at 50% 45%, #1e293b 0%, #020617 85%); border:1px solid #334155; border-radius:12px; padding:6px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                <div id="brawler-3d-preview" style="width:100%; height:195px;"></div>
+                <div style="font-size:10px; color:#94a3b8; margin-top:2px;">🧊 Modèle 3D — glisser pour pivoter</div>
+              </div>
+              <div style="background:#1e293b; border-radius:12px; padding:12px; font-size:12px; color:#cbd5e1; display:flex; flex-direction:column; justify-content:center; gap:6px;">
+                <div style="font-size:14px;"><strong style="color:${BRAWLER_BADGE_COLORS[selectedBrawler.id]};">${selectedBrawler.name}</strong> — ${selectedBrawler.title}</div>
+                <div style="color:#94a3b8;">${selectedBrawler.archetype} • Vitesse ${selectedBrawler.speed_value} • ❤️ ${selectedBrawler.base_hp} PV</div>
+                <div>🎯 <strong>${selectedBrawler.basic_attack.name}</strong> : ${selectedBrawler.basic_attack.projectiles_count}×${selectedBrawler.basic_attack.base_damage} dégâts</div>
+                <div>🟡 <strong>Super</strong> : ${selectedBrawler.super_ability.name}</div>
+                <div>🟢 <strong>Gadget (×3)</strong> : ${selectedBrawler.gadget.name}</div>
+              </div>
             </div>
           </section>
 
@@ -145,6 +157,11 @@ class BrawlCollegeApp {
         </div>
       </div>
     `;
+
+    const previewContainer = this.root.querySelector<HTMLElement>('#brawler-3d-preview');
+    if (previewContainer) {
+      this.lobbyPreview3D = new LobbyBrawlerPreview3D(previewContainer, selectedBrawler.id);
+    }
 
     // Listeners Héros
     this.root.querySelectorAll<HTMLButtonElement>('[data-brawler-id]').forEach((btn) => {
@@ -187,6 +204,8 @@ class BrawlCollegeApp {
   }
 
   private startMatch(brawlerId: BrawlerId, mode: IGameMode): void {
+    this.lobbyPreview3D?.dispose();
+    this.lobbyPreview3D = null;
     this.matchCounter += 1;
     const currentMatchIndex = this.matchCounter;
     const brawler = getBrawlerById(brawlerId);
