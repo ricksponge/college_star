@@ -46,3 +46,26 @@ export function getHourlyRotatedMode(now: Date = new Date()): IGameMode {
   const index = now.getHours() % ALL_GAME_MODES.length;
   return ALL_GAME_MODES[index];
 }
+
+export {
+  CAMPUS_EXPLORATION_INFO,
+  CampusExplorationSession,
+  type ICampusExplorationInfo,
+  type ICampusExplorationState,
+  type ICampusPositionUpdateResult,
+} from './Mode6CampusExploration';
+
+export {
+  CAMPUS_BADGE_SPAWNS,
+  CAMPUS_HEIGHT,
+  CAMPUS_NPCS,
+  CAMPUS_OBSTACLES,
+  CAMPUS_ROOMS,
+  CAMPUS_SPAWN_POINT,
+  CAMPUS_WIDTH,
+  CAMPUS_WORLD_DATA,
+  getNpcById,
+  getRoomAtPosition,
+  getRoomById,
+  type ICampusBadgeSpawn,
+} from './CampusMapLayout';
