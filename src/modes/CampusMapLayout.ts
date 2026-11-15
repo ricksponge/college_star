@@ -98,7 +98,7 @@ export const CAMPUS_ROOMS: ICampusRoomZone[] = [
     floor_color: '#272038',
     accent_color: '#a855f7',
     description:
-      'Bureau de M. Toure (CPE) : gestion des retards, carnets de liaison et sorties.',
+      "QG d'aide et d'écoute de la Vie Scolaire (M. Toure) : cadenas bloqué, objet perdu, emploi du temps ou besoin de parler.",
   },
   {
     id: 'COUR_HONNEUR',
@@ -301,7 +301,7 @@ export const CAMPUS_NPCS: ICampusNpc[] = [
     primary_color: '#a855f7',
     accent_color: '#e9d5ff',
     greeting_flash:
-      'Carnet de liaison prêt ? Prouve que tu maîtrises les changements de salle !',
+      "Bienvenue à la Vie Scolaire ! Cadenas bloqué, objet perdu ou besoin d'aide ? On est là pour t'écouter et t'aider !",
     linked_arena_mode: 'CHANGEMENT_DE_SALLE',
   },
   {

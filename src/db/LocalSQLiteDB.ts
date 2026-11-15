@@ -1,6 +1,8 @@
 import type {
   BrawlerId,
+  IAccessibilitySettings,
   IDailyQuest,
+  IParentSerenityReport,
   IParentSubjectSummary,
   IPlayerProfile,
   IQuestProgressRecord,
@@ -70,6 +72,7 @@ interface ISqliteInternalState {
   claimed_milestones: number[];
   daily_quests: IDailyQuest[];
   spaced_repetition_entries: ISpacedRepetitionEntry[];
+  accessibility_settings: IAccessibilitySettings;
 }
 
 const ALL_SUBJECTS: SubjectCategory[] = [
@@ -106,11 +109,14 @@ const DEFAULT_SKILLS: Array<{ code: string; subject: SubjectCategory }> = [
   { code: 'SCI_SOL', subject: 'histoire_geo_sciences' },
   { code: 'SCI_MAT', subject: 'histoire_geo_sciences' },
   { code: 'SCI_VIV', subject: 'histoire_geo_sciences' },
-  // Vie au Collège & Méthodologie (4)
+  // Vie au Collège & Méthodologie (7)
   { code: 'COL_EDT', subject: 'vie_au_college' },
   { code: 'COL_ADU', subject: 'vie_au_college' },
   { code: 'COL_CONS', subject: 'vie_au_college' },
   { code: 'COL_SAC', subject: 'vie_au_college' },
+  { code: 'COL_STRESS', subject: 'vie_au_college' },
+  { code: 'COL_CPS', subject: 'vie_au_college' },
+  { code: 'COL_LIEUX', subject: 'vie_au_college' },
 ];
 
 const VALID_BRAWLERS: BrawlerId[] = ['TIMO', 'LEO', 'MAYA', 'ZACK'];
@@ -191,6 +197,13 @@ function createDefaultState(): ISqliteInternalState {
     claimed_milestones: [],
     daily_quests: createDefaultDailyQuests(),
     spaced_repetition_entries: [],
+    accessibility_settings: {
+      smart_auto_aim: true,
+      visual_gps_compass: true,
+      calm_mode: false,
+      auto_hint_assist: true,
+      onboarding_seen: false,
+    },
   };
 }
 
@@ -516,6 +529,88 @@ export class LocalSQLiteDB {
     return true;
   }
 
+  public getAccessibilitySettings(): IAccessibilitySettings {
+    return { ...this.state.accessibility_settings };
+  }
+
+  public updateAccessibilitySettings(
+    patch: Partial<IAccessibilitySettings>
+  ): IAccessibilitySettings {
+    const current = this.state.accessibility_settings;
+    this.state.accessibility_settings = {
+      smart_auto_aim:
+        typeof patch.smart_auto_aim === 'boolean' ? patch.smart_auto_aim : current.smart_auto_aim,
+      visual_gps_compass:
+        typeof patch.visual_gps_compass === 'boolean'
+          ? patch.visual_gps_compass
+          : current.visual_gps_compass,
+      calm_mode: typeof patch.calm_mode === 'boolean' ? patch.calm_mode : current.calm_mode,
+      auto_hint_assist:
+        typeof patch.auto_hint_assist === 'boolean'
+          ? patch.auto_hint_assist
+          : current.auto_hint_assist,
+      onboarding_seen:
+        typeof patch.onboarding_seen === 'boolean'
+          ? patch.onboarding_seen
+          : current.onboarding_seen,
+    };
+    this.persist();
+    return this.getAccessibilitySettings();
+  }
+
+  /**
+   * Réclame en 1 clic toutes les quêtes du jour terminées et les paliers de la Route des Trophées atteints.
+   */
+  public claimAllAvailableRewards(): {
+    claimedCount: number;
+    coinsEarned: number;
+    starsEarned: number;
+    dropsEarned: number;
+    descriptions: string[];
+  } {
+    const beforeCoins = this.state.player_profile.coins;
+    const beforeStars = this.state.combat_stars;
+    const beforeDrops = this.state.player_profile.starr_drops_available;
+
+    let claimedCount = 0;
+    const descriptions: string[] = [];
+
+    for (const quest of this.getDailyQuests()) {
+      if (!quest.claimed && quest.progress >= quest.target) {
+        if (this.claimDailyQuest(quest.id)) {
+          claimedCount += 1;
+          const starsLabel =
+            quest.reward_stars > 0
+              ? `, +${quest.reward_stars} Étoile${quest.reward_stars > 1 ? 's' : ''}`
+              : '';
+          descriptions.push(`Quête « ${quest.title} » (+${quest.reward_coins} Pièces${starsLabel})`);
+        }
+      }
+    }
+
+    const milestones = [100, 250, 450, 650, 850, 1000];
+    for (const m of milestones) {
+      if (
+        this.state.player_profile.trophies >= m &&
+        !this.state.claimed_milestones.includes(m)
+      ) {
+        const res = this.claimTrophyMilestone(m);
+        if (res.claimed) {
+          claimedCount += 1;
+          descriptions.push(`Palier ${m} 🏆 : ${res.rewardDescription}`);
+        }
+      }
+    }
+
+    return {
+      claimedCount,
+      coinsEarned: Math.max(0, this.state.player_profile.coins - beforeCoins),
+      starsEarned: Math.max(0, this.state.combat_stars - beforeStars),
+      dropsEarned: Math.max(0, this.state.player_profile.starr_drops_available - beforeDrops),
+      descriptions,
+    };
+  }
+
   public getSpacedRepetitionEntries(): ISpacedRepetitionEntry[] {
     return this.state.spaced_repetition_entries.map(cloneSpacedEntry);
   }
@@ -686,8 +781,87 @@ export class LocalSQLiteDB {
         success_rate_pct: successRatePct,
         avg_reaction_time_ms: avgReactionMs,
         skills_to_consolidate: skillsToConsolidate,
+        attempts_count: totalAttempts,
       };
     });
+  }
+
+  /**
+   * Calcule le baromètre global « Sérénité & Adaptation 6ème » pour le Dashboard Parent.
+   * Combine l'autonomie collège, la réussite globale et le calme exécutif (absence de précipitation < 1,2s).
+   */
+  public computeParentSerenityReport(): IParentSerenityReport {
+    const allSkills = this.getAllSkillMasteries();
+    const totalSkillsCount = allSkills.length;
+    const exploredSkillsCount = allSkills.filter((s) => s.attempts_count > 0).length;
+
+    let totalAttempts = 0;
+    let totalSuccess = 0;
+    for (const skill of allSkills) {
+      totalAttempts += skill.attempts_count;
+      totalSuccess += skill.success_count;
+    }
+
+    const globalSuccessPct =
+      totalAttempts > 0 ? Math.round((totalSuccess / totalAttempts) * 100) : 0;
+
+    const campusSkills = allSkills.filter((s) => s.subject_category === 'vie_au_college');
+    let campusAttempts = 0;
+    let campusSuccess = 0;
+    let campusExplored = 0;
+    for (const skill of campusSkills) {
+      campusAttempts += skill.attempts_count;
+      campusSuccess += skill.success_count;
+      if (skill.attempts_count > 0) campusExplored += 1;
+    }
+
+    const campusAutonomyPct =
+      campusAttempts > 0
+        ? Math.round(
+            (campusSuccess / campusAttempts) * 70 +
+              (campusExplored / Math.max(1, campusSkills.length)) * 30
+          )
+        : 50;
+
+    const logs = this.getTelemetryLogs(500);
+    let executiveCalmPct = 85;
+    if (logs.length > 0) {
+      const impulsiveErrors = logs.filter(
+        (log) => !log.is_hit_correct && log.reaction_time_ms < 1200
+      ).length;
+      executiveCalmPct = Math.round(((logs.length - impulsiveErrors) / logs.length) * 100);
+    }
+
+    const serenityScorePct =
+      totalAttempts === 0
+        ? 50
+        : Math.max(
+            0,
+            Math.min(
+              100,
+              Math.round(
+                campusAutonomyPct * 0.45 +
+                  globalSuccessPct * 0.3 +
+                  executiveCalmPct * 0.25
+              )
+            )
+          );
+
+    let statusLabel = 'En bonne voie vers la 6ème';
+    if (totalAttempts === 0) {
+      statusLabel = 'En découverte — Prêt à explorer';
+    } else if (serenityScorePct >= 75) {
+      statusLabel = 'Prêt & serein pour la 6ème !';
+    }
+
+    return {
+      serenity_score_pct: serenityScorePct,
+      status_label: statusLabel,
+      campus_autonomy_pct: campusAutonomyPct,
+      executive_calm_pct: executiveCalmPct,
+      explored_skills_count: exploredSkillsCount,
+      total_skills_count: totalSkillsCount,
+    };
   }
 
   /**
@@ -886,6 +1060,30 @@ export class LocalSQLiteDB {
       }
     }
 
+    const rawAccessibility = (raw.accessibility_settings ?? {}) as Partial<IAccessibilitySettings>;
+    const accessibilitySettings: IAccessibilitySettings = {
+      smart_auto_aim:
+        typeof rawAccessibility.smart_auto_aim === 'boolean'
+          ? rawAccessibility.smart_auto_aim
+          : defaults.accessibility_settings.smart_auto_aim,
+      visual_gps_compass:
+        typeof rawAccessibility.visual_gps_compass === 'boolean'
+          ? rawAccessibility.visual_gps_compass
+          : defaults.accessibility_settings.visual_gps_compass,
+      calm_mode:
+        typeof rawAccessibility.calm_mode === 'boolean'
+          ? rawAccessibility.calm_mode
+          : defaults.accessibility_settings.calm_mode,
+      auto_hint_assist:
+        typeof rawAccessibility.auto_hint_assist === 'boolean'
+          ? rawAccessibility.auto_hint_assist
+          : defaults.accessibility_settings.auto_hint_assist,
+      onboarding_seen:
+        typeof rawAccessibility.onboarding_seen === 'boolean'
+          ? rawAccessibility.onboarding_seen
+          : defaults.accessibility_settings.onboarding_seen,
+    };
+
     return {
       player_profile: playerProfile,
       skill_mastery: skillMastery,
@@ -912,6 +1110,7 @@ export class LocalSQLiteDB {
       claimed_milestones: claimedMilestones,
       daily_quests: dailyQuests,
       spaced_repetition_entries: spacedEntries,
+      accessibility_settings: accessibilitySettings,
     };
   }
 

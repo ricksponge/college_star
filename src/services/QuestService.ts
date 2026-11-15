@@ -236,6 +236,48 @@ export class QuestService {
     return reward;
   }
 
+  /**
+   * Réclame en lot toutes les quêtes actuellement au statut COMPLETED
+   * et retourne le bilan cumulé des récompenses réellement accordées.
+   */
+  public claimAllCompletedQuests(): {
+    count: number;
+    totalCoins: number;
+    totalTrophies: number;
+    totalStars: number;
+    totalKnowledge: number;
+  } {
+    let count = 0;
+    let totalCoins = 0;
+    let totalTrophies = 0;
+    let totalStars = 0;
+    let totalKnowledge = 0;
+
+    const completedEntries = this.getAllQuestsWithStatus().filter(
+      (entry) => entry.progress.status === 'COMPLETED'
+    );
+
+    for (const entry of completedEntries) {
+      const reward = this.claimQuestReward(entry.quest.id);
+      if (!reward) {
+        continue;
+      }
+      count += 1;
+      totalCoins += reward.coins;
+      totalTrophies += reward.trophies;
+      totalStars += reward.combat_stars;
+      totalKnowledge += reward.knowledge_points;
+    }
+
+    return {
+      count,
+      totalCoins,
+      totalTrophies,
+      totalStars,
+      totalKnowledge,
+    };
+  }
+
   private advanceIfMatches(
     predicate: (objective: IQuestObjective) => boolean
   ): IQuestStepAdvanceResult {

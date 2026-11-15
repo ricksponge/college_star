@@ -1,5 +1,12 @@
 import './styles/brawl-theme.css';
-import type { BrawlerId, GameModeId, IGameMode, IQuestion, SubjectCategory } from './types/cctp';
+import type {
+  BrawlerId,
+  CampusRoomId,
+  GameModeId,
+  IGameMode,
+  IQuestion,
+  SubjectCategory,
+} from './types/cctp';
 import { LocalSQLiteDB } from './db/LocalSQLiteDB';
 import { CampusEngine } from './engine/CampusEngine';
 import { GameEngine, type IMatchSummary } from './engine/GameEngine';
@@ -9,24 +16,19 @@ import {
   CAMPUS_WORLD_DATA,
   getGameModeById,
   getHourlyRotatedMode,
+  getModeQuickGuide,
   getRoomById,
 } from './modes/ModesRegistry';
 import { ELO_DEFAULT } from './services/EloEngine';
-import { QuestionProvider } from './services/QuestionProvider';
+import { QuestionProvider, getSubjectVisualMeta } from './services/QuestionProvider';
 import { QuestService } from './services/QuestService';
 import { soundManager } from './services/SoundManager';
 import { ParentDashboard } from './ui/ParentDashboard';
 import { LobbyBrawlerPreview3D } from './ui/LobbyBrawlerPreview3D';
 import { QuestJournalModal } from './ui/QuestJournalModal';
-import { renderTrophyRoadHtml, StarrDropModal } from './ui/StarrDropModal';
+import { getCurrentTrophyRank, renderTrophyRoadHtml, StarrDropModal } from './ui/StarrDropModal';
 
-const SUBJECT_NAMES: Record<string, string> = {
-  mathematiques: 'Maths & Logique',
-  francais: 'Français & Conjugaison',
-  anglais: 'Anglais LV1',
-  histoire_geo_sciences: 'Histoire-Géo & Sciences',
-  vie_au_college: 'Vie au Collège 6e',
-};
+const TROPHY_MILESTONE_THRESHOLDS = [0, 100, 250, 450, 650, 850, 1000] as const;
 
 const BRAWLER_BADGE_COLORS: Record<BrawlerId, string> = {
   TIMO: '#facc15',
@@ -66,6 +68,7 @@ class BrawlCollegeApp {
   private lobbyBannerMsg: string | null = null;
   private readonly collectedCampusBadgeIds = new Set<string>();
   private returnToCampusAfterMatch = false;
+  private activeKeyHandler: ((ev: KeyboardEvent) => void) | null = null;
 
   constructor(root: HTMLElement) {
     this.root = root;
@@ -75,9 +78,245 @@ class BrawlCollegeApp {
     await this.db.init();
     this.questionProvider.hydrateSpacedQueue(this.db.getSpacedRepetitionEntries());
     this.renderLobby();
+    if (!this.db.getAccessibilitySettings().onboarding_seen) {
+      this.openComfortAndGuideModal(true);
+    }
+  }
+
+  private clearActiveKeyHandler(): void {
+    if (this.activeKeyHandler) {
+      window.removeEventListener('keydown', this.activeKeyHandler);
+      this.activeKeyHandler = null;
+    }
+  }
+
+  private setActiveKeyHandler(handler: (ev: KeyboardEvent) => void): void {
+    this.clearActiveKeyHandler();
+    this.activeKeyHandler = handler;
+    window.addEventListener('keydown', handler);
+  }
+
+  private openComfortAndGuideModal(isFirstVisit = false): void {
+    const existing = document.getElementById('brawl-comfort-modal');
+    existing?.remove();
+
+    let settings = this.db.getAccessibilitySettings();
+    const overlay = document.createElement('div');
+    overlay.id = 'brawl-comfort-modal';
+    overlay.className = 'brawl-modal-overlay';
+
+    const toggleItems: Array<{
+      key: 'smart_auto_aim' | 'visual_gps_compass' | 'calm_mode' | 'auto_hint_assist';
+      title: string;
+      desc: string;
+    }> = [
+      {
+        key: 'smart_auto_aim',
+        title: '🎯 Visée Assistée Intelligente',
+        desc: 'Aligne ton tir vers la cible la plus proche quand tu appuies vite ou touches une étiquette.',
+      },
+      {
+        key: 'visual_gps_compass',
+        title: '🧭 Boussole GPS Visuelle',
+        desc: 'Affiche une flèche dorée pour te guider vers la bonne cible ou ta salle au collège.',
+      },
+      {
+        key: 'calm_mode',
+        title: '🐢 Mode Calme (-20% vitesse)',
+        desc: 'Ralentit les cibles mouvantes pour lire tranquillement chaque question.',
+      },
+      {
+        key: 'auto_hint_assist',
+        title: '💡 Indice Automatique Doux',
+        desc: 'Montre une astuce au bout de quelques secondes d’hésitation, sans aucune pénalité.',
+      },
+    ];
+
+    const renderContent = (): void => {
+      settings = this.db.getAccessibilitySettings();
+      overlay.innerHTML = `
+        <div class="brawl-modal-panel brawl-pop" style="width:min(700px, 95vw); padding:22px; max-height:92dvh; overflow-y:auto;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:14px;">
+            <div>
+              <div class="brawl-outline-text" style="font-size:11px; color:#38bdf8; letter-spacing:1px;">GUIDE EXPRESS EN 3 SECONDES</div>
+              <h2 class="brawl-title" style="margin:2px 0 0; font-size:23px; color:#ffd426;">
+                ${isFirstVisit ? '⚡ BIENVENUE DANS BRAWL COLLÈGE !' : '⚙️ COMMENT JOUER & CONFORT'}
+              </h2>
+            </div>
+            <button id="btn-comfort-close-x" class="brawl-btn brawl-btn-sm">✖</button>
+          </div>
+
+          <div class="brawl-guide-grid">
+            <div class="brawl-guide-card">
+              <div style="font-size:28px; margin-bottom:4px;">🕹️</div>
+              <div class="brawl-outline-text" style="font-size:14px; color:#fde047; margin-bottom:4px;">1. BOUGER</div>
+              <div style="font-size:12px; color:#cbd5e1; line-height:1.4;">
+                Stick gauche (ou touches <strong>ZQSD / Flèches</strong>) pour esquiver et te placer.
+              </div>
+            </div>
+            <div class="brawl-guide-card">
+              <div style="font-size:28px; margin-bottom:4px;">🎯</div>
+              <div class="brawl-outline-text" style="font-size:14px; color:#38bdf8; margin-bottom:4px;">2. TIRER MALIN</div>
+              <div style="font-size:12px; color:#cbd5e1; line-height:1.4;">
+                Glisse à droite / souris <strong>OU touche directement la bonne réponse</strong> à l’écran !
+              </div>
+            </div>
+            <div class="brawl-guide-card">
+              <div style="font-size:28px; margin-bottom:4px;">💡</div>
+              <div class="brawl-outline-text" style="font-size:14px; color:#4ade80; margin-bottom:4px;">3. ZÉRO BLOCAGE</div>
+              <div style="font-size:12px; color:#cbd5e1; line-height:1.4;">
+                Un doute ? Utilise <strong>💡 Indice</strong>, ton <strong>🟢 Gadget (×3)</strong> ou ton <strong>🟡 Super</strong> !
+              </div>
+            </div>
+          </div>
+
+          <div class="brawl-pd-subcard" style="padding:12px; margin-bottom:16px;">
+            <div class="brawl-outline-text" style="font-size:13px; color:#93c5fd; margin-bottom:8px;">
+              🛠️ RÉGLAGES ACCESSIBILITÉ & CONFORT
+            </div>
+            <div class="brawl-toggle-list">
+              ${toggleItems
+                .map((item) => {
+                  const isOn = settings[item.key];
+                  return `
+                    <button type="button" data-acc-key="${item.key}" class="brawl-toggle-row" style="text-align:left; color:#f8fafc;">
+                      <div>
+                        <div style="font-size:13px; font-weight:800; color:#fef9c3;">${item.title}</div>
+                        <div style="font-size:11px; color:#cbd5e1;">${item.desc}</div>
+                      </div>
+                      <span class="brawl-switch ${isOn ? 'on' : ''}" aria-hidden="true"></span>
+                    </button>
+                  `;
+                })
+                .join('')}
+            </div>
+          </div>
+
+          <button id="btn-comfort-done" class="brawl-btn brawl-btn-lg brawl-btn-yellow" style="width:100%;">
+            🚀 C’EST PARTI !
+          </button>
+        </div>
+      `;
+
+      overlay.querySelectorAll<HTMLButtonElement>('[data-acc-key]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const key = btn.dataset.accKey as
+            | 'smart_auto_aim'
+            | 'visual_gps_compass'
+            | 'calm_mode'
+            | 'auto_hint_assist'
+            | undefined;
+          if (!key) return;
+          const current = this.db.getAccessibilitySettings();
+          this.db.updateAccessibilitySettings({ [key]: !current[key] });
+          renderContent();
+        });
+      });
+
+      const closeAndSave = (): void => {
+        this.db.updateAccessibilitySettings({ onboarding_seen: true });
+        overlay.remove();
+        this.renderLobby();
+      };
+
+      overlay.querySelector('#btn-comfort-close-x')?.addEventListener('click', closeAndSave);
+      overlay.querySelector('#btn-comfort-done')?.addEventListener('click', closeAndSave);
+    };
+
+    overlay.addEventListener('click', (ev) => {
+      if (ev.target === overlay) {
+        this.db.updateAccessibilitySettings({ onboarding_seen: true });
+        overlay.remove();
+        this.renderLobby();
+      }
+    });
+
+    document.body.appendChild(overlay);
+    renderContent();
+  }
+
+  private openTrophyRoadModal(): void {
+    const existing = document.getElementById('brawl-trophy-modal');
+    existing?.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'brawl-trophy-modal';
+    overlay.className = 'brawl-modal-overlay';
+
+    const renderModal = (): void => {
+      const profile = this.db.getPlayerProfile();
+      const claimedMilestones = this.db.getClaimedMilestones();
+      const rank = getCurrentTrophyRank(profile.trophies);
+      const claimableCount = TROPHY_MILESTONE_THRESHOLDS.filter(
+        (t) => profile.trophies >= t && !claimedMilestones.includes(t)
+      ).length;
+
+      overlay.innerHTML = `
+        <div class="brawl-modal-panel brawl-pop" style="width:min(760px, 95vw); padding:20px; max-height:90dvh; overflow-y:auto;">
+          <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:10px; margin-bottom:12px;">
+            <div>
+              <div class="brawl-outline-text" style="font-size:11px; color:#38bdf8;">PROGRESSION VERS LA 6ÈME</div>
+              <h2 class="brawl-title" style="margin:2px 0 0; font-size:22px; color:#ffd426;">
+                🏆 ${profile.trophies} / 1000 Trophées — ${rank}
+              </h2>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              ${
+                claimableCount > 0
+                  ? `<button id="btn-trophy-claim-all" class="brawl-btn brawl-btn-sm brawl-btn-yellow brawl-pulse">
+                      ✨ Tout réclamer (${claimableCount})
+                    </button>`
+                  : ''
+              }
+              <button id="btn-trophy-close" class="brawl-btn brawl-btn-sm brawl-btn-blue">Fermer</button>
+            </div>
+          </div>
+
+          ${renderTrophyRoadHtml(profile.trophies, claimedMilestones)}
+        </div>
+      `;
+
+      overlay.querySelectorAll<HTMLButtonElement>('[data-claim-milestone]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const val = Number(btn.dataset.claimMilestone);
+          if (!Number.isFinite(val)) return;
+          const res = this.db.claimTrophyMilestone(val);
+          this.lobbyBannerMsg = res.claimed
+            ? `Palier ${val} 🏆 réclamé : ${res.rewardDescription} !`
+            : res.rewardDescription;
+          if (res.claimed) soundManager.playStarrDropReveal('EPIQUE');
+          renderModal();
+        });
+      });
+
+      overlay.querySelector('#btn-trophy-claim-all')?.addEventListener('click', () => {
+        const res = this.db.claimAllAvailableRewards();
+        if (res.claimedCount > 0) {
+          soundManager.playStarrDropReveal('EPIQUE');
+          this.lobbyBannerMsg = `✨ ${res.claimedCount} récompense(s) récupérée(s) : +${res.coinsEarned}🪙 !`;
+        }
+        renderModal();
+      });
+
+      overlay.querySelector('#btn-trophy-close')?.addEventListener('click', () => {
+        overlay.remove();
+        this.renderLobby();
+      });
+    };
+
+    overlay.addEventListener('click', (ev) => {
+      if (ev.target === overlay) {
+        overlay.remove();
+        this.renderLobby();
+      }
+    });
+
+    document.body.appendChild(overlay);
+    renderModal();
   }
 
   private renderLobby(): void {
+    this.clearActiveKeyHandler();
     this.activeEngine?.stop();
     this.activeEngine = null;
     this.activeCampusEngine?.stop();
@@ -102,233 +341,327 @@ class BrawlCollegeApp {
     const dailyQuests = this.db.getDailyQuests();
     const unlockedRewards = this.db.getUnlockedRewards();
     const selectedMode = getGameModeById(this.selectedModeId);
+    const selectedModeGuide = getModeQuickGuide(selectedMode.id);
     const hourlyMode = getHourlyRotatedMode();
     const stars = this.db.getCombatStars();
     const starsProgress = stars % 3;
     const isMuted = soundManager.isMuted();
+    const trophyRank = getCurrentTrophyRank(profile.trophies);
+    const trophyProgressPct = Math.min(100, Math.round((profile.trophies / 1000) * 100));
+    const brawlerSubjectMeta = getSubjectVisualMeta(selectedBrawler.favorite_subject);
+    const accessibility = this.db.getAccessibilitySettings();
 
     const allQuestsWithStatus = this.questService.getAllQuestsWithStatus();
     const totalQuestsCount = allQuestsWithStatus.length;
     const completedQuestsCount = allQuestsWithStatus.filter(
       (entry) => entry.progress.status === 'COMPLETED' || entry.progress.status === 'CLAIMED'
     ).length;
+    const claimableCampusQuestsCount = allQuestsWithStatus.filter(
+      (entry) => entry.progress.status === 'COMPLETED'
+    ).length;
+    const claimableDailyQuestsCount = dailyQuests.filter(
+      (q) => !q.claimed && q.progress >= q.target
+    ).length;
+    const claimableMilestonesCount = TROPHY_MILESTONE_THRESHOLDS.filter(
+      (t) => profile.trophies >= t && !claimedMilestones.includes(t)
+    ).length;
+    const totalClaimableCount =
+      claimableDailyQuestsCount + claimableCampusQuestsCount + claimableMilestonesCount;
+
     const activeQuestInfo = this.questService.getActiveQuest();
     const activeQuestTargetRoom = activeQuestInfo
       ? getRoomById(activeQuestInfo.activeObjective.target_room_id)
       : null;
 
     this.root.innerHTML = `
-      <div class="brawl-bg" style="min-height:100dvh; padding:14px 16px;">
-        <div class="lobby-shell" style="max-width:1200px; margin:0 auto; display:flex; flex-direction:column; gap:14px;">
-          <!-- Header Bar -->
-          <header class="brawl-card" style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:12px; padding:12px 18px;">
-            <div>
-              <div class="brawl-outline-text" style="font-size:11px; text-transform:uppercase; letter-spacing:1.3px; color:#38bdf8;">Brawl Collège : Opération 6ème</div>
-              <h1 class="brawl-title" style="margin:2px 0 0; font-size:22px; color:#ffd426;">🎒 ${profile.nickname} — Prêt pour l'arène !</h1>
+      <div class="brawl-bg">
+        <div class="brawl-lobby-shell">
+          <!-- Barre supérieure style Brawl Stars -->
+          <header class="brawl-topbar">
+            <div class="brawl-topbar-left">
+              <div>
+                <div class="brawl-outline-text" style="font-size:10px; text-transform:uppercase; letter-spacing:1.1px; color:#38bdf8;">
+                  Brawl Collège • Opération 6ème
+                </div>
+                <h1 class="brawl-title" style="margin:0; font-size:19px; color:#ffd426;">
+                  🎒 ${profile.nickname}
+                </h1>
+              </div>
+
+              <button id="btn-open-trophy-road" class="brawl-trophy-pill" title="Ouvrir la Route des Trophées">
+                <span style="font-size:16px;">🏆</span>
+                <div style="text-align:left;">
+                  <div style="font-size:12px; font-weight:900; line-height:1.1;">
+                    ${profile.trophies} / 1000 <span style="color:#fde047;">• ${trophyRank}</span>
+                  </div>
+                  <div class="brawl-trophy-track" style="margin-top:3px;">
+                    <div class="brawl-trophy-fill" style="width:${trophyProgressPct}%;"></div>
+                  </div>
+                </div>
+                ${claimableMilestonesCount > 0 ? '<span class="brawl-ready-dot" title="Palier prêt !"></span>' : ''}
+              </button>
             </div>
-            <div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px;">
-              <div class="brawl-outline-text" style="background:#0b1129; border:2.5px solid #090d16; padding:7px 12px; border-radius:11px; font-size:13px; box-shadow:0 3px 0 #090d16;">🏆 ${profile.trophies} / 1000</div>
-              <div class="brawl-outline-text" style="background:#0b1129; border:2.5px solid #090d16; padding:7px 12px; border-radius:11px; font-size:13px; color:#ffd426; box-shadow:0 3px 0 #090d16;">🪙 ${profile.coins}</div>
-              <div class="brawl-outline-text" style="background:#0b1129; border:2.5px solid #090d16; padding:7px 12px; border-radius:11px; font-size:13px; color:#c084fc; box-shadow:0 3px 0 #090d16;">📖 ${knowledgePoints}</div>
-              <div class="brawl-outline-text" style="background:#0b1129; border:2.5px solid #090d16; padding:7px 12px; border-radius:11px; font-size:13px; color:#22b8ff; box-shadow:0 3px 0 #090d16;">⭐ ${starsProgress}/3</div>
+
+            <div class="brawl-topbar-right">
+              <div class="brawl-stat-pill" style="color:#ffd426;" title="Pièces d'or">🪙 ${profile.coins}</div>
+              <div class="brawl-stat-pill" style="color:#c084fc;" title="Points de Savoir">📖 ${knowledgePoints}</div>
+              <div class="brawl-stat-pill" style="color:#38bdf8;" title="Étoiles pour le prochain Casier">⭐ ${starsProgress}/3</div>
+
+              ${
+                totalClaimableCount > 0
+                  ? `<button id="btn-claim-all" class="brawl-btn brawl-btn-sm brawl-btn-yellow brawl-pulse">
+                      ✨ Tout réclamer (${totalClaimableCount})
+                    </button>`
+                  : ''
+              }
+
               <button id="btn-starr-drop" class="brawl-btn brawl-btn-sm ${profile.starr_drops_available > 0 ? 'brawl-btn-yellow brawl-pulse' : ''}" ${profile.starr_drops_available === 0 ? 'disabled' : ''}>
                 🎁 Casiers (${profile.starr_drops_available})
               </button>
-              <button id="btn-quest-journal" class="brawl-btn brawl-btn-sm brawl-btn-green">
-                📜 Quêtes (${completedQuestsCount}/${totalQuestsCount})
+              <button id="btn-comfort-help" class="brawl-btn brawl-btn-sm brawl-btn-blue" title="Guide 3 secondes & Réglages Confort">
+                ⚙️ Aide${accessibility.calm_mode ? ' • 🐢' : ''}
               </button>
-              <button id="btn-parent-dash" class="brawl-btn brawl-btn-sm brawl-btn-blue">
-                🔒 Carnet Parent
+              <button id="btn-parent-dash" class="brawl-btn brawl-btn-sm brawl-btn-purple">
+                🔒 Parent
               </button>
-              <button id="btn-toggle-mute" class="brawl-btn brawl-btn-sm" title="Activer ou couper les effets sonores">
-                ${isMuted ? '🔇 Muet' : '🔊 Son'}
+              <button id="btn-toggle-mute" class="brawl-btn brawl-btn-sm" title="Activer ou couper le son">
+                ${isMuted ? '🔇' : '🔊'}
               </button>
               <button id="btn-fullscreen" class="brawl-btn brawl-btn-sm" title="Plein écran & Paysage">
-                ⛶ Plein écran
+                ⛶
               </button>
             </div>
           </header>
 
           ${
             this.lobbyBannerMsg
-              ? `<div class="brawl-pd-subcard" style="background:rgba(56,189,248,0.18); border-color:#38bdf8; color:#e0f2fe; font-weight:800; padding:10px 14px; display:flex; justify-content:space-between; align-items:center;">
+              ? `<div class="brawl-pd-subcard" style="background:rgba(56,189,248,0.18); border-color:#38bdf8; color:#e0f2fe; font-weight:800; padding:8px 12px; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
                   <span>✨ ${this.lobbyBannerMsg}</span>
                   <button id="btn-dismiss-banner" style="background:transparent; border:none; color:#fef08a; font-weight:900; cursor:pointer;">✖</button>
                 </div>`
               : ''
           }
 
-          <!-- Mode Aventure M4 : Carte Ouverte 3D du Collège, Quêtes & Missions -->
-          <section class="brawl-card" style="padding:14px 18px; background:linear-gradient(135deg, rgba(30,58,138,0.9), rgba(15,23,42,0.95)); border-color:#38bdf8;">
-            <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:14px;">
-              <div style="flex:1; min-width:260px;">
-                <div class="brawl-outline-text" style="font-size:12px; color:#38bdf8; letter-spacing:0.8px;">🏫 MODE AVENTURE • CARTE OUVERTE 3D (2400×1800)</div>
-                <h2 class="brawl-outline-text" style="margin:2px 0 6px; font-size:20px; color:#ffd426;">EXPLORER LE COLLÈGE &amp; QUÊTES (${completedQuestsCount}/${totalQuestsCount})</h2>
+          <!-- Grille principale 3 Piliers sans scroll inutile -->
+          <main class="brawl-lobby-grid">
+            <!-- PILIER GAUCHE : Exploration Collège & Quêtes -->
+            <section class="brawl-lobby-col">
+              <div class="brawl-col-title">
+                <span>🏫 COLLÈGE 3D & QUÊTES</span>
+                <span style="color:#4ade80;">${completedQuestsCount}/${totalQuestsCount}</span>
+              </div>
+
+              <div class="brawl-campus-card">
+                <div style="font-size:11px; font-weight:900; color:#86efac; letter-spacing:0.6px;">
+                  🗺️ CARTE OUVERTE DU COLLÈGE (2400×1800)
+                </div>
                 ${
                   activeQuestInfo
-                    ? `<div style="font-size:13px; color:#e2e8f0; line-height:1.45;">
-                        <span style="color:#fde047; font-weight:900;">📜 Quête active : ${activeQuestInfo.quest.title}</span><br/>
-                        Objectif : <strong>${activeQuestInfo.activeObjective.description}</strong> (${Math.min(activeQuestInfo.progress.current_count, activeQuestInfo.activeObjective.required_count)}/${activeQuestInfo.activeObjective.required_count})${
+                    ? `<div style="font-size:12px; color:#f8fafc; line-height:1.4;">
+                        <strong style="color:#fde047;">📜 ${activeQuestInfo.quest.title}</strong><br/>
+                        ${activeQuestInfo.activeObjective.description}
+                        <span style="color:#86efac; font-weight:900;">(${Math.min(activeQuestInfo.progress.current_count, activeQuestInfo.activeObjective.required_count)}/${activeQuestInfo.activeObjective.required_count})</span>
+                        ${
                           activeQuestTargetRoom
-                            ? ` • <span style="color:#7dd3fc; font-weight:800;">📍 ${activeQuestTargetRoom.name} (${activeQuestTargetRoom.floor_label})</span>`
+                            ? `<div style="color:#bae6fd; font-weight:800; margin-top:2px;">📍 ${activeQuestTargetRoom.name} (${activeQuestTargetRoom.floor_label})</div>`
                             : ''
                         }
                       </div>`
-                    : `<div style="font-size:13px; color:#86efac; font-weight:800;">🏆 Toutes les quêtes du collège sont accomplies (${completedQuestsCount}/${totalQuestsCount}) !</div>`
+                    : `<div style="font-size:12px; color:#86efac; font-weight:800;">🏆 Toutes les missions du collège sont réussies !</div>`
                 }
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                  <button id="btn-explore-campus" class="brawl-btn brawl-btn-sm brawl-btn-yellow" style="flex:1;">
+                    🏫 EXPLORER
+                  </button>
+                  ${
+                    activeQuestInfo && activeQuestTargetRoom
+                      ? `<button id="btn-quick-quest-go" class="brawl-btn brawl-btn-sm brawl-btn-green" style="flex:1;">
+                          🚀 Y ALLER
+                        </button>`
+                      : ''
+                  }
+                </div>
               </div>
-              <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
-                <button id="btn-explore-campus" class="brawl-btn brawl-btn-lg brawl-btn-yellow">
-                  🗺️ ENTRER DANS LE COLLÈGE (${selectedBrawler.name.toUpperCase()})
-                </button>
-                <button id="btn-open-quests-card" class="brawl-btn brawl-btn-lg brawl-btn-blue">
-                  📜 CARNET DE QUÊTES
+
+              <div class="brawl-col-title" style="margin-top:2px;">
+                <span>⚡ QUÊTES DU JOUR</span>
+                <button id="btn-open-quests-card" class="brawl-btn brawl-btn-sm brawl-btn-blue" style="padding:3px 9px; font-size:11px;">
+                  📜 Carnet (12)
                 </button>
               </div>
-            </div>
-          </section>
 
-          <!-- Route vers la 6ème -->
-          ${renderTrophyRoadHtml(profile.trophies, claimedMilestones)}
-
-          <!-- 3 Quêtes du Jour -->
-          <section class="brawl-card" style="padding:12px 14px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-              <h2 class="brawl-outline-text" style="margin:0; font-size:15px; color:#38e54d;">📜 QUÊTES DU JOUR</h2>
-              <span style="font-size:11px; color:#94a3b8; font-weight:700;">Complète des combats pour gagner Pièces & Étoiles</span>
-            </div>
-            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:10px;">
-              ${dailyQuests
-                .map((q) => {
-                  const pct = Math.min(100, Math.round((q.progress / Math.max(1, q.target)) * 100));
-                  const canClaim = !q.claimed && q.progress >= q.target;
-                  return `
-                  <div class="brawl-pd-subcard" style="padding:9px 11px; display:flex; flex-direction:column; gap:6px; justify-content:space-between;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
-                      <strong style="font-size:12px; color:#f8fafc;">${q.title}</strong>
-                      <span style="font-size:11px; font-weight:900; color:#facc15;">+${q.reward_coins}🪙${q.reward_stars > 0 ? ` +${q.reward_stars}⭐` : ''}</span>
-                    </div>
-                    <div style="height:8px; background:#090d16; border-radius:999px; overflow:hidden; border:1.5px solid #1e293b;">
-                      <div style="width:${pct}%; height:100%; background:${q.claimed ? '#475569' : '#22c55e'};"></div>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
-                      <span style="font-size:11px; color:#cbd5e1; font-weight:700;">${q.progress} / ${q.target}</span>
-                      ${
-                        q.claimed
-                          ? `<span style="font-size:11px; color:#86efac; font-weight:900;">✓ Réclamée</span>`
-                          : `<button data-claim-quest="${q.id}" class="brawl-btn brawl-btn-sm ${canClaim ? 'brawl-btn-yellow' : ''}" ${canClaim ? '' : 'disabled'} style="padding:3px 9px; font-size:11px;">
-                              ${canClaim ? 'Réclamer !' : 'En cours'}
-                            </button>`
-                      }
-                    </div>
-                  </div>
-                `;
-                })
-                .join('')}
-            </div>
-          </section>
-
-          <!-- Sélection Héros & Modes -->
-          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:16px;">
-            <!-- 4 Héros -->
-            <section class="brawl-card" style="padding:14px;">
-              <h2 class="brawl-outline-text" style="margin:0 0 10px; font-size:17px; color:#ffd426;">⚡ LES 4 ÉLÈVES-HÉROS</h2>
-              <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:10px;">
-                ${brawlers
-                  .map((b) => {
-                    const isSelected = b.id === selectedBrawler.id;
-                    const accent = BRAWLER_BADGE_COLORS[b.id];
-                    const ringClass = BRAWLER_RING_CLASS[b.id];
-                    const lvl = this.db.getBrawlerLevel(b.id);
-                    const hpAtLvl = Math.round(b.base_hp * (1 + 0.08 * (lvl - 1)));
+              <div class="brawl-quest-mini-list">
+                ${dailyQuests
+                  .map((q) => {
+                    const pct = Math.min(100, Math.round((q.progress / Math.max(1, q.target)) * 100));
+                    const canClaim = !q.claimed && q.progress >= q.target;
                     return `
-                    <button data-brawler-id="${b.id}" class="brawl-card ${isSelected ? 'brawl-card-active' : ''}" style="text-align:left; padding:10px; cursor:pointer; display:flex; align-items:center; gap:10px;">
-                      <span class="brawl-portrait-ring ${ringClass}" style="width:52px; height:52px; flex-shrink:0;">
-                        <img src="${BRAWLER_PORTRAITS[b.id]}" alt="${b.name}" style="width:100%; height:100%; object-fit:cover; display:block;" />
-                      </span>
-                      <div style="min-width:0; flex:1;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; gap:4px;">
-                          <strong class="brawl-outline-text" style="font-size:15px; color:${accent};">${b.name}</strong>
-                          <span style="font-size:10px; font-weight:900; color:#fde047; background:#090d16; border-radius:6px; padding:1px 5px;">Niv.${lvl}</span>
+                      <div class="brawl-quest-mini-item ${canClaim ? 'brawl-quest-ready' : ''}">
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:4px;">
+                          <strong style="color:#f8fafc;">${q.title}</strong>
+                          <span style="font-size:11px; font-weight:900; color:#facc15;">+${q.reward_coins}🪙${q.reward_stars > 0 ? ` +${q.reward_stars}⭐` : ''}</span>
                         </div>
-                        <div style="font-size:11px; color:#cbd5e1; margin:1px 0 3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">❤️ ${hpAtLvl} • ${b.title}</div>
-                        <div style="font-size:11px; font-weight:700; color:#e2e8f0;">📚 ${SUBJECT_NAMES[b.favorite_subject]}</div>
-                        <div style="font-size:10px; color:#fde68a; margin-top:2px;">⚡ ${b.super_ability.name}</div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                          <div style="flex:1; height:7px; background:#090d16; border-radius:999px; overflow:hidden; border:1px solid #1e293b;">
+                            <div style="width:${pct}%; height:100%; background:${q.claimed ? '#475569' : '#22c55e'};"></div>
+                          </div>
+                          <span style="font-size:11px; color:#cbd5e1; font-weight:700;">${q.progress}/${q.target}</span>
+                          ${
+                            q.claimed
+                              ? `<span style="font-size:11px; color:#86efac; font-weight:900;">✓</span>`
+                              : canClaim
+                                ? `<button data-claim-quest="${q.id}" class="brawl-btn brawl-btn-sm brawl-btn-yellow" style="padding:2px 8px; font-size:11px;">Réclamer</button>`
+                                : ''
+                          }
+                        </div>
                       </div>
-                    </button>
-                  `;
+                    `;
                   })
                   .join('')}
               </div>
-              <div style="margin-top:12px; display:grid; grid-template-columns:minmax(180px, 240px) 1fr; gap:12px; align-items:stretch;">
-                <div class="brawl-pd-subcard" style="background:radial-gradient(circle at 50% 45%, #263c9e 0%, #090e26 88%); padding:6px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-                  <div id="brawler-3d-preview" style="width:100%; height:200px;"></div>
-                  <div style="font-size:10px; color:#cbd5e1; margin-top:2px; font-weight:700;">🧊 Modèle 3D — glisser pour pivoter</div>
-                </div>
-                <div class="brawl-pd-subcard" style="padding:12px; font-size:12px; color:#e2e8f0; display:flex; flex-direction:column; justify-content:space-between; gap:7px;">
-                  <div style="display:flex; flex-direction:column; gap:6px;">
-                    <div style="display:flex; align-items:center; gap:8px;">
-                      <span class="brawl-portrait-ring ${BRAWLER_RING_CLASS[selectedBrawler.id]}" style="width:36px; height:36px; flex-shrink:0;">
-                        <img src="${BRAWLER_PORTRAITS[selectedBrawler.id]}" alt="${selectedBrawler.name}" style="width:100%; height:100%; object-fit:cover; display:block;" />
-                      </span>
-                      <div>
-                        <div style="font-size:15px;"><strong class="brawl-outline-text" style="color:${BRAWLER_BADGE_COLORS[selectedBrawler.id]};">${selectedBrawler.name}</strong> <span style="font-size:11px; color:#fde047; font-weight:900;">Niv.${selectedBrawlerLevel}</span> — <span style="font-weight:700;">${selectedBrawler.title}</span></div>
-                        <div style="font-size:11px; color:#93c5fd; font-weight:700;">${selectedBrawler.archetype} • ⚡ ${selectedBrawler.speed_value} • ❤️ ${selectedScaledHp} PV (+8%/niv)</div>
-                      </div>
-                    </div>
-                    <div>🎯 <strong>${selectedBrawler.basic_attack.name}</strong> : ${selectedBrawler.id === 'MAYA' ? 3 : selectedBrawler.basic_attack.projectiles_count}×${selectedScaledDmg} dégâts</div>
-                    <div>🟡 <strong>Super</strong> : ${selectedBrawler.super_ability.name}</div>
-                    <div>🟢 <strong>Gadget (×3)</strong> : ${selectedBrawler.gadget.name}</div>
-                    ${
-                      unlockedRewards.length > 0
-                        ? `<div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:2px;">
-                            ${unlockedRewards
-                              .slice(-4)
-                              .map(
-                                (r) =>
-                                  `<span style="background:rgba(250,204,21,0.16); border:1px solid #facc15; color:#fef08a; border-radius:6px; padding:1px 6px; font-size:10px; font-weight:800;">🏅 ${r}</span>`
-                              )
-                              .join('')}
-                          </div>`
-                        : ''
-                    }
-                  </div>
-                  <button id="btn-upgrade-brawler" class="brawl-btn brawl-btn-sm brawl-btn-yellow" ${selectedBrawlerLevel >= 10 ? 'disabled' : ''} style="width:100%;">
-                    ${
-                      selectedBrawlerLevel >= 10
-                        ? '⭐ NIVEAU MAX (10)'
-                        : `⬆️ Améliorer Niv.${selectedBrawlerLevel + 1} (${upgradeCost.coins}🪙 + ${upgradeCost.knowledgePoints}📖)`
-                    }
-                  </button>
-                </div>
-              </div>
             </section>
 
-            <!-- 5 Modes -->
-            <section class="brawl-card" style="padding:14px; display:flex; flex-direction:column; justify-content:space-between;">
+            <!-- PILIER CENTRAL : Podium Héros 3D & Dock 4 Héros -->
+            <section class="brawl-lobby-col brawl-hero-stage">
+              <div class="brawl-col-title">
+                <span>🌟 ÉLÈVE-HÉROS SÉLECTIONNÉ</span>
+                <span style="color:#fde047;">Niv.${selectedBrawlerLevel}</span>
+              </div>
+
+              <div class="brawl-hero-3d-wrap">
+                <div class="brawl-hero-banner">
+                  <div>
+                    <div class="brawl-outline-text" style="font-size:20px; color:${BRAWLER_BADGE_COLORS[selectedBrawler.id]};">
+                      ${selectedBrawler.name}
+                    </div>
+                    <div style="font-size:11px; font-weight:700; color:#e2e8f0;">${selectedBrawler.title}</div>
+                  </div>
+                  <span class="brawl-subject-tag" style="background:${brawlerSubjectMeta.badge_bg}; color:#f8fafc; border-color:${brawlerSubjectMeta.accent_color};">
+                    ${brawlerSubjectMeta.icon} ${brawlerSubjectMeta.short_label}
+                  </span>
+                </div>
+                <div id="brawler-3d-preview" style="width:100%; height:100%;"></div>
+                <div style="position:absolute; bottom:6px; left:0; right:0; text-align:center; font-size:10px; color:#cbd5e1; font-weight:700; pointer-events:none;">
+                  👆 Glisse pour faire pivoter en 3D
+                </div>
+              </div>
+
+              <div class="brawl-brawler-dock">
+                ${brawlers
+                  .map((b) => {
+                    const isSelected = b.id === selectedBrawler.id;
+                    const lvl = this.db.getBrawlerLevel(b.id);
+                    const ringClass = BRAWLER_RING_CLASS[b.id];
+                    return `
+                      <button data-brawler-id="${b.id}" class="brawl-hero-chip ${isSelected ? 'active' : ''}">
+                        <span class="brawl-portrait-ring ${ringClass}" style="width:44px; height:44px;">
+                          <img src="${BRAWLER_PORTRAITS[b.id]}" alt="${b.name}" />
+                        </span>
+                        <span style="font-size:11px; font-weight:900; color:${BRAWLER_BADGE_COLORS[b.id]};">${b.name}</span>
+                        <span style="font-size:10px; color:#cbd5e1; font-weight:700;">Niv.${lvl}</span>
+                      </button>
+                    `;
+                  })
+                  .join('')}
+              </div>
+
+              <div class="brawl-hero-stats-bar">
+                <div class="brawl-stat-chip">
+                  ❤️ <strong>${selectedScaledHp} PV</strong> • ⚡ Vit. ${selectedBrawler.speed_value}
+                </div>
+                <div class="brawl-stat-chip">
+                  🎯 <strong>${selectedBrawler.basic_attack.name}</strong> (${selectedBrawler.id === 'MAYA' ? 3 : selectedBrawler.basic_attack.projectiles_count}×${selectedScaledDmg})
+                </div>
+                <div class="brawl-stat-chip">
+                  🟡 <strong>Super</strong> : ${selectedBrawler.super_ability.name}
+                </div>
+                <div class="brawl-stat-chip">
+                  🟢 <strong>Gadget (×3)</strong> : ${selectedBrawler.gadget.name}
+                </div>
+              </div>
+
+              ${
+                unlockedRewards.length > 0
+                  ? `<div style="display:flex; flex-wrap:wrap; gap:4px;">
+                      ${unlockedRewards
+                        .slice(-3)
+                        .map(
+                          (r) =>
+                            `<span style="background:rgba(250,204,21,0.16); border:1px solid #facc15; color:#fef08a; border-radius:6px; padding:1px 6px; font-size:10px; font-weight:800;">🏅 ${r}</span>`
+                        )
+                        .join('')}
+                    </div>`
+                  : ''
+              }
+
+              <button id="btn-upgrade-brawler" class="brawl-btn brawl-btn-sm brawl-btn-yellow" ${selectedBrawlerLevel >= 10 ? 'disabled' : ''} style="width:100%;">
+                ${
+                  selectedBrawlerLevel >= 10
+                    ? '⭐ NIVEAU MAX (10)'
+                    : `⬆️ Améliorer Niv.${selectedBrawlerLevel + 1} (${upgradeCost.coins}🪙 + ${upgradeCost.knowledgePoints}📖)`
+                }
+              </button>
+            </section>
+
+            <!-- PILIER DROIT : Choix du Mode & Bouton Géant JOUER -->
+            <section class="brawl-lobby-col" style="justify-content:space-between;">
               <div>
-                <h2 class="brawl-outline-text" style="margin:0 0 10px; font-size:17px; color:#22b8ff;">🏟️ LES 5 MODES D'ARÈNE <span style="font-size:12px; color:#fde047;">(Rotation : ${hourlyMode.name})</span></h2>
-                <div style="display:flex; flex-direction:column; gap:8px;">
+                <div class="brawl-col-title" style="margin-bottom:8px;">
+                  <span>🏟️ MODES D'ARÈNE</span>
+                  <span style="font-size:11px; color:#fde047;">⏰ ${hourlyMode.name}</span>
+                </div>
+
+                <div class="brawl-modes-stack">
                   ${ALL_GAME_MODES.map((m) => {
                     const active = m.id === selectedMode.id;
+                    const guide = getModeQuickGuide(m.id);
+                    const isRecommended =
+                      guide.recommendedBrawler === selectedBrawler.id ||
+                      m.target_subject === selectedBrawler.favorite_subject;
+                    const subjMeta = m.target_subject ? getSubjectVisualMeta(m.target_subject) : null;
                     return `
-                    <button data-mode-id="${m.id}" class="brawl-card ${active ? 'brawl-card-active' : ''}" style="text-align:left; padding:9px 12px; cursor:pointer;">
-                      <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
-                        <strong class="brawl-outline-text" style="font-size:14px; color:${active ? '#ffd426' : '#f8fafc'};">${m.mode_number}. ${m.name}</strong>
-                        <span style="font-size:11px; color:#ffd426; font-weight:900; background:#090e26; border:2px solid #090d16; border-radius:8px; padding:2px 7px;">${m.format} • ${m.duration_seconds}s</span>
-                      </div>
-                      <div style="font-size:11px; color:#cbd5e1; margin-top:3px;">${m.description}</div>
-                    </button>
-                  `;
+                      <button data-mode-id="${m.id}" class="brawl-mode-pill ${active ? 'active' : ''}">
+                        <span class="brawl-mode-icon">${guide.icon}</span>
+                        <div style="flex:1; min-width:0;">
+                          <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap;">
+                            <strong style="font-size:13px; color:${active ? '#ffd426' : '#f8fafc'};">${m.name}</strong>
+                            ${
+                              isRecommended
+                                ? '<span class="brawl-recommend-badge">⭐ Conseillé</span>'
+                                : ''
+                            }
+                          </div>
+                          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:2px; font-size:11px; color:#cbd5e1;">
+                            <span>${guide.shortTag}</span>
+                            <span>• ${m.format} • ${m.duration_seconds}s</span>
+                            ${
+                              subjMeta
+                                ? `<span class="brawl-subject-tag" style="background:${subjMeta.badge_bg}; color:#f8fafc; border-color:${subjMeta.accent_color};">${subjMeta.icon} ${subjMeta.short_label}</span>`
+                                : ''
+                            }
+                          </div>
+                        </div>
+                      </button>
+                    `;
                   }).join('')}
                 </div>
               </div>
 
-              <button id="btn-play-match" class="brawl-btn brawl-btn-lg brawl-btn-yellow brawl-pulse" style="margin-top:14px; width:100%;">
-                ▶ JOUER (${selectedBrawler.name.toUpperCase()} — ${selectedMode.name.toUpperCase()})
+              <div class="brawl-pd-subcard" style="padding:9px 11px; font-size:11px; color:#e2e8f0; display:flex; flex-direction:column; gap:4px;">
+                <div style="font-weight:900; color:#fde047;">${selectedModeGuide.icon} ${selectedModeGuide.oneLineGoal}</div>
+                <div style="display:flex; flex-direction:column; gap:2px; color:#cbd5e1;">
+                  ${selectedModeGuide.howToWinSteps.map((step) => `<span>• ${step}</span>`).join('')}
+                </div>
+              </div>
+
+              <button id="btn-play-match" class="brawl-btn brawl-btn-yellow brawl-play-cta brawl-pulse">
+                ▶ JOUER !
+                <div style="font-size:11px; font-weight:800; opacity:0.9; margin-top:1px;">
+                  ${selectedBrawler.name.toUpperCase()} • ${selectedMode.name.toUpperCase()}
+                </div>
               </button>
             </section>
-          </div>
+          </main>
         </div>
       </div>
     `;
@@ -360,11 +693,35 @@ class BrawlCollegeApp {
       });
     });
 
+    // Route des Trophées
+    this.root.querySelector('#btn-open-trophy-road')?.addEventListener('click', () => {
+      this.openTrophyRoadModal();
+    });
+
+    // Tout Réclamer en 1 clic
+    this.root.querySelector('#btn-claim-all')?.addEventListener('click', () => {
+      const dbRes = this.db.claimAllAvailableRewards();
+      const qRes = this.questService.claimAllCompletedQuests();
+      const totalItems = dbRes.claimedCount + qRes.count;
+      if (totalItems > 0) {
+        soundManager.playStarrDropReveal('EPIQUE');
+        const totalCoins = dbRes.coinsEarned + qRes.totalCoins;
+        const totalStars = dbRes.starsEarned + qRes.totalStars;
+        this.lobbyBannerMsg = `✨ ${totalItems} récompense(s) récupérée(s) : +${totalCoins}🪙${totalStars > 0 ? ` +${totalStars}⭐` : ''}${qRes.totalTrophies > 0 ? ` +${qRes.totalTrophies}🏆` : ''} !`;
+      }
+      this.renderLobby();
+    });
+
     // Casier Mystère
     this.root.querySelector('#btn-starr-drop')?.addEventListener('click', () => {
       if (this.db.getPlayerProfile().starr_drops_available > 0) {
         this.starrDropModal.open(() => this.renderLobby());
       }
+    });
+
+    // Guide & Confort
+    this.root.querySelector('#btn-comfort-help')?.addEventListener('click', () => {
+      this.openComfortAndGuideModal(false);
     });
 
     // Dashboard Parent
@@ -376,7 +733,7 @@ class BrawlCollegeApp {
     const muteBtn = this.root.querySelector<HTMLButtonElement>('#btn-toggle-mute');
     muteBtn?.addEventListener('click', () => {
       const mutedNow = soundManager.toggleMute();
-      muteBtn.textContent = mutedNow ? '🔇 Muet' : '🔊 Son';
+      muteBtn.textContent = mutedNow ? '🔇' : '🔊';
     });
 
     // Plein écran & Paysage mobile
@@ -398,20 +755,6 @@ class BrawlCollegeApp {
     this.root.querySelector('#btn-dismiss-banner')?.addEventListener('click', () => {
       this.lobbyBannerMsg = null;
       this.renderLobby();
-    });
-
-    // Réclamation paliers Route des Trophées
-    this.root.querySelectorAll<HTMLButtonElement>('[data-claim-milestone]').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const val = Number(btn.dataset.claimMilestone);
-        if (!Number.isFinite(val)) return;
-        const res = this.db.claimTrophyMilestone(val);
-        this.lobbyBannerMsg = res.claimed
-          ? `Palier ${val} 🏆 réclamé : ${res.rewardDescription} !`
-          : res.rewardDescription;
-        if (res.claimed) soundManager.playStarrDropReveal('EPIQUE');
-        this.renderLobby();
-      });
     });
 
     // Réclamation Quêtes du Jour
@@ -440,21 +783,32 @@ class BrawlCollegeApp {
     });
 
     // Carnet de Quêtes & Mode Exploration du Collège (M4)
-    const openQuestsFromLobby = (): void => {
+    this.root.querySelector('#btn-open-quests-card')?.addEventListener('click', () => {
       this.questJournalModal.open({
         onClose: () => this.renderLobby(),
         onStartCampusExploration: () => {
           this.lobbyBannerMsg = null;
           this.startCampusExploration(selectedBrawler.id);
         },
+        onTeleportToQuestRoom: (roomId) => {
+          this.lobbyBannerMsg = null;
+          this.startCampusExploration(selectedBrawler.id, roomId);
+        },
         onQuestSelected: () => {},
       });
-    };
-    this.root.querySelector('#btn-quest-journal')?.addEventListener('click', openQuestsFromLobby);
-    this.root.querySelector('#btn-open-quests-card')?.addEventListener('click', openQuestsFromLobby);
+    });
+
     this.root.querySelector('#btn-explore-campus')?.addEventListener('click', () => {
       this.lobbyBannerMsg = null;
       this.startCampusExploration(selectedBrawler.id);
+    });
+
+    this.root.querySelector('#btn-quick-quest-go')?.addEventListener('click', () => {
+      this.lobbyBannerMsg = null;
+      this.startCampusExploration(
+        selectedBrawler.id,
+        activeQuestInfo?.activeObjective.target_room_id
+      );
     });
 
     // Lancer le combat 60 FPS
@@ -548,7 +902,8 @@ class BrawlCollegeApp {
     return eloResult.new_elo;
   }
 
-  private startCampusExploration(brawlerId: BrawlerId): void {
+  private startCampusExploration(brawlerId: BrawlerId, initialRoomId?: CampusRoomId): void {
+    this.clearActiveKeyHandler();
     this.activeEngine?.stop();
     this.activeEngine = null;
     this.activeCampusEngine?.stop();
@@ -562,6 +917,7 @@ class BrawlCollegeApp {
     const brawler = getBrawlerById(brawlerId);
     const brawlerLevel = this.db.getBrawlerLevel(brawlerId);
     const initialAvgElo = this.computeSubjectAvgElo(brawler.favorite_subject);
+    const accessibility = this.db.getAccessibilitySettings();
 
     this.root.innerHTML = `
       <div class="arena-container">
@@ -574,6 +930,9 @@ class BrawlCollegeApp {
           </button>
           <button id="btn-campus-quests" class="brawl-btn brawl-btn-sm brawl-btn-blue">
             📜 Quêtes
+          </button>
+          <button id="btn-campus-teleport" class="brawl-btn brawl-btn-sm brawl-hud-teleport-btn" title="Aller directement à l'objectif actif">
+            🚀 Aller à l'objectif
           </button>
           <button id="btn-campus-interact" class="brawl-btn brawl-btn-sm">
             💬 Parler / Défi
@@ -588,7 +947,7 @@ class BrawlCollegeApp {
 
         <!-- Aide commandes Exploration Collège -->
         <div style="position:absolute; bottom:14px; left:16px; background:rgba(9,13,22,0.84); border:2px solid #090d16; padding:6px 12px; border-radius:11px; font-size:11px; font-weight:700; color:#e2e8f0; pointer-events:none;">
-          🕹️ Gauche / ZQSD : Bouger • 🎯 Droite / Clic : Tirer • 💬 Entrée : Parler PNJ • 🟡 Espace : Super • 🟢 E : Gadget
+          🕹️ ZQSD / Stick : Bouger • 🎯 Clic ou touche une cible : Tirer • 🚀 Objectif : Téléport • 💬 Entrée : Parler • 🟡 Super • 🟢 Gadget
         </div>
 
         <!-- Boutons tactiles Super (Jaune) & Gadget (Vert) -->
@@ -620,6 +979,7 @@ class BrawlCollegeApp {
       brawlerLevel,
       targetSpeedMultiplier: this.questionProvider.getTargetSpeedMultiplier(initialAvgElo),
       initialCollectedBadgeIds: Array.from(this.collectedCampusBadgeIds),
+      accessibility,
       requestNextQuestion: (subject?: SubjectCategory) =>
         this.pickAdaptiveQuestion(
           subject,
@@ -696,6 +1056,7 @@ class BrawlCollegeApp {
       onNpcArenaRequested: (npc) => {
         if (!npc.linked_arena_mode) return;
         const linkedMode = getGameModeById(npc.linked_arena_mode);
+        this.clearActiveKeyHandler();
         campusEngine.stop();
         this.activeCampusEngine = null;
         this.returnToCampusAfterMatch = true;
@@ -705,10 +1066,18 @@ class BrawlCollegeApp {
 
     this.activeCampusEngine = campusEngine;
     campusEngine.start();
+    if (initialRoomId) {
+      campusEngine.teleportToRoom(initialRoomId);
+    }
 
     this.bindPointerTap(btnSuper, () => campusEngine.triggerSuperFromUI());
     this.bindPointerTap(btnGadget, () => campusEngine.triggerGadgetFromUI());
     this.bindPointerTap(btnInteract, () => campusEngine.triggerInteractFromUI());
+    this.bindPointerTap(this.root.querySelector('#btn-campus-teleport'), () => {
+      if (!campusEngine.teleportToActiveQuestObjective()) {
+        campusEngine.spawnChallengeInCurrentRoom();
+      }
+    });
     this.bindPointerTap(this.root.querySelector('#btn-campus-challenge'), () =>
       campusEngine.spawnChallengeInCurrentRoom()
     );
@@ -716,6 +1085,10 @@ class BrawlCollegeApp {
       this.questJournalModal.open({
         onClose: () => campusEngine.refreshQuestOverlay(),
         onQuestSelected: () => campusEngine.refreshQuestOverlay(),
+        onTeleportToQuestRoom: (roomId) => {
+          campusEngine.teleportToRoom(roomId);
+          campusEngine.refreshQuestOverlay();
+        },
       });
     });
 
@@ -728,6 +1101,7 @@ class BrawlCollegeApp {
     });
 
     this.bindPointerTap(this.root.querySelector('#btn-campus-lobby'), () => {
+      this.clearActiveKeyHandler();
       campusEngine.stop();
       this.activeCampusEngine = null;
       this.renderLobby();
@@ -735,6 +1109,7 @@ class BrawlCollegeApp {
   }
 
   private startMatch(brawlerId: BrawlerId, mode: IGameMode): void {
+    this.clearActiveKeyHandler();
     this.activeEngine?.stop();
     this.activeEngine = null;
     this.activeCampusEngine?.stop();
@@ -745,6 +1120,7 @@ class BrawlCollegeApp {
     const currentMatchIndex = this.matchCounter;
     const brawler = getBrawlerById(brawlerId);
     const brawlerLevel = this.db.getBrawlerLevel(brawlerId);
+    const accessibility = this.db.getAccessibilitySettings();
     const preferredSubject = mode.target_subject ?? brawler.favorite_subject;
     const candidateSubjects = mode.target_subject
       ? [mode.target_subject]
@@ -757,9 +1133,12 @@ class BrawlCollegeApp {
         <canvas id="arena-canvas" style="display:block; width:100%; height:100%;"></canvas>
 
         <!-- Boutons haut gauche sous HUD -->
-        <div style="position:absolute; top:68px; left:14px; display:flex; gap:8px; z-index:10;">
+        <div style="position:absolute; top:68px; left:14px; display:flex; flex-wrap:wrap; gap:8px; z-index:10;">
           <button id="btn-quit-match" class="brawl-btn brawl-btn-sm">
             ✖ Quitter
+          </button>
+          <button id="btn-match-hint" class="brawl-btn brawl-btn-sm brawl-hud-hint-btn" title="Afficher une astuce et surligner la bonne réponse (Touche H)">
+            💡 Indice (H)
           </button>
           <button id="btn-match-mute" class="brawl-btn brawl-btn-sm" title="Son">
             ${soundManager.isMuted() ? '🔇' : '🔊'}
@@ -768,7 +1147,7 @@ class BrawlCollegeApp {
 
         <!-- Aide commandes desktop/tactile -->
         <div style="position:absolute; bottom:14px; left:16px; background:rgba(9,13,22,0.82); border:2px solid #090d16; padding:6px 12px; border-radius:11px; font-size:11px; font-weight:700; color:#e2e8f0; pointer-events:none;">
-          🕹️ Gauche / ZQSD : Bouger • 🎯 Droite / Clic : Viser & Tirer • 🟡 Espace : Super • 🟢 E : Gadget
+          🕹️ ZQSD / Stick : Bouger • 🎯 Glisser OU toucher la bonne réponse • 💡 H : Indice • 🟡 Espace : Super • 🟢 E : Gadget
         </div>
 
         <!-- Boutons tactiles Super (Jaune) & Gadget (Vert) -->
@@ -788,6 +1167,7 @@ class BrawlCollegeApp {
 
     const btnSuper = this.root.querySelector<HTMLButtonElement>('#btn-hud-super');
     const btnGadget = this.root.querySelector<HTMLButtonElement>('#btn-hud-gadget');
+    const btnHint = this.root.querySelector<HTMLButtonElement>('#btn-match-hint');
     const superPctBadge = this.root.querySelector<HTMLElement>('#super-pct-badge');
     const gadgetBadge = this.root.querySelector<HTMLElement>('#gadget-count-badge');
 
@@ -799,6 +1179,7 @@ class BrawlCollegeApp {
       mode,
       brawlerLevel,
       targetSpeedMultiplier: this.questionProvider.getTargetSpeedMultiplier(initialAvgElo),
+      accessibility,
       requestNextQuestion: () =>
         this.pickAdaptiveQuestion(
           mode.target_subject,
@@ -838,6 +1219,7 @@ class BrawlCollegeApp {
         }
       },
       onMatchFinished: (summary) => {
+        this.clearActiveKeyHandler();
         this.handleMatchFinished(summary);
       },
     });
@@ -847,6 +1229,14 @@ class BrawlCollegeApp {
 
     this.bindPointerTap(btnSuper, () => engine.triggerSuperFromUI());
     this.bindPointerTap(btnGadget, () => engine.triggerGadgetFromUI());
+    this.bindPointerTap(btnHint, () => engine.triggerFreeHintFromUI());
+    this.setActiveKeyHandler((ev) => {
+      if (ev.code === 'KeyH' && this.activeEngine === engine) {
+        ev.preventDefault();
+        engine.triggerFreeHintFromUI();
+      }
+    });
+
     const matchMuteBtn = this.root.querySelector<HTMLButtonElement>('#btn-match-mute');
     this.bindPointerTap(matchMuteBtn, () => {
       const mutedNow = soundManager.toggleMute();
@@ -855,6 +1245,7 @@ class BrawlCollegeApp {
       }
     });
     this.bindPointerTap(this.root.querySelector('#btn-quit-match'), () => {
+      this.clearActiveKeyHandler();
       engine.stop();
       if (this.returnToCampusAfterMatch) {
         this.startCampusExploration(brawlerId);

@@ -3,6 +3,7 @@ import { ISO_Y_SCALE, type IRenderJoystick, type IRenderVec2 } from './Isometric
 export interface ITwinStickFireCommand {
   angle: number;
   autoAim?: boolean;
+  targetWorldPos?: IRenderVec2;
 }
 
 const STICK_MAX_RADIUS = 48;
@@ -20,9 +21,13 @@ export class TwinStickController {
   private readonly canvas: HTMLCanvasElement;
   private readonly screenToWorldFn: (sx: number, sy: number) => IRenderVec2;
   private readonly getPlayerWorldFn: () => IRenderVec2;
+  private readonly findTargetAtScreenPos?: (sx: number, sy: number) => IRenderVec2 | null;
 
   private leftPointerId: number | null = null;
   private rightPointerId: number | null = null;
+  private mouseDownAiming = false;
+  private mouseAimDragged = false;
+  private mouseDownPos: IRenderVec2 = { x: 0, y: 0 };
 
   private leftStick: IRenderJoystick = {
     active: false,
@@ -53,11 +58,13 @@ export class TwinStickController {
   constructor(
     canvas: HTMLCanvasElement,
     screenToWorldFn: (sx: number, sy: number) => IRenderVec2,
-    getPlayerWorldFn: () => IRenderVec2
+    getPlayerWorldFn: () => IRenderVec2,
+    findTargetAtScreenPos?: (sx: number, sy: number) => IRenderVec2 | null
   ) {
     this.canvas = canvas;
     this.screenToWorldFn = screenToWorldFn;
     this.getPlayerWorldFn = getPlayerWorldFn;
+    this.findTargetAtScreenPos = findTargetAtScreenPos;
   }
 
   public attach(): void {
@@ -81,6 +88,12 @@ export class TwinStickController {
     window.removeEventListener('keydown', this.onKeyDown);
     window.removeEventListener('keyup', this.onKeyUp);
     this.keysPressed.clear();
+    this.mouseDownAiming = false;
+    this.mouseAimDragged = false;
+    this.leftPointerId = null;
+    this.rightPointerId = null;
+    this.leftStick.active = false;
+    this.rightStick.active = false;
   }
 
   public requestSuper(): void {
@@ -92,6 +105,7 @@ export class TwinStickController {
   }
 
   public isAiming(): boolean {
+    if (this.mouseDownAiming) return true;
     if (!this.rightStick.active) return false;
     const dx = this.rightStick.currentX - this.rightStick.originX;
     const dy = this.rightStick.currentY - this.rightStick.originY;
@@ -184,12 +198,30 @@ export class TwinStickController {
     const x = ev.clientX - rect.left;
     const y = ev.clientY - rect.top;
 
-    // Souris desktop : clic gauche vise directement vers le curseur et tire
+    // Souris desktop : clic gauche vise directement vers le curseur ou la cible pointée et tire
     if (ev.pointerType === 'mouse') {
-      const worldTarget = this.screenToWorldFn(x, y);
+      if (ev.button !== undefined && ev.button !== 0) return;
+      const hitPos = this.findTargetAtScreenPos?.(x, y) ?? null;
+      const targetWorldPos = hitPos ?? this.screenToWorldFn(x, y);
       const playerPos = this.getPlayerWorldFn();
-      this.aimAngle = Math.atan2(worldTarget.y - playerPos.y, worldTarget.x - playerPos.x);
-      this.pendingFire = { angle: this.aimAngle, autoAim: false };
+      this.aimAngle = Math.atan2(targetWorldPos.y - playerPos.y, targetWorldPos.x - playerPos.x);
+      this.mouseDownAiming = true;
+      this.mouseAimDragged = false;
+      this.mouseDownPos = { x, y };
+      this.pendingFire = { angle: this.aimAngle, autoAim: false, targetWorldPos };
+      return;
+    }
+
+    // Tactile (Mobile/Tablette) : Tap-to-Shoot direct si le doigt touche une cible
+    const hitPos = this.findTargetAtScreenPos?.(x, y) ?? null;
+    if (hitPos) {
+      const playerPos = this.getPlayerWorldFn();
+      this.aimAngle = Math.atan2(hitPos.y - playerPos.y, hitPos.x - playerPos.x);
+      this.pendingFire = {
+        angle: this.aimAngle,
+        autoAim: true,
+        targetWorldPos: hitPos,
+      };
       return;
     }
 
@@ -227,6 +259,12 @@ export class TwinStickController {
       const worldTarget = this.screenToWorldFn(x, y);
       const playerPos = this.getPlayerWorldFn();
       this.aimAngle = Math.atan2(worldTarget.y - playerPos.y, worldTarget.x - playerPos.x);
+      if (
+        this.mouseDownAiming &&
+        Math.hypot(x - this.mouseDownPos.x, y - this.mouseDownPos.y) >= AIM_ACTIVATION_DIST
+      ) {
+        this.mouseAimDragged = true;
+      }
       return;
     }
 
@@ -251,6 +289,24 @@ export class TwinStickController {
   };
 
   private readonly onPointerUp = (ev: PointerEvent): void => {
+    if (ev.pointerType === 'mouse') {
+      if (this.mouseDownAiming) {
+        if (ev.type !== 'pointercancel' && this.mouseAimDragged) {
+          const rect = this.canvas.getBoundingClientRect();
+          const x = ev.clientX - rect.left;
+          const y = ev.clientY - rect.top;
+          const hitPos = this.findTargetAtScreenPos?.(x, y) ?? null;
+          const targetWorldPos = hitPos ?? this.screenToWorldFn(x, y);
+          const playerPos = this.getPlayerWorldFn();
+          this.aimAngle = Math.atan2(targetWorldPos.y - playerPos.y, targetWorldPos.x - playerPos.x);
+          this.pendingFire = { angle: this.aimAngle, autoAim: false, targetWorldPos };
+        }
+        this.mouseDownAiming = false;
+        this.mouseAimDragged = false;
+      }
+      return;
+    }
+
     if (ev.pointerId === this.leftPointerId) {
       this.leftPointerId = null;
       this.leftStick.active = false;

@@ -1,4 +1,5 @@
 import type {
+  IAccessibilitySettings,
   IBrawler,
   ICombatImpactResult,
   IGameMode,
@@ -66,6 +67,7 @@ export interface IGameEngineOptions {
   mode: IGameMode;
   brawlerLevel?: number;
   targetSpeedMultiplier?: number;
+  accessibility?: IAccessibilitySettings;
   requestNextQuestion: () => IQuestion;
   onHitTelemetry?: (event: IHitTelemetryEvent) => void;
   onHudStateChange?: (hud: IGameEngineHudSnapshot) => void;
@@ -120,6 +122,7 @@ export class GameEngine {
   private readonly mode: IGameMode;
   private readonly brawlerLevel: number;
   private targetSpeedMultiplier: number;
+  private readonly accessibility: IAccessibilitySettings;
   private readonly requestNextQuestion: () => IQuestion;
   private readonly onHitTelemetry?: (event: IHitTelemetryEvent) => void;
   private readonly onHudStateChange?: (hud: IGameEngineHudSnapshot) => void;
@@ -141,6 +144,7 @@ export class GameEngine {
   private errorShieldRemainingMs = 0;
   private penaltyCooldownMs = 0;
   private laserHitCooldownMs = 0;
+  private safeCorridorBoostCooldownMs = 0;
   private consecutiveCorrectHits = 0;
   private comboMultiplier = 1.0;
 
@@ -150,11 +154,15 @@ export class GameEngine {
   private fastReflexHits = 0;
   private totalShotsHit = 0;
   private lastDamageDealt = 0;
+  private lastErrorPenaltyDamage = 0;
+  private breathingTipShown = false;
 
   private currentQuestion!: IQuestion;
   private questionShownAtMs = 0;
   private hasFailedCurrentWave = false;
   private waveTelemetryRecorded = false;
+  private currentHintText: string | null = null;
+  private autoHintTriggeredForWave = false;
   private readonly missedQuestionsMap = new Map<string, IQuestion>();
 
   private targets: ITargetEntity[] = [];
@@ -167,6 +175,7 @@ export class GameEngine {
   private turretPos: IRenderVec2 | null = null;
   private turretRemainingMs = 0;
   private compassTargetPos: IRenderVec2 | null = null;
+  private autoCompassPos: IRenderVec2 | null = null;
   private compassRemainingMs = 0;
   private shakeIntensity = 0;
   private lastKnownMaxHp: number;
@@ -180,6 +189,13 @@ export class GameEngine {
     this.mode = options.mode;
     this.brawlerLevel = Math.max(1, options.brawlerLevel ?? 1);
     this.targetSpeedMultiplier = options.targetSpeedMultiplier ?? 1.0;
+    this.accessibility = {
+      smart_auto_aim: options.accessibility?.smart_auto_aim ?? true,
+      visual_gps_compass: options.accessibility?.visual_gps_compass ?? true,
+      calm_mode: options.accessibility?.calm_mode ?? false,
+      auto_hint_assist: options.accessibility?.auto_hint_assist ?? true,
+      onboarding_seen: options.accessibility?.onboarding_seen ?? true,
+    };
     this.requestNextQuestion = options.requestNextQuestion;
     this.onHitTelemetry = options.onHitTelemetry;
     this.onHudStateChange = options.onHudStateChange;
@@ -193,7 +209,8 @@ export class GameEngine {
     this.controller = new TwinStickController(
       options.canvas,
       (sx, sy) => this.renderer.screenToWorld(sx, sy),
-      () => ({ x: this.playerX, y: this.playerY })
+      () => ({ x: this.playerX, y: this.playerY }),
+      (sx, sy) => this.findTargetAtScreenPos(sx, sy)
     );
 
     this.setupModeObstacles();
@@ -211,6 +228,19 @@ export class GameEngine {
     this.controller.attach();
     this.superSystem.resetForMatch(3);
     this.spawnNextQuestionWave();
+    this.errorShieldRemainingMs = 2200;
+
+    const introMsg =
+      this.mode.id === 'CHASSE_AUX_BONNES_NOTES'
+        ? '🎯 Tire sur la bonne gemme pour collecter les cristaux !'
+        : this.mode.id === 'MATCH_DES_ACCORDS'
+          ? '⚽ Pousse le ballon dans la cage de la bonne réponse !'
+          : this.mode.id === 'INTERRO_SURPRISE'
+            ? '🎯 Tire sur la bonne réponse et reste dans la cour !'
+            : this.mode.id === 'CHANGEMENT_DE_SALLE'
+              ? '🏫 Rejoins la bonne salle de cours pour la capturer !'
+              : '🎯 Esquive le laser dans le couloir vert et vise juste !';
+    this.pushBubble(introMsg, this.playerX, this.playerY, 2400, true);
 
     window.addEventListener('resize', this.handleResize);
     this.lastTimestamp = performance.now();
@@ -235,6 +265,11 @@ export class GameEngine {
 
   public triggerGadgetFromUI(): void {
     this.controller.requestGadget();
+  }
+
+  public triggerFreeHintFromUI(): void {
+    if (this.finished) return;
+    this.activateWaveHint(true);
   }
 
   private readonly handleResize = (): void => {
@@ -333,6 +368,9 @@ export class GameEngine {
     if (this.laserHitCooldownMs > 0) {
       this.laserHitCooldownMs = Math.max(0, this.laserHitCooldownMs - dtMs);
     }
+    if (this.safeCorridorBoostCooldownMs > 0) {
+      this.safeCorridorBoostCooldownMs = Math.max(0, this.safeCorridorBoostCooldownMs - dtMs);
+    }
 
     // Bulles flottantes
     this.floatingBubbles = this.floatingBubbles
@@ -373,13 +411,18 @@ export class GameEngine {
       // Déplacement du joueur + collisions obstacles + furtivité Zack dans les buissons
       this.updatePlayerMovement(dt);
 
-      // Commandes Tir (avec Auto-Aim rapide) / Super / Gadget
+      // Commandes Tir (avec Auto-Aim intelligent / Tap-to-Shoot) / Super / Gadget
       const fireCmd = this.controller.consumeFireCommand();
       if (fireCmd && this.ammoBars >= 1) {
         this.ammoBars -= 1;
-        const resolvedAngle = fireCmd.autoAim
-          ? this.resolveAutoAimAngle(fireCmd.angle)
-          : fireCmd.angle;
+        const resolvedAngle =
+          fireCmd.autoAim || (this.accessibility.smart_auto_aim && fireCmd.targetWorldPos)
+            ? this.resolveAutoAimAngle(
+                fireCmd.angle,
+                fireCmd.targetWorldPos,
+                Boolean(fireCmd.autoAim)
+              )
+            : fireCmd.angle;
         this.spawnPlayerProjectiles(resolvedAngle);
       }
 
@@ -392,6 +435,16 @@ export class GameEngine {
       }
     }
 
+    // Filet d'indice automatique après hésitation (8.5s)
+    if (
+      this.accessibility.auto_hint_assist &&
+      !this.autoHintTriggeredForWave &&
+      this.questionShownAtMs > 0 &&
+      nowMs - this.questionShownAtMs >= 8500
+    ) {
+      this.activateWaveHint(false);
+    }
+
     // Déplacement des cibles + répulsion anti-chevauchement
     this.updateTargets(dt, dtMs);
 
@@ -399,6 +452,9 @@ export class GameEngine {
     if (this.updateModeLogic(dt, nowMs)) {
       return;
     }
+
+    // Boussole GPS d'objectif (si activée)
+    this.autoCompassPos = this.computeAutoCompassPos();
 
     // Bot rival adaptatif
     this.updateRivalBot(dt, dtMs);
@@ -422,7 +478,7 @@ export class GameEngine {
     );
     this.isPlayerStealthed = this.brawler.id === 'ZACK' && inBush;
 
-    let speedFactor = this.penaltyCooldownMs > 0 ? 0.55 : 1.0;
+    let speedFactor = 1.0;
     if (this.isPlayerStealthed) {
       speedFactor *= 1.2;
     }
@@ -464,8 +520,108 @@ export class GameEngine {
     return false;
   }
 
-  private resolveAutoAimAngle(fallbackAngle: number): number {
-    const maxDist = this.brawler.basic_attack.range + 90;
+  private findTargetAtScreenPos(sx: number, sy: number): IRenderVec2 | null {
+    const worldPos = this.renderer.screenToWorld(sx, sy);
+    let bestPos: IRenderVec2 | null = null;
+    let bestDist = 58;
+
+    for (const t of this.targets) {
+      if (t.hp <= 0) continue;
+      const d = Math.hypot(t.x - worldPos.x, t.y - worldPos.y);
+      if (d <= bestDist) {
+        bestDist = d;
+        bestPos = { x: t.x, y: t.y };
+      }
+    }
+
+    if (bestPos) return bestPos;
+
+    if (this.modeSession instanceof MatchAccordsSession) {
+      const ball = this.modeSession.getState().ball;
+      if (Math.hypot(ball.x - worldPos.x, ball.y - worldPos.y) <= 58) {
+        return { x: ball.x, y: ball.y };
+      }
+    }
+
+    if (this.modeSession instanceof InterroSurpriseSession) {
+      let bestCrate: IRenderVec2 | null = null;
+      let bestCrateDist = 58;
+      for (const crate of this.modeSession.getState().crates) {
+        if (crate.hp <= 0) continue;
+        const d = Math.hypot(crate.x - worldPos.x, crate.y - worldPos.y);
+        if (d <= bestCrateDist) {
+          bestCrateDist = d;
+          bestCrate = { x: crate.x, y: crate.y };
+        }
+      }
+      if (bestCrate) return bestCrate;
+    }
+
+    return null;
+  }
+
+  private resolveAutoAimAngle(
+    fallbackAngle: number,
+    targetWorldPos?: IRenderVec2,
+    allowAutoFallback = true
+  ): number {
+    // Priorité 0 : cible vivante pointée / tapée à <= 68 unités
+    if (targetWorldPos) {
+      let pointedTarget: ITargetEntity | null = null;
+      let pointedDist = 68;
+      for (const t of this.targets) {
+        if (t.hp <= 0) continue;
+        const d = Math.hypot(t.x - targetWorldPos.x, t.y - targetWorldPos.y);
+        if (d <= pointedDist) {
+          pointedDist = d;
+          pointedTarget = t;
+        }
+      }
+      if (pointedTarget) {
+        return Math.atan2(pointedTarget.y - this.playerY, pointedTarget.x - this.playerX);
+      }
+    }
+
+    if (!allowAutoFallback) {
+      return fallbackAngle;
+    }
+
+    const range = this.brawler.basic_attack.range;
+
+    // 1. Cible vivante illuminée (highlightedMs > 0) à portée + 140
+    let bestHighlighted: ITargetEntity | null = null;
+    let bestHighlightedDist = range + 140;
+    for (const t of this.targets) {
+      if (t.hp <= 0 || t.highlightedMs <= 0) continue;
+      const d = Math.hypot(t.x - this.playerX, t.y - this.playerY);
+      if (d <= bestHighlightedDist) {
+        bestHighlightedDist = d;
+        bestHighlighted = t;
+      }
+    }
+    if (bestHighlighted) {
+      return Math.atan2(bestHighlighted.y - this.playerY, bestHighlighted.x - this.playerX);
+    }
+
+    // 2. Si smart_auto_aim et déjà une erreur sur la vague, assiste vers la bonne cible
+    if (this.accessibility.smart_auto_aim && this.hasFailedCurrentWave) {
+      let bestCorrect: ITargetEntity | null = null;
+      let bestCorrectDist = range + 140;
+      for (const t of this.targets) {
+        if (t.hp <= 0 || !t.isCorrect) continue;
+        const d = Math.hypot(t.x - this.playerX, t.y - this.playerY);
+        if (d <= bestCorrectDist) {
+          bestCorrectDist = d;
+          bestCorrect = t;
+        }
+      }
+      if (bestCorrect) {
+        return Math.atan2(bestCorrect.y - this.playerY, bestCorrect.x - this.playerX);
+      }
+    }
+
+    // 3. Cible vivante la plus proche à portée + 90
+    const maxDist = range + 90;
     let bestTarget: { x: number; y: number } | null = null;
     let bestDist = maxDist;
 
@@ -478,15 +634,99 @@ export class GameEngine {
       }
     }
 
+    // 4. Ballon en Mode 2 ou caisse d'énergie proche en Mode 3
     if (!bestTarget && this.modeSession instanceof MatchAccordsSession) {
       const ball = this.modeSession.getState().ball;
-      if (Math.hypot(ball.x - this.playerX, ball.y - this.playerY) <= 150) {
+      if (Math.hypot(ball.x - this.playerX, ball.y - this.playerY) <= maxDist) {
         bestTarget = ball;
+      }
+    }
+
+    if (!bestTarget && this.modeSession instanceof InterroSurpriseSession) {
+      let bestCrateDist = maxDist;
+      for (const crate of this.modeSession.getState().crates) {
+        if (crate.hp <= 0) continue;
+        const d = Math.hypot(crate.x - this.playerX, crate.y - this.playerY);
+        if (d <= bestCrateDist) {
+          bestCrateDist = d;
+          bestTarget = crate;
+        }
       }
     }
 
     if (!bestTarget) return fallbackAngle;
     return Math.atan2(bestTarget.y - this.playerY, bestTarget.x - this.playerX);
+  }
+
+  private activateWaveHint(playAudio: boolean): void {
+    this.autoHintTriggeredForWave = true;
+    const correctTargets = this.targets.filter((t) => t.isCorrect && t.hp > 0);
+    for (const t of correctTargets) {
+      t.highlightedMs = Math.max(t.highlightedMs, 5500);
+    }
+
+    const rawFlash = (this.currentQuestion?.explanation_flash ?? '').trim();
+    if (rawFlash.length > 0) {
+      this.currentHintText = rawFlash.length > 96 ? `${rawFlash.slice(0, 93)}...` : rawFlash;
+    } else if (correctTargets[0]) {
+      this.currentHintText = `Vise « ${correctTargets[0].label} » !`;
+    }
+
+    if (playAudio) {
+      soundManager.playGadget();
+    }
+    this.pushBubble(
+      '💡 Indice activé : vise la cible dorée !',
+      this.playerX,
+      this.playerY,
+      1500,
+      true
+    );
+  }
+
+  private computeAutoCompassPos(): IRenderVec2 | null {
+    if (!this.accessibility.visual_gps_compass) {
+      return null;
+    }
+
+    if (this.modeSession instanceof ChasseNotesSession) {
+      const crystals = this.modeSession.getState().droppedCrystals;
+      if (crystals.length > 0) {
+        return { x: crystals[0].x, y: crystals[0].y };
+      }
+      const hlCorrect = this.targets.find((t) => t.isCorrect && t.hp > 0 && t.highlightedMs > 0);
+      return hlCorrect ? { x: hlCorrect.x, y: hlCorrect.y } : null;
+    }
+
+    if (this.modeSession instanceof MatchAccordsSession) {
+      const st = this.modeSession.getState();
+      if (Math.hypot(st.ball.x - this.playerX, st.ball.y - this.playerY) > 75) {
+        return { x: st.ball.x, y: st.ball.y };
+      }
+      return st.correctSide === 'LEFT' ? { x: 250, y: 58 } : { x: 710, y: 58 };
+    }
+
+    if (this.modeSession instanceof ChangementSalleSession) {
+      const correctRoom = this.modeSession.getState().rooms.find((r) => r.isCorrect);
+      if (correctRoom) {
+        return {
+          x: correctRoom.x + correctRoom.width * 0.5,
+          y: correctRoom.y + correctRoom.height * 0.5,
+        };
+      }
+      return null;
+    }
+
+    if (this.modeSession instanceof ConseilClasseSession) {
+      const safeIdx = this.modeSession.getState().safeCorridorIndex;
+      return {
+        x: (safeIdx + 0.5) * (ARENA_WIDTH / 4),
+        y: this.playerY,
+      };
+    }
+
+    const hlTarget = this.targets.find((t) => t.hp > 0 && t.highlightedMs > 0);
+    return hlTarget ? { x: hlTarget.x, y: hlTarget.y } : null;
   }
 
   private updateTargets(dt: number, dtMs: number): void {
@@ -498,6 +738,9 @@ export class GameEngine {
         continue;
       }
       let tSpeedScale = this.targetSpeedMultiplier;
+      if (this.accessibility.calm_mode) {
+        tSpeedScale *= 0.8;
+      }
       if (target.slowedMs > 0) {
         target.slowedMs = Math.max(0, target.slowedMs - dtMs);
         tSpeedScale *= 0.5;
@@ -611,6 +854,22 @@ export class GameEngine {
         this.playerHp = Math.min(nextMaxHp, this.playerHp + (nextMaxHp - this.lastKnownMaxHp));
         this.lastKnownMaxHp = nextMaxHp;
       }
+      if (!this.breathingTipShown && this.remainingSeconds <= 30) {
+        this.breathingTipShown = true;
+        this.playerHp = Math.min(this.computePlayerMaxHp(), this.playerHp + 350);
+        for (const t of this.targets) {
+          if (t.hp > 0) {
+            t.slowedMs = Math.max(t.slowedMs, 3500);
+          }
+        }
+        this.pushBubble(
+          "🧘 30s : Respire calme et relis bien l'énoncé !",
+          this.playerX,
+          this.playerY,
+          2000,
+          true
+        );
+      }
       if (
         this.respawnRemainingMs <= 0 &&
         this.modeSession.isOutsideSafeZone(this.playerX, this.playerY, ARENA_WIDTH * 0.5, ARENA_HEIGHT * 0.5)
@@ -633,6 +892,22 @@ export class GameEngine {
           this.shakeIntensity = 5;
           this.pushBubble('💬 Bavardage ! Vitesse -40%', this.playerX, this.playerY, 950, false);
         }
+        if (
+          this.playerX >= 165 &&
+          this.playerX <= 365 &&
+          this.playerY >= 260 &&
+          this.playerY <= 350 &&
+          this.modeSession.activateLockerBonus()
+        ) {
+          soundManager.playGadget();
+          this.pushBubble(
+            '🎒 Passage au Casier ! Capture ×1.5 !',
+            this.playerX,
+            this.playerY,
+            1300,
+            true
+          );
+        }
         const inCorrect = this.modeSession.isPlayerInCorrectRoom(this.playerX, this.playerY);
         const captured = this.modeSession.advanceCapture(dt, inCorrect);
         if (inCorrect) {
@@ -647,20 +922,44 @@ export class GameEngine {
       } else {
         this.modeSession.updateChatterDrones(dt, -999, -999, ARENA_WIDTH);
       }
+      if (this.modeSession.checkMidMatchUnexpectedEvent(this.remainingSeconds)) {
+        this.pushBubble(
+          '📢 Imprévu EDT : Prof absent, vérifie la nouvelle salle !',
+          ARENA_WIDTH * 0.5,
+          120,
+          2000,
+          true
+        );
+        this.spawnNextQuestionWave();
+      }
       return false;
     }
 
     if (this.modeSession instanceof ConseilClasseSession) {
-      this.modeSession.tickLaser(dt, 90, 540);
-      if (
-        this.respawnRemainingMs <= 0 &&
-        this.laserHitCooldownMs <= 0 &&
-        this.modeSession.isHitByLaser(this.playerX, this.playerY, ARENA_WIDTH)
-      ) {
-        this.laserHitCooldownMs = 950;
-        this.damagePlayer(Math.round(this.computePlayerMaxHp() * 0.15));
-        soundManager.playHitError();
-        this.pushBubble('🚨 Laser ! Va dans le couloir vert !', this.playerX, this.playerY, 1000, false);
+      this.modeSession.tickLaser(dt * (this.accessibility.calm_mode ? 0.8 : 1.0), 90, 540);
+      if (this.respawnRemainingMs <= 0) {
+        const laserY = this.modeSession.getState().laserSweepY;
+        if (Math.abs(this.playerY - laserY) < 14) {
+          if (this.modeSession.isHitByLaser(this.playerX, this.playerY, ARENA_WIDTH)) {
+            if (this.laserHitCooldownMs <= 0) {
+              this.laserHitCooldownMs = 950;
+              this.damagePlayer(Math.round(this.computePlayerMaxHp() * 0.15));
+              soundManager.playHitError();
+              this.pushBubble('🚨 Laser ! Va dans le couloir vert !', this.playerX, this.playerY, 1000, false);
+            }
+          } else if (this.safeCorridorBoostCooldownMs <= 0) {
+            this.safeCorridorBoostCooldownMs = 1500;
+            this.superSystem.addSuperCharge(12);
+            this.playerHp = Math.min(this.computePlayerMaxHp(), this.playerHp + 200);
+            this.pushBubble(
+              '🤝 Couloir des Délégués ! +12% Super',
+              this.playerX,
+              this.playerY,
+              1100,
+              true
+            );
+          }
+        }
       }
     }
 
@@ -1029,6 +1328,10 @@ export class GameEngine {
       this.objectiveScore += 1 * pointMult;
       const bossDmg = Math.max(950, this.lastDamageDealt);
       const defeated = this.modeSession.damageBoss(bossDmg);
+      const banner = this.modeSession.consumeMilestoneBanner();
+      if (banner) {
+        this.pushBubble(banner, ARENA_WIDTH * 0.5, 130, 1450, true);
+      }
       if (defeated) {
         this.forceVictory = true;
         this.finishMatch();
@@ -1093,6 +1396,19 @@ export class GameEngine {
           950,
           true
         );
+        if (this.hasFailedCurrentWave && this.lastErrorPenaltyDamage > 0) {
+          const recoveredHp = Math.round(this.lastErrorPenaltyDamage * 0.6);
+          this.playerHp = Math.min(this.computePlayerMaxHp(), this.playerHp + recoveredHp);
+          this.superSystem.addSuperCharge(15);
+          this.lastErrorPenaltyDamage = 0;
+          this.pushBubble(
+            `🔄 Rebote réussi ! +${recoveredHp} PV récupérés !`,
+            this.playerX,
+            this.playerY,
+            1350,
+            true
+          );
+        }
         this.onCorrectTargetDefeated(target, nowMs);
         if (!this.finished) {
           this.spawnNextQuestionWave();
@@ -1103,16 +1419,23 @@ export class GameEngine {
       return;
     }
 
-    // Cible erronée : rebond métallique, reset combo, pénalité 12% PV_max + indice visuel
+    // Cible erronée : rebond métallique, reset combo, pénalité 12% PV_max + conseil coach bienveillant
     this.hasFailedCurrentWave = true;
+    this.autoHintTriggeredForWave = true;
+    this.lastErrorPenaltyDamage = impact.error_penalty_damage;
+    target.hp = 0;
     this.recordWaveOutcome(false, reactionTimeMs);
 
-    const correctTarget = this.targets.find((t) => t.isCorrect && t.hp > 0);
-    if (correctTarget) {
-      correctTarget.highlightedMs = Math.max(correctTarget.highlightedMs, 1400);
+    for (const correctTarget of this.targets) {
+      if (correctTarget.isCorrect && correctTarget.hp > 0) {
+        correctTarget.highlightedMs = Math.max(correctTarget.highlightedMs, 5500);
+      }
     }
 
-    this.renderer.spawnHitBurst(target.x, target.y, 0xef4444, 14);
+    const rawFlash = this.currentQuestion.explanation_flash.trim();
+    this.currentHintText = rawFlash.length > 96 ? `${rawFlash.slice(0, 93)}...` : rawFlash;
+
+    this.renderer.spawnHitBurst(target.x, target.y, 0x38bdf8, 14);
     soundManager.playHitError();
     proj.isRebounding = true;
     proj.vx = -proj.vx * 0.65;
@@ -1128,8 +1451,11 @@ export class GameEngine {
       this.errorShieldRemainingMs = ERROR_SHIELD_DURATION_MS;
     }
 
+    const coachFlash = /^[\p{Emoji_Presentation}\p{Extended_Pictographic}]/u.test(rawFlash)
+      ? rawFlash
+      : `💡 ${rawFlash}`;
     this.pushBubble(
-      this.currentQuestion.explanation_flash,
+      coachFlash,
       target.x,
       target.y,
       impact.trigger_explanation_flash_ms,
@@ -1192,7 +1518,12 @@ export class GameEngine {
         return;
       }
     } else if (this.modeSession instanceof ConseilClasseSession) {
-      if (this.modeSession.damageBoss(2500)) {
+      const defeated = this.modeSession.damageBoss(2500);
+      const banner = this.modeSession.consumeMilestoneBanner();
+      if (banner) {
+        this.pushBubble(banner, ARENA_WIDTH * 0.5, 130, 1450, true);
+      }
+      if (defeated) {
         this.forceVictory = true;
         this.finishMatch();
         return;
@@ -1238,6 +1569,9 @@ export class GameEngine {
     this.questionShownAtMs = performance.now();
     this.hasFailedCurrentWave = false;
     this.waveTelemetryRecorded = false;
+    this.currentHintText = null;
+    this.autoHintTriggeredForWave = false;
+    this.lastErrorPenaltyDamage = 0;
 
     const targetsList = this.currentQuestion.targets;
     const count = Math.max(1, targetsList.length);
@@ -1431,7 +1765,7 @@ export class GameEngine {
       safeCorridorIndex,
       bossState,
       turretPos: this.turretPos,
-      compassTargetPos: this.compassTargetPos,
+      compassTargetPos: this.compassTargetPos ?? this.autoCompassPos,
       flashBubble: this.floatingBubbles[this.floatingBubbles.length - 1] ?? null,
       floatingBubbles: this.floatingBubbles,
       reflexRemainingRatio: reflexRatio,
@@ -1453,6 +1787,7 @@ export class GameEngine {
             }
           : null,
       rushBannerText,
+      hintText: this.currentHintText,
       shakeIntensity: this.shakeIntensity,
       leftStick: this.controller.getLeftStickRender(),
       rightStick: this.controller.getRightStickRender(),

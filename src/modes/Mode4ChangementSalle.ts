@@ -43,6 +43,7 @@ export interface IChangementSalleState {
   directive: IScheduleDirective;
   capturePct: number;
   slowedByChatterMs: number;
+  lockerBonusActive: boolean;
   rooms: ICampusRoomZone[];
   chatterDrones: IChatterDrone[];
 }
@@ -58,6 +59,8 @@ export class ChangementSalleSession {
   };
   private capturePct = 0;
   private slowedByChatterMs = 0;
+  private lockerBonusActive = false;
+  private unexpectedEventTriggered = false;
   private rooms: ICampusRoomZone[] = [];
   private chatterDrones: IChatterDrone[] = [
     { id: 'chatter_1', x: 240, y: 240, vx: 150, radius: 22 },
@@ -69,6 +72,7 @@ export class ChangementSalleSession {
   }
 
   public setupRoomsFromQuestion(question: IQuestion): void {
+    this.lockerBonusActive = false;
     const slots = [
       { x: 70, y: 95 },
       { x: 300, y: 95 },
@@ -85,6 +89,22 @@ export class ChangementSalleSession {
       label: target.label,
       isCorrect: target.is_correct,
     }));
+  }
+
+  public activateLockerBonus(): boolean {
+    if (this.lockerBonusActive) {
+      return false;
+    }
+    this.lockerBonusActive = true;
+    return true;
+  }
+
+  public checkMidMatchUnexpectedEvent(remainingSeconds: number): boolean {
+    if (!this.unexpectedEventTriggered && remainingSeconds <= 65) {
+      this.unexpectedEventTriggered = true;
+      return true;
+    }
+    return false;
   }
 
   public isPlayerInCorrectRoom(playerX: number, playerY: number): boolean {
@@ -134,7 +154,7 @@ export class ChangementSalleSession {
   }
 
   public hitChatterTrap(): void {
-    this.slowedByChatterMs = 2000;
+    this.slowedByChatterMs = 1400;
   }
 
   public advanceCapture(dtSec: number, isInsideCorrectRoom: boolean): boolean {
@@ -142,7 +162,8 @@ export class ChangementSalleSession {
       this.slowedByChatterMs = Math.max(0, this.slowedByChatterMs - dtSec * 1000);
     }
     if (isInsideCorrectRoom) {
-      this.capturePct = Math.min(100, this.capturePct + dtSec * 25);
+      const ratePerSec = this.lockerBonusActive ? 45 : 30;
+      this.capturePct = Math.min(100, this.capturePct + dtSec * ratePerSec);
     }
     return this.capturePct >= 100;
   }
@@ -152,6 +173,7 @@ export class ChangementSalleSession {
       directive: this.directive,
       capturePct: Math.round(this.capturePct),
       slowedByChatterMs: this.slowedByChatterMs,
+      lockerBonusActive: this.lockerBonusActive,
       rooms: this.rooms.map((room) => ({ ...room })),
       chatterDrones: this.chatterDrones.map((drone) => ({ ...drone })),
     };

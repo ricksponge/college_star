@@ -63,7 +63,7 @@ export class ChasseNotesSession {
     });
   }
 
-  public tryPickupCrystals(playerX: number, playerY: number, pickupRadius = 58): number {
+  public tryPickupCrystals(playerX: number, playerY: number, pickupRadius = 92): number {
     const remaining: IDroppedCrystal[] = [];
     let pickedCount = 0;
 

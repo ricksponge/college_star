@@ -171,6 +171,8 @@ export interface IRenderFrameState {
   inkPuddles?: Array<{ x: number; y: number; radius: number; remainingMs: number }>;
   rivalBot?: { x: number; y: number; label: string; hp: number; maxHp: number } | null;
   rushBannerText?: string | null;
+  hintText?: string | null;
+  isTouchHintVisible?: boolean;
   shakeIntensity?: number;
   leftStick: IRenderJoystick;
   rightStick: IRenderJoystick;
@@ -555,7 +557,14 @@ export class IsometricRenderer {
       this.render2DFallback(state, cssW, cssH);
     }
 
-    this.drawJoysticks(state.leftStick, state.rightStick, state.player.isCancellingAim);
+    this.drawJoysticks(
+      state.leftStick,
+      state.rightStick,
+      state.player.isCancellingAim,
+      cssW,
+      cssH,
+      state.isTouchHintVisible ?? true
+    );
     this.drawHudOverlay(state, cssW);
   }
 
@@ -978,7 +987,7 @@ export class IsometricRenderer {
       this.drawLaserSweep(state.arenaWidth, state.laserSweepY, state.safeCorridorIndex);
     }
     if (state.player.isAiming && !state.player.isRespawning) {
-      this.drawAimTelegraph(state.player, state.obstacles);
+      this.drawAimTelegraph(state.player, state.obstacles, state.targets);
     }
     if (state.droppedCrystals) {
       this.drawDroppedCrystals(state.droppedCrystals);
@@ -1010,8 +1019,8 @@ export class IsometricRenderer {
       const headPos = this.worldToScreen(t.x, t.y, t.isBoss ? 92 : 60);
       let shiftY = 0;
       for (const prev of placed) {
-        if (Math.abs(headPos.x - prev.x) < 110 * this.zoom && Math.abs(headPos.y + shiftY - prev.y) < 34 * this.zoom) {
-          shiftY -= 36 * this.zoom;
+        if (Math.abs(headPos.x - prev.x) < 118 * this.zoom && Math.abs(headPos.y + shiftY - prev.y) < 38 * this.zoom) {
+          shiftY -= 38 * this.zoom;
         }
       }
       offsets.set(t.id, shiftY);
@@ -1064,13 +1073,14 @@ export class IsometricRenderer {
   private drawTargetOverlay(target: IRenderTarget, labelOffsetY = 0): void {
     const ctx = this.ctx;
     const headPos = this.worldToScreen(target.x, target.y, target.isBoss ? 92 : 60);
-    const fontSize = Math.max(13, Math.round(15 * this.zoom));
+    const displayLabel = target.highlighted ? `⭐ ${target.label}` : target.label;
+    const fontSize = Math.max(14, Math.round(16 * this.zoom));
 
     ctx.save();
     ctx.font = `900 ${fontSize}px system-ui, sans-serif`;
-    const metrics = ctx.measureText(target.label);
-    const pillW = Math.max(62 * this.zoom, metrics.width + 24 * this.zoom);
-    const pillH = 27 * this.zoom;
+    const metrics = ctx.measureText(displayLabel);
+    const pillW = Math.max(68 * this.zoom, metrics.width + 28 * this.zoom);
+    const pillH = 30 * this.zoom;
     const pillCenterY = headPos.y - pillH * 0.5 - 15 * this.zoom + labelOffsetY;
 
     let topColor = '#1e293b';
@@ -1098,6 +1108,11 @@ export class IsometricRenderer {
       trimColor = '#c4b5fd';
     }
 
+    if (target.highlighted) {
+      ctx.shadowColor = '#facc15';
+      ctx.shadowBlur = 14;
+    }
+
     this.drawSkewedPill(
       headPos.x,
       pillCenterY,
@@ -1108,12 +1123,13 @@ export class IsometricRenderer {
       topColor,
       bottomColor,
       trimColor,
-      3 * this.zoom
+      (target.highlighted ? 3.8 : 3) * this.zoom
     );
+    ctx.shadowBlur = 0;
 
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    this.drawOutlinedText(target.label, headPos.x, pillCenterY + 0.5, '#ffffff', 3.5);
+    this.drawOutlinedText(displayLabel, headPos.x, pillCenterY + 0.5, '#ffffff', 3.5);
 
     // Barre de PV segmentée style Brawl Stars
     const hpRatio = Math.max(0, Math.min(1, target.hp / target.maxHp));
@@ -1352,13 +1368,39 @@ export class IsometricRenderer {
     ctx.restore();
   }
 
-  private drawAimTelegraph(player: IRenderPlayer, obstacles: IRenderObstacle[]): void {
+  private drawAimTelegraph(
+    player: IRenderPlayer,
+    obstacles: IRenderObstacle[],
+    targets: IRenderTarget[] = []
+  ): void {
     const ctx = this.ctx;
     const range = player.attackRange ?? 380;
     const angle = player.aimAngle;
     const cancelling = Boolean(player.isCancellingAim);
     const color = cancelling ? 'rgba(239, 68, 68, 0.55)' : 'rgba(250, 204, 21, 0.45)';
     const border = cancelling ? 'rgba(248, 113, 113, 0.9)' : 'rgba(254, 240, 138, 0.85)';
+
+    let effectiveRayRange = range;
+    if (player.brawlerId !== 'MAYA' && player.brawlerId !== 'LEO') {
+      // Raycast léger contre les murs/bureaux pour le télégrafe linéaire
+      const step = 18;
+      for (let d = 24; d <= range; d += step) {
+        const px = player.x + Math.cos(angle) * d;
+        const py = player.y + Math.sin(angle) * d;
+        const blocked = obstacles.some(
+          (o) =>
+            (o.kind === 'wall' || o.kind === 'desk') &&
+            px >= o.x &&
+            px <= o.x + o.width &&
+            py >= o.y &&
+            py <= o.y + o.height
+        );
+        if (blocked) {
+          effectiveRayRange = d;
+          break;
+        }
+      }
+    }
 
     ctx.save();
     if (player.brawlerId === 'MAYA') {
@@ -1397,29 +1439,10 @@ export class IsometricRenderer {
       ctx.fill();
       ctx.stroke();
     } else {
-      // Raycast léger contre les murs/bureaux pour le télégrafe linéaire
-      let effectiveDist = range;
-      const step = 18;
-      for (let d = 24; d <= range; d += step) {
-        const px = player.x + Math.cos(angle) * d;
-        const py = player.y + Math.sin(angle) * d;
-        const blocked = obstacles.some(
-          (o) =>
-            (o.kind === 'wall' || o.kind === 'desk') &&
-            px >= o.x &&
-            px <= o.x + o.width &&
-            py >= o.y &&
-            py <= o.y + o.height
-        );
-        if (blocked) {
-          effectiveDist = d;
-          break;
-        }
-      }
       const p1 = this.worldToScreen(player.x, player.y, 10);
       const p2 = this.worldToScreen(
-        player.x + Math.cos(angle) * effectiveDist,
-        player.y + Math.sin(angle) * effectiveDist,
+        player.x + Math.cos(angle) * effectiveRayRange,
+        player.y + Math.sin(angle) * effectiveRayRange,
         10
       );
       ctx.strokeStyle = color;
@@ -1439,6 +1462,55 @@ export class IsometricRenderer {
       ctx.stroke();
       ctx.setLineDash([]);
     }
+
+    // Réticule de verrouillage (Target-Lock) sur la cible alignée avec le rayon de visée
+    if (!cancelling && targets.length > 0) {
+      const ux = Math.cos(angle);
+      const uy = Math.sin(angle);
+      let lockedTarget: IRenderTarget | null = null;
+      let bestAlong = Infinity;
+
+      for (const target of targets) {
+        if (target.hp <= 0) continue;
+        const dx = target.x - player.x;
+        const dy = target.y - player.y;
+        const along = dx * ux + dy * uy;
+        if (along < 0 || along > effectiveRayRange + target.radius) continue;
+        const perpDist = Math.abs(dx * uy - dy * ux);
+        if (perpDist <= target.radius + 26 && along < bestAlong) {
+          bestAlong = along;
+          lockedTarget = target;
+        }
+      }
+
+      if (lockedTarget) {
+        const lockCenter = this.worldToScreen(lockedTarget.x, lockedTarget.y, 10);
+        const pulse = 0.5 + 0.5 * Math.sin(this.currentTimeSec * 10);
+        const rx = (lockedTarget.radius + 12 + pulse * 5) * this.zoom;
+        const ry = rx * ISO_Y_SCALE;
+
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = 'rgba(250, 204, 21, 0.36)';
+        ctx.lineWidth = 6 * this.zoom;
+        ctx.beginPath();
+        ctx.ellipse(lockCenter.x, lockCenter.y, rx, ry, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.strokeStyle = '#fde047';
+        ctx.lineWidth = 2.8 * this.zoom;
+        ctx.setLineDash([7, 5]);
+        ctx.beginPath();
+        ctx.ellipse(lockCenter.x, lockCenter.y, rx, ry, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.font = `900 ${Math.max(13, Math.round(14 * this.zoom))}px system-ui, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        this.drawOutlinedText('🎯', lockCenter.x, lockCenter.y - ry - 9 * this.zoom, '#fde047', 2.5);
+      }
+    }
+
     ctx.restore();
   }
 
@@ -1737,8 +1809,8 @@ export class IsometricRenderer {
       h,
       9,
       -0.14,
-      bubble.isPositive ? '#22c55e' : '#ef4444',
-      bubble.isPositive ? '#15803d' : '#991b1b',
+      bubble.isPositive ? '#22c55e' : '#1d4ed8',
+      bubble.isPositive ? '#15803d' : '#1e3a8a',
       '#fde047',
       3.5
     );
@@ -1757,15 +1829,69 @@ export class IsometricRenderer {
   private drawJoysticks(
     left: IRenderJoystick,
     right: IRenderJoystick,
-    isCancellingAim = false
+    isCancellingAim = false,
+    cssW = this.canvas.clientWidth || 960,
+    cssH = this.canvas.clientHeight || 540,
+    showTouchHints = true
   ): void {
+    const ctx = this.ctx;
+
+    if (showTouchHints && !left.active) {
+      const gx = 92;
+      const gy = cssH - 96;
+      ctx.save();
+      ctx.globalAlpha = 0.3;
+      ctx.strokeStyle = '#38bdf8';
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.55)';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(gx, gy, 40, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#38bdf8';
+      ctx.beginPath();
+      ctx.arc(gx, gy, 16, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.font = '900 11px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      this.drawOutlinedText('🕹️ BOUGER', gx, gy - 50, '#e0f2fe', 3);
+      ctx.restore();
+    }
+
+    if (showTouchHints && !right.active) {
+      const gx = Math.max(200, cssW - 220);
+      const gy = cssH - 86;
+      ctx.save();
+      ctx.globalAlpha = 0.3;
+      ctx.strokeStyle = '#ef4444';
+      ctx.fillStyle = 'rgba(127, 29, 29, 0.42)';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(gx, gy, 34, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#facc15';
+      ctx.beginPath();
+      ctx.arc(gx, gy, 14, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.font = '900 10px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      this.drawOutlinedText('🎯 TIRER / AUTO', gx, gy - 45, '#fef08a', 3);
+      ctx.restore();
+    }
+
     const entries: Array<{ stick: IRenderJoystick; isCancel: boolean }> = [
       { stick: left, isCancel: false },
       { stick: right, isCancel: isCancellingAim },
     ];
     for (const { stick, isCancel } of entries) {
       if (!stick.active) continue;
-      const ctx = this.ctx;
       ctx.save();
       ctx.strokeStyle = isCancel ? '#ef4444' : stick.color;
       ctx.fillStyle = isCancel ? 'rgba(127, 29, 29, 0.45)' : 'rgba(15, 23, 42, 0.35)';
@@ -2282,6 +2408,36 @@ export class IsometricRenderer {
         -0.12
       );
       stackCenterY += 16;
+    }
+
+    if (state.hintText && state.hintText.trim().length > 0) {
+      const rawHint = state.hintText.trim();
+      const hintLabel = rawHint.startsWith('💡') ? rawHint : `💡 ${rawHint}`;
+      let hintFontSize = 12;
+      ctx.font = `800 ${hintFontSize}px system-ui, sans-serif`;
+      const maxHintW = Math.min(540, cssW - 48);
+      const measuredW = ctx.measureText(hintLabel).width;
+      if (measuredW > maxHintW - 34 && measuredW > 0) {
+        hintFontSize = Math.max(10, Math.floor((hintFontSize * (maxHintW - 34)) / measuredW));
+        ctx.font = `800 ${hintFontSize}px system-ui, sans-serif`;
+      }
+      const hintW = Math.min(maxHintW, Math.max(220, ctx.measureText(hintLabel).width + 36));
+      this.drawSkewedPill(
+        bannerCenterX,
+        stackCenterY + 6,
+        hintW,
+        26,
+        7,
+        -0.1,
+        '#92400e',
+        '#451a03',
+        '#fde047',
+        2.5
+      );
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      this.drawOutlinedText(hintLabel, bannerCenterX, stackCenterY + 6.5, '#fef9c3', 2.8);
+      stackCenterY += 32;
     }
 
     if (state.rushBannerText) {

@@ -1,6 +1,7 @@
 import type {
   CampusRoomId,
   GameModeId,
+  IAccessibilitySettings,
   IBrawler,
   ICampusNpc,
   ICampusQuest,
@@ -102,6 +103,7 @@ export interface ICampusEngineOptions {
   questService: ICampusQuestService;
   brawlerLevel?: number;
   targetSpeedMultiplier?: number;
+  accessibility?: IAccessibilitySettings;
   modeId?: GameModeId;
   initialCollectedBadgeIds?: string[];
   requestNextQuestion: (subject?: SubjectCategory) => IQuestion;
@@ -145,6 +147,7 @@ export class CampusEngine {
   private readonly brawlerLevel: number;
   private readonly modeId: GameModeId;
   private targetSpeedMultiplier: number;
+  private readonly accessibility: IAccessibilitySettings;
 
   private readonly requestNextQuestion: (subject?: SubjectCategory) => IQuestion;
   private readonly onHitTelemetry?: (event: ICampusHitTelemetryEvent) => void;
@@ -198,6 +201,13 @@ export class CampusEngine {
     this.brawlerLevel = options.brawlerLevel ?? 1;
     this.modeId = options.modeId ?? 'CHANGEMENT_DE_SALLE';
     this.targetSpeedMultiplier = options.targetSpeedMultiplier ?? 1.0;
+    this.accessibility = {
+      smart_auto_aim: options.accessibility?.smart_auto_aim ?? true,
+      visual_gps_compass: options.accessibility?.visual_gps_compass ?? true,
+      calm_mode: options.accessibility?.calm_mode ?? false,
+      auto_hint_assist: options.accessibility?.auto_hint_assist ?? true,
+      onboarding_seen: options.accessibility?.onboarding_seen ?? true,
+    };
     this.collectedBadgeIds = new Set<string>(options.initialCollectedBadgeIds ?? []);
 
     this.requestNextQuestion = options.requestNextQuestion;
@@ -219,7 +229,8 @@ export class CampusEngine {
     this.controller = new TwinStickController(
       options.canvas,
       (sx, sy) => this.renderer.screenToWorld(sx, sy),
-      () => ({ x: this.playerX, y: this.playerY })
+      () => ({ x: this.playerX, y: this.playerY }),
+      (sx, sy) => this.findTargetAtScreenPos(sx, sy)
     );
   }
 
@@ -367,6 +378,48 @@ export class CampusEngine {
     this.emitHudState();
   }
 
+  public teleportToActiveQuestObjective(): boolean {
+    const active = this.questService.getActiveQuest();
+    if (!active?.activeObjective) {
+      return false;
+    }
+
+    const obj = active.activeObjective;
+    const targetNpc = obj.target_npc_id
+      ? this.world.npcs.find((n) => n.id === obj.target_npc_id)
+      : undefined;
+
+    if (targetNpc) {
+      const safePos = this.resolveWallCollisions(targetNpc.x, targetNpc.y + 46, PLAYER_RADIUS);
+      this.playerX = safePos.x;
+      this.playerY = safePos.y;
+      this.projectiles = [];
+      this.lastAutoInteractedNpcId = null;
+
+      const room = this.world.getRoomAtPosition(this.playerX, this.playerY);
+      if (room && room.id !== this.currentRoomId) {
+        this.handleRoomTransition(room);
+      } else if (!room && this.currentRoomId !== null) {
+        this.currentRoomId = null;
+        this.clearRoomTargets();
+      }
+      this.nearbyNpc = this.findNearestNpc(0);
+      this.emitHudState();
+    } else {
+      this.teleportToRoom(obj.target_room_id);
+    }
+
+    this.renderer.spawnSuperShockwave(this.playerX, this.playerY, 0x38bdf8);
+    this.flashBubble = {
+      text: "🚀 Arrivée directe à l'objectif !",
+      x: this.playerX,
+      y: this.playerY,
+      remainingMs: 1600,
+      isPositive: true,
+    };
+    return true;
+  }
+
   /**
    * Collisions cercle-rectangle glissantes contre les murs ('wall') et bureaux ('desk').
    * Les zones 'safe_zone' et 'bush' laissent circuler librement.
@@ -512,7 +565,15 @@ export class CampusEngine {
     const fireCmd = this.controller.consumeFireCommand();
     if (fireCmd && this.ammoBars >= 1) {
       this.ammoBars -= 1;
-      this.spawnPlayerProjectiles(fireCmd.angle);
+      const resolvedAngle =
+        fireCmd.autoAim || (this.accessibility.smart_auto_aim && fireCmd.targetWorldPos)
+          ? this.resolveAutoAimAngle(
+              fireCmd.angle,
+              fireCmd.targetWorldPos,
+              Boolean(fireCmd.autoAim)
+            )
+          : fireCmd.angle;
+      this.spawnPlayerProjectiles(resolvedAngle);
     }
 
     if (this.controller.consumeSuperCommand()) {
@@ -711,6 +772,9 @@ export class CampusEngine {
       }
 
       let tSpeedScale = this.targetSpeedMultiplier;
+      if (this.accessibility.calm_mode) {
+        tSpeedScale *= 0.8;
+      }
       if (target.slowedMs > 0) {
         target.slowedMs = Math.max(0, target.slowedMs - dtMs);
         tSpeedScale *= 0.5;
@@ -737,6 +801,63 @@ export class CampusEngine {
         target.vy *= -1;
       }
     }
+  }
+
+  private findTargetAtScreenPos(sx: number, sy: number): IRenderVec2 | null {
+    const worldPos = this.renderer.screenToWorld(sx, sy);
+    let bestPos: IRenderVec2 | null = null;
+    let bestDist = 58;
+
+    for (const t of this.targets) {
+      if (t.hp <= 0) continue;
+      const d = Math.hypot(t.x - worldPos.x, t.y - worldPos.y);
+      if (d <= bestDist) {
+        bestDist = d;
+        bestPos = { x: t.x, y: t.y };
+      }
+    }
+    return bestPos;
+  }
+
+  private resolveAutoAimAngle(
+    fallbackAngle: number,
+    targetWorldPos?: IRenderVec2,
+    allowAutoFallback = true
+  ): number {
+    if (targetWorldPos) {
+      let pointedTarget: ITargetEntity | null = null;
+      let pointedDist = 68;
+      for (const t of this.targets) {
+        if (t.hp <= 0) continue;
+        const d = Math.hypot(t.x - targetWorldPos.x, t.y - targetWorldPos.y);
+        if (d <= pointedDist) {
+          pointedDist = d;
+          pointedTarget = t;
+        }
+      }
+      if (pointedTarget) {
+        return Math.atan2(pointedTarget.y - this.playerY, pointedTarget.x - this.playerX);
+      }
+    }
+
+    if (!allowAutoFallback) {
+      return fallbackAngle;
+    }
+
+    const maxDist = this.brawler.basic_attack.range + 90;
+    let bestTarget: ITargetEntity | null = null;
+    let bestDist = maxDist;
+    for (const t of this.targets) {
+      if (t.hp <= 0) continue;
+      const d = Math.hypot(t.x - this.playerX, t.y - this.playerY);
+      if (d < bestDist) {
+        bestDist = d;
+        bestTarget = t;
+      }
+    }
+
+    if (!bestTarget) return fallbackAngle;
+    return Math.atan2(bestTarget.y - this.playerY, bestTarget.x - this.playerX);
   }
 
   private findNearestNpc(extraMargin = 0): ICampusNpc | null {
@@ -1160,11 +1281,10 @@ export class CampusEngine {
   private draw(): void {
     const active = this.questService.getActiveQuest();
     const targetNpcId = active?.activeObjective?.target_npc_id;
-    const questTargetPos = this.computeQuestCompassTarget();
+    const objectivePos = this.computeQuestCompassTarget();
     const compassTargetPos =
-      this.gadgetCompassRemainingMs > 0 && this.gadgetCompassPos
-        ? this.gadgetCompassPos
-        : questTargetPos;
+      (this.gadgetCompassRemainingMs > 0 ? this.gadgetCompassPos : null) ??
+      (this.accessibility.visual_gps_compass ? objectivePos : null);
 
     const campusNpcs: IRenderCampusNpc[] = this.world.npcs.map((npc) => ({
       id: npc.id,
@@ -1193,7 +1313,7 @@ export class CampusEngine {
       rooms: this.world.rooms,
       playerX: this.playerX,
       playerY: this.playerY,
-      objectivePos: questTargetPos,
+      objectivePos,
       npcs: this.world.npcs.map((npc) => ({
         x: npc.x,
         y: npc.y,
@@ -1223,6 +1343,9 @@ export class CampusEngine {
         errorShieldRemainingMs: this.errorShieldRemainingMs,
         penaltyCooldownMs: this.penaltyCooldownMs,
         comboMultiplier: this.comboMultiplier,
+        isAiming: this.controller.isAiming(),
+        isCancellingAim: this.controller.isCancellingAim(),
+        attackRange: this.brawler.basic_attack.range,
       },
       targets: this.targets
         .filter((t) => t.hp > 0)

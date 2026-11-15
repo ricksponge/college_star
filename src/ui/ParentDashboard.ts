@@ -40,6 +40,68 @@ const SKILL_LABELS: Record<string, string> = {
   COL_ADU: 'Rôle des adultes (CPE, CDI)',
   COL_CONS: 'Consignes doubles',
   COL_SAC: 'Préparation du cartable',
+  COL_STRESS: 'Gestion du stress & confiance',
+  COL_CPS: 'Coopération, respect & amitié',
+  COL_LIEUX: 'Repères & lieux du collège',
+};
+
+const PARENT_COACHING_TIPS: Record<string, string> = {
+  MATH_MUL:
+    'Lancez un mini-défi de 2 minutes en voiture ou en cuisinant (« 7 × 8 ? »), toujours dans le jeu et sans chrono stressant.',
+  MATH_DIV:
+    'Partagez concrètement à la maison (part de gâteau, bonbons ou cartes à distribuer équitablement) pour ancrer le sens du partage.',
+  MATH_FRAC:
+    'Faites le lien avec la cuisine et la monnaie : 1/2 L, 1/4 d’heure, 0,50 €… Les fractions deviennent vite intuitives.',
+  MATH_CONV:
+    'Comparez les étiquettes des courses (500 g vs 1 kg, 1,5 L vs 150 cL) pour rendre les conversions concrètes.',
+  MATH_GEOM:
+    'Mesurez ensemble la table ou sa chambre en pas ou au mètre ruban pour distinguer le tour (périmètre) et la surface (aire).',
+  MATH_PRIO:
+    'Rappelez la règle d’or comme un jeu de piste : d’abord les parenthèses, puis × et ÷, et enfin + et −.',
+  FR_HOMO:
+    'Astuce ludique à tester à l’oral : remplacer « a » par « avait » ou « son » par « ses/était » devient vite un réflexe.',
+  FR_ACC:
+    'Demandez-lui « Qui est-ce qui fait l’action ? » avant d’accorder le verbe, même quand le sujet est caché ou loin.',
+  FR_TERM:
+    'Le truc du verbe « vendre / vendu » : si on peut dire « vendre », c’est -ER ; si on dit « vendu », c’est -É !',
+  FR_NAT:
+    'Jouez à trier les mots d’une phrase affichée (étiquette Nom, Verbe, Adjectif) comme des cartes de jeu.',
+  FR_PREF:
+    'Amusez-vous à démonter un mot en famille (« re-commenc-er », « in-croy-able ») pour deviner le sens de mots nouveaux.',
+  ANG_VOC:
+    'Glissez 3 petits mots du quotidien en anglais le matin (backpack, notebook, ready?) sur un ton complice.',
+  ANG_PRON:
+    'Mimez ensemble les pronoms (I, you, he, she, we, they) devant un miroir ou en désignant la famille.',
+  ANG_AUX:
+    'Associez « Be » à ce qu’on est/ressent et « Have » à ce qu’on possède dans de toutes petites phrases rigolotes.',
+  ANG_INT:
+    'Associez chaque mot en WH- à un geste simple (Where = chercher du regard, When = regarder sa montre, Who = montrer quelqu’un).',
+  ANG_NUM:
+    'Faites lire les numéros de portes, plaques ou prix jusqu’à 100 en anglais lors des trajets.',
+  HG_PER:
+    'Placez 3 repères visuels simples ensemble (Lascaux, Jules César, châteaux forts, Révolution…) comme une mini-frise sur le frigo.',
+  HG_GEO:
+    'Regardez 2 minutes un planisphère ou la météo du soir pour situer continents, océans et grandes villes de France.',
+  SCI_SOL:
+    'Observez la Lune ou cherchez une planète le soir et nommez ensemble l’ordre des planètes comme une comptine.',
+  SCI_MAT:
+    'En cuisinant (glaçon, eau, vapeur d’eau), observez les changements d’état : les sciences deviennent concrètes !',
+  SCI_VIV:
+    'En balade, imaginez « qui nourrit qui » dans la nature pour comprendre les équilibres des écosystèmes.',
+  COL_EDT:
+    'En fin d’été, lisez ensemble un faux emploi du temps (Semaine A/B) pendant 3 minutes : cela rassure énormément avant le jour J.',
+  COL_ADU:
+    'Rappelez-lui qu’au collège il y a toujours un adulte ressource (CPE, prof principal, documentaliste, infirmière) prêt à aider.',
+  COL_CONS:
+    'Invitez votre enfant à reformuler une consigne en deux petites étapes (« 1 : je souligne, 2 : je réponds »).',
+  COL_SAC:
+    'Instaurez le rituel tranquille du « cartable prêt la veille à 19h » pour garder des matins sereins sans précipitation.',
+  COL_STRESS:
+    'Normalisez le trac de la rentrée et testez ensemble la respiration calme (3s inspirer, 3s expirer) avant un moment impressionnant.',
+  COL_CPS:
+    'Parlez ensemble de comment demander de l’aide ou poser ses limites calmement ; savoir qu’il peut compter sur les adultes protège.',
+  COL_LIEUX:
+    'Repérez sur le plan du collège les « îlots de repère » (cour, Vie Scolaire, CDI, cantine, infirmerie) : la peur de se perdre disparaît vite.',
 };
 
 function formatSkillName(code: string): string {
@@ -227,10 +289,18 @@ export class ParentDashboard {
     const renderAnalytics = (): void => {
       cleanupPinListeners();
       const summaries = this.db.computeParentSubjectSummaries();
+      const serenity = this.db.computeParentSerenityReport();
       const top5 = this.db.getTopSkillsToConsolidate(5);
       const logs = this.db.getTelemetryLogs(8);
       const profile = this.db.getPlayerProfile();
       const questProgress = this.db.getAllQuestProgress();
+
+      const serenityColor =
+        serenity.serenity_score_pct >= 75
+          ? '#4ade80'
+          : serenity.serenity_score_pct >= 50
+            ? '#38bdf8'
+            : '#facc15';
 
       modal.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:14px;">
@@ -258,6 +328,39 @@ export class ParentDashboard {
           </div>
         </div>
 
+        <div style="background:linear-gradient(135deg, rgba(30,58,138,0.45), rgba(15,23,42,0.95)); border-radius:14px; padding:14px 16px; border:1px solid #38bdf8; margin-bottom:16px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
+            <div>
+              <h3 style="margin:0; font-size:15px; color:#7dd3fc;">🌱 Baromètre Sérénité & Adaptation 6ème</h3>
+              <div style="font-size:11px; color:#cbd5e1; margin-top:2px;">Indicateur bienveillant d’aisance cognitive, d’autonomie collège et de confiance</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="font-size:11px; font-weight:800; color:#0f172a; background:${serenityColor}; padding:4px 10px; border-radius:999px;">${escapeHtml(serenity.status_label)}</span>
+              <span style="font-size:22px; font-weight:900; color:${serenityColor};">${serenity.serenity_score_pct}%</span>
+            </div>
+          </div>
+          <div style="width:100%; height:8px; background:#0f172a; border-radius:999px; overflow:hidden; margin-bottom:12px; border:1px solid #334155;">
+            <div style="width:${serenity.serenity_score_pct}%; height:100%; background:linear-gradient(90deg, #38bdf8, ${serenityColor});"></div>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:10px;">
+            <div style="background:rgba(15,23,42,0.85); border-radius:10px; padding:8px 10px; border:1px solid #334155;">
+              <div style="font-size:11px; color:#94a3b8;">🧭 Autonomie Collège</div>
+              <div style="font-size:17px; font-weight:900; color:#38bdf8;">${serenity.campus_autonomy_pct}%</div>
+              <div style="font-size:10px; color:#cbd5e1;">Repères, salles, vie scolaire & entraide</div>
+            </div>
+            <div style="background:rgba(15,23,42,0.85); border-radius:10px; padding:8px 10px; border:1px solid #334155;">
+              <div style="font-size:11px; color:#94a3b8;">🧠 Calme Exécutif</div>
+              <div style="font-size:17px; font-weight:900; color:#4ade80;">${serenity.executive_calm_pct}%</div>
+              <div style="font-size:10px; color:#cbd5e1;">Prend le temps de lire avant d’agir</div>
+            </div>
+            <div style="background:rgba(15,23,42,0.85); border-radius:10px; padding:8px 10px; border:1px solid #334155;">
+              <div style="font-size:11px; color:#94a3b8;">🗺️ Notions explorées</div>
+              <div style="font-size:17px; font-weight:900; color:#facc15;">${serenity.explored_skills_count} / ${serenity.total_skills_count}</div>
+              <div style="font-size:10px; color:#cbd5e1;">Compétences découvertes en jouant</div>
+            </div>
+          </div>
+        </div>
+
         <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px; margin-bottom:16px;">
           <div style="background:#1e293b; border-radius:14px; padding:14px; border:1px solid #334155;">
             <h3 style="margin:0 0 10px; font-size:15px; color:#facc15;">Radar par Matière (Taux de réussite)</h3>
@@ -276,16 +379,26 @@ export class ParentDashboard {
           <h3 style="margin:0 0 10px; font-size:15px; color:#facc15;">Détail par Pilier du Bulletin Officiel</h3>
           <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:10px;">
             ${summaries
-              .map(
-                (s) => `
+              .map((s) => {
+                const hasAttempts = (s.attempts_count ?? 0) > 0;
+                const valueColor = !hasAttempts
+                  ? '#38bdf8'
+                  : s.success_rate_pct >= 70
+                    ? '#4ade80'
+                    : '#fb923c';
+                const valueLabel = hasAttempts ? `${s.success_rate_pct}%` : 'À découvrir';
+                const reactionLine = hasAttempts
+                  ? `Réaction moy. : ${(s.avg_reaction_time_ms / 1000).toFixed(2)}s`
+                  : 'Première mission à lancer';
+                return `
                 <div style="background:#0f172a; border-radius:10px; padding:10px; border:1px solid #334155;">
                   <div style="font-weight:800; font-size:13px; color:#38bdf8;">${SUBJECT_LABELS[s.subject]}</div>
-                  <div style="font-size:22px; font-weight:900; color:${s.success_rate_pct >= 70 ? '#4ade80' : '#fb923c'}; margin:4px 0;">${s.success_rate_pct}%</div>
-                  <div style="font-size:11px; color:#cbd5e1;">Réaction moy. : ${(s.avg_reaction_time_ms / 1000).toFixed(2)}s</div>
+                  <div style="font-size:${hasAttempts ? '22px' : '17px'}; font-weight:900; color:${valueColor}; margin:4px 0;">${valueLabel}</div>
+                  <div style="font-size:11px; color:#cbd5e1;">${reactionLine}</div>
                   <div style="font-size:11px; color:#94a3b8; margin-top:4px;">À consolider : ${s.skills_to_consolidate.length > 0 ? s.skills_to_consolidate.map(formatSkillName).join(', ') : 'Aucune lacune'}</div>
                 </div>
-              `
-              )
+              `;
+              })
               .join('')}
           </div>
         </div>
@@ -593,16 +706,23 @@ export class ParentDashboard {
       skill.attempts_count > 0
         ? Math.round((skill.success_count / skill.attempts_count) * 100)
         : 0;
+    const tip = PARENT_COACHING_TIPS[skill.skill_code];
+    const tipHtml = tip
+      ? `<div style="margin-top:6px; padding-top:6px; border-top:1px dashed #334155; font-size:11px; color:#cbd5e1; line-height:1.35;">💡 <strong style="color:#7dd3fc;">Astuce parent :</strong> ${escapeHtml(tip)}</div>`
+      : '';
     return `
-      <div style="display:flex; justify-content:space-between; align-items:center; background:#0f172a; padding:8px 10px; border-radius:8px; border-left:3px solid #fb923c;">
-        <div>
-          <div style="font-size:13px; font-weight:700; color:#f8fafc;">#${rank} ${formatSkillName(skill.skill_code)}</div>
-          <div style="font-size:11px; color:#94a3b8;">${SUBJECT_LABELS[skill.subject_category]} • Elo ${skill.elo_rating}</div>
+      <div style="background:#0f172a; padding:8px 10px; border-radius:8px; border-left:3px solid #fb923c;">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+          <div>
+            <div style="font-size:13px; font-weight:700; color:#f8fafc;">#${rank} ${formatSkillName(skill.skill_code)}</div>
+            <div style="font-size:11px; color:#94a3b8;">${SUBJECT_LABELS[skill.subject_category]} • Elo ${skill.elo_rating}</div>
+          </div>
+          <div style="text-align:right; flex-shrink:0;">
+            <div style="font-size:13px; font-weight:800; color:${rate >= 70 ? '#4ade80' : '#fb923c'};">${skill.attempts_count > 0 ? `${rate}%` : 'À tester'}</div>
+            <div style="font-size:11px; color:#94a3b8;">${(skill.avg_response_ms / 1000).toFixed(1)}s moy.</div>
+          </div>
         </div>
-        <div style="text-align:right;">
-          <div style="font-size:13px; font-weight:800; color:${rate >= 70 ? '#4ade80' : '#fb923c'};">${skill.attempts_count > 0 ? `${rate}%` : 'À tester'}</div>
-          <div style="font-size:11px; color:#94a3b8;">${(skill.avg_response_ms / 1000).toFixed(1)}s moy.</div>
-        </div>
+        ${tipHtml}
       </div>
     `;
   }

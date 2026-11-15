@@ -206,6 +206,7 @@ export interface IStarrDropReward {
   trophies_granted: number;
   knowledge_points_granted: number;
   unlocked_badge_or_skin?: string;
+  secret_tip_6e?: string;
 }
 
 export interface IParentSubjectSummary {
@@ -213,6 +214,16 @@ export interface IParentSubjectSummary {
   success_rate_pct: number;
   avg_reaction_time_ms: number;
   skills_to_consolidate: string[];
+  attempts_count?: number;
+}
+
+export interface IParentSerenityReport {
+  serenity_score_pct: number;
+  status_label: string;
+  campus_autonomy_pct: number;
+  executive_calm_pct: number;
+  explored_skills_count: number;
+  total_skills_count: number;
 }
 
 export interface IDailyQuest {
@@ -336,4 +347,29 @@ export interface IQuestStepAdvanceResult {
   rewardGranted?: IQuestReward;
   message?: string;
   nextActiveQuest?: ICampusQuest | null;
+}
+
+// ============================================================================
+// 6. ACCESSIBILITÉ & GUIDAGE BRAWL STARS (Zéro Friction Scolaire)
+// ============================================================================
+
+export interface IAccessibilitySettings {
+  /** Visée assistée intelligente (cible prioritairement la cible pointée ou la bonne réponse si révélée) */
+  smart_auto_aim: boolean;
+  /** Flèche GPS dorée permanente au sol vers l'objectif de mode / quête */
+  visual_gps_compass: boolean;
+  /** Vitesse adoucie (-20% vitesse des drones et lasers) pour jouer sereinement */
+  calm_mode: boolean;
+  /** Indice automatique après 2 erreurs ou 9 secondes d'hésitation */
+  auto_hint_assist: boolean;
+  /** Indique si le mini-tutoriel visuel Brawl Stars a déjà été vu */
+  onboarding_seen: boolean;
+}
+
+export interface ISubjectVisualMeta {
+  subject: SubjectCategory;
+  short_label: string;
+  icon: string;
+  accent_color: string;
+  badge_bg: string;
 }

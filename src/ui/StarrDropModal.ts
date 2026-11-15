@@ -133,7 +133,42 @@ export class StarrDropModal {
     return current;
   }
 
+  private static readonly SECRETS_DE_6EME: readonly string[] = [
+    'La première semaine de 6ème, tout le monde cherche encore sa salle — c’est normal !',
+    'Au self, les agents sont là pour t’aider : tu peux toujours demander sans hésiter.',
+    'La Vie Scolaire (CPE et surveillants) est ton QG ami dès que tu as un doute ou un souci.',
+    'Préparer son cartable la veille au soir offre 10 minutes de calme en plus le matin.',
+    'Pas besoin de tout réussir du premier coup : au collège, chaque essai fait progresser.',
+    'En 6ème, sourire ou proposer un crayon à son voisin suffit souvent à lancer une belle amitié.',
+    'Si un camarade est embêté ou seul dans la cour, prévenir un adulte ou l’inviter à jouer change tout.',
+    'Un casier rangé à la récré évite de porter des cahiers trop lourds toute la journée.',
+  ];
+
+  private static readonly SUPER_RARE_BADGES: readonly string[] = [
+    'Badge Calculateur Rapide',
+    'Badge Camarade Solidaire',
+    'Badge Champion Anti-Stress',
+  ];
+
+  private static readonly EPIQUE_BADGES: readonly string[] = [
+    'Badge Plume d’Or 6ème',
+    'Badge Super Délégué Bienveillant',
+    'Badge Explorateur du Campus',
+  ];
+
+  private static readonly LEGENDAIRE_REWARDS: readonly string[] = [
+    'Skin Légendaire Maître du Collège',
+    'Skin Légendaire Ambassadeur 6ème',
+    'Skin Légendaire Gardien de l’Entraide',
+  ];
+
+  private pickRandom(items: readonly string[]): string {
+    return items[Math.floor(Math.random() * items.length)];
+  }
+
   public buildReward(finalRarity: StarrDropRarity): IStarrDropReward {
+    const secretTip = this.pickRandom(StarrDropModal.SECRETS_DE_6EME);
+
     switch (finalRarity) {
       case 'RARE':
         return {
@@ -142,6 +177,7 @@ export class StarrDropModal {
           coins_granted: 50,
           trophies_granted: 15,
           knowledge_points_granted: 20,
+          secret_tip_6e: secretTip,
         };
       case 'SUPER_RARE':
         return {
@@ -150,7 +186,8 @@ export class StarrDropModal {
           coins_granted: 110,
           trophies_granted: 30,
           knowledge_points_granted: 45,
-          unlocked_badge_or_skin: 'Badge Calculateur Rapide',
+          unlocked_badge_or_skin: this.pickRandom(StarrDropModal.SUPER_RARE_BADGES),
+          secret_tip_6e: secretTip,
         };
       case 'EPIQUE':
         return {
@@ -159,7 +196,8 @@ export class StarrDropModal {
           coins_granted: 200,
           trophies_granted: 50,
           knowledge_points_granted: 80,
-          unlocked_badge_or_skin: 'Badge Plume d’Or 6ème',
+          unlocked_badge_or_skin: this.pickRandom(StarrDropModal.EPIQUE_BADGES),
+          secret_tip_6e: secretTip,
         };
       case 'LEGENDAIRE':
         return {
@@ -168,7 +206,8 @@ export class StarrDropModal {
           coins_granted: 400,
           trophies_granted: 80,
           knowledge_points_granted: 150,
-          unlocked_badge_or_skin: 'Skin Légendaire Maître du Collège',
+          unlocked_badge_or_skin: this.pickRandom(StarrDropModal.LEGENDAIRE_REWARDS),
+          secret_tip_6e: secretTip,
         };
     }
   }
@@ -249,6 +288,9 @@ export class StarrDropModal {
         const badgeLine = finalReward.unlocked_badge_or_skin
           ? `<div style="margin-top:8px; padding:8px; border-radius:10px; background:rgba(250,204,21,0.16); color:#fef08a; font-weight:700;">🏅 ${finalReward.unlocked_badge_or_skin}</div>`
           : '';
+        const secretTipLine = finalReward.secret_tip_6e
+          ? `<div style="margin-top:8px; padding:10px 12px; border-radius:10px; background:rgba(56,189,248,0.14); border:1px solid rgba(56,189,248,0.4); color:#e0f2fe; font-size:12px; line-height:1.4; text-align:left;"><strong style="color:#7dd3fc;">🗝️ Secret de 6ème :</strong> ${finalReward.secret_tip_6e}</div>`
+          : '';
         const nextBtnHtml =
           remaining > 0
             ? `<button id="sd-next-btn" type="button" class="pulse-glow" style="margin-top:14px; width:100%; padding:12px; border-radius:12px; border:none;
@@ -278,6 +320,7 @@ export class StarrDropModal {
               </div>
             </div>
             ${badgeLine}
+            ${secretTipLine}
             ${nextBtnHtml}
             <button id="sd-claim-btn" type="button" style="margin-top:${remaining > 0 ? '10px' : '16px'}; width:100%; padding:12px; border-radius:12px; border:none;
                     background:#facc15; color:#0f172a; font-weight:900; font-size:16px; cursor:pointer;">

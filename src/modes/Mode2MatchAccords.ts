@@ -95,8 +95,8 @@ export class MatchAccordsSession {
     this.ball.vx *= friction;
     this.ball.vy *= friction;
 
-    const inLeftGoalX = this.ball.x >= 140 && this.ball.x <= 360;
-    const inRightGoalX = this.ball.x >= 600 && this.ball.x <= 820;
+    const inLeftGoalX = this.ball.x >= 120 && this.ball.x <= 380;
+    const inRightGoalX = this.ball.x >= 580 && this.ball.x <= 840;
 
     if (this.ball.y <= 82 && (inLeftGoalX || inRightGoalX)) {
       const side: 'LEFT' | 'RIGHT' = inLeftGoalX ? 'LEFT' : 'RIGHT';

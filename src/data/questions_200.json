@@ -5198,5 +5198,395 @@
         "is_correct": false
       }
     ]
+  },
+  {
+    "id": "COL_CPS_041",
+    "subject": "vie_au_college",
+    "skill_code": "COL_STRESS",
+    "elo_difficulty": 880,
+    "hud_prompt": "Cahier oublié : que faire d'abord ?",
+    "explanation_flash": "Rassure-toi : prévenir le prof dès l'entrée montre ton sérieux !",
+    "targets": [
+      {
+        "label": "Prévenir prof",
+        "is_correct": true
+      },
+      {
+        "label": "Se cacher",
+        "is_correct": false
+      },
+      {
+        "label": "Paniquer",
+        "is_correct": false
+      },
+      {
+        "label": "Mentir",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_CPS_042",
+    "subject": "vie_au_college",
+    "skill_code": "COL_STRESS",
+    "elo_difficulty": 860,
+    "hud_prompt": "Perdu dans un couloir : réflexe ?",
+    "explanation_flash": "Au collège, tout adulte ou AED t'indiquera ta salle avec plaisir !",
+    "targets": [
+      {
+        "label": "Demander aide",
+        "is_correct": true
+      },
+      {
+        "label": "Pleurer seul",
+        "is_correct": false
+      },
+      {
+        "label": "Courir partout",
+        "is_correct": false
+      },
+      {
+        "label": "Sortir dehors",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_CPS_043",
+    "subject": "vie_au_college",
+    "skill_code": "COL_STRESS",
+    "elo_difficulty": 920,
+    "hud_prompt": "Stressé avant un contrôle : astuce ?",
+    "explanation_flash": "Respirer lentement 3 fois calme le cœur et aide à réfléchir !",
+    "targets": [
+      {
+        "label": "Respirer calme",
+        "is_correct": true
+      },
+      {
+        "label": "Tout bâcler",
+        "is_correct": false
+      },
+      {
+        "label": "Bloquer dessus",
+        "is_correct": false
+      },
+      {
+        "label": "Copier voisin",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_CPS_044",
+    "subject": "vie_au_college",
+    "skill_code": "COL_STRESS",
+    "elo_difficulty": 950,
+    "hud_prompt": "Prof absent à 9h : où aller ?",
+    "explanation_flash": "En cas d'absence d'un prof, direction la Vie Scolaire / Permanence !",
+    "targets": [
+      {
+        "label": "Permanence",
+        "is_correct": true
+      },
+      {
+        "label": "Rentrer seul",
+        "is_correct": false
+      },
+      {
+        "label": "Errer couloir",
+        "is_correct": false
+      },
+      {
+        "label": "Parking",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_CPS_045",
+    "subject": "vie_au_college",
+    "skill_code": "COL_STRESS",
+    "elo_difficulty": 900,
+    "hud_prompt": "Une erreur au tableau sert à ?",
+    "explanation_flash": "Se tromper est normal : chaque erreur aide ton cerveau à progresser !",
+    "targets": [
+      {
+        "label": "Apprendre",
+        "is_correct": true
+      },
+      {
+        "label": "Abandonner",
+        "is_correct": false
+      },
+      {
+        "label": "Avoir honte",
+        "is_correct": false
+      },
+      {
+        "label": "Se moquer",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_CPS_046",
+    "subject": "vie_au_college",
+    "skill_code": "COL_CPS",
+    "elo_difficulty": 880,
+    "hud_prompt": "Un élève mange seul au self ?",
+    "explanation_flash": "Esprit Collège : propose-lui de venir s'asseoir à ta table !",
+    "targets": [
+      {
+        "label": "L'inviter",
+        "is_correct": true
+      },
+      {
+        "label": "Se moquer",
+        "is_correct": false
+      },
+      {
+        "label": "L'ignorer",
+        "is_correct": false
+      },
+      {
+        "label": "Chuchoter",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_CPS_047",
+    "subject": "vie_au_college",
+    "skill_code": "COL_CPS",
+    "elo_difficulty": 940,
+    "hud_prompt": "Témoin d'une moquerie répétée ?",
+    "explanation_flash": "Allié Protecteur : soutiens l'élève et préviens un adulte ressource !",
+    "targets": [
+      {
+        "label": "Alerter adulte",
+        "is_correct": true
+      },
+      {
+        "label": "Rire aussi",
+        "is_correct": false
+      },
+      {
+        "label": "Filmer",
+        "is_correct": false
+      },
+      {
+        "label": "Répéter",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_CPS_048",
+    "subject": "vie_au_college",
+    "skill_code": "COL_CPS",
+    "elo_difficulty": 960,
+    "hud_prompt": "Numéro gratuit contre le harcèlement ?",
+    "explanation_flash": "Le 3018 est le numéro national gratuit et confidentiel d'écoute !",
+    "targets": [
+      {
+        "label": "Le 3018",
+        "is_correct": true
+      },
+      {
+        "label": "Le 118",
+        "is_correct": false
+      },
+      {
+        "label": "Le 3615",
+        "is_correct": false
+      },
+      {
+        "label": "Aucun",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_CPS_049",
+    "subject": "vie_au_college",
+    "skill_code": "COL_CPS",
+    "elo_difficulty": 980,
+    "hud_prompt": "Poussé à faire une bêtise ?",
+    "explanation_flash": "Force mentale : un vrai héros sait dire non sans avoir peur !",
+    "targets": [
+      {
+        "label": "Savoir dire non",
+        "is_correct": true
+      },
+      {
+        "label": "Obéir",
+        "is_correct": false
+      },
+      {
+        "label": "Imiter",
+        "is_correct": false
+      },
+      {
+        "label": "Crier",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_CPS_050",
+    "subject": "vie_au_college",
+    "skill_code": "COL_CPS",
+    "elo_difficulty": 920,
+    "hud_prompt": "Ton binôme est absent aujourd'hui ?",
+    "explanation_flash": "Entraide 6e : prends les cours et feuilles pour ton binôme !",
+    "targets": [
+      {
+        "label": "Noter pour lui",
+        "is_correct": true
+      },
+      {
+        "label": "Tout garder",
+        "is_correct": false
+      },
+      {
+        "label": "L'oublier",
+        "is_correct": false
+      },
+      {
+        "label": "Rien dire",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_CPS_051",
+    "subject": "vie_au_college",
+    "skill_code": "COL_LIEUX",
+    "elo_difficulty": 940,
+    "hud_prompt": "Quand passer à son casier ?",
+    "explanation_flash": "Astuce Pro : passe au casier à la récré ou à midi !",
+    "targets": [
+      {
+        "label": "Récré ou midi",
+        "is_correct": true
+      },
+      {
+        "label": "Chaque heure",
+        "is_correct": false
+      },
+      {
+        "label": "Pendant cours",
+        "is_correct": false
+      },
+      {
+        "label": "Jamais",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_CPS_052",
+    "subject": "vie_au_college",
+    "skill_code": "COL_LIEUX",
+    "elo_difficulty": 860,
+    "hud_prompt": "Pause calme le midi : où aller ?",
+    "explanation_flash": "Le CDI est ouvert le midi pour lire ou travailler au calme !",
+    "targets": [
+      {
+        "label": "Aller au CDI",
+        "is_correct": true
+      },
+      {
+        "label": "Couloir",
+        "is_correct": false
+      },
+      {
+        "label": "Escalier",
+        "is_correct": false
+      },
+      {
+        "label": "Parking",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_CPS_053",
+    "subject": "vie_au_college",
+    "skill_code": "COL_LIEUX",
+    "elo_difficulty": 980,
+    "hud_prompt": "Carte de cantine perdue : quel bureau ?",
+    "explanation_flash": "L'intendance (ou secrétariat de gestion) s'occupe des cartes de self !",
+    "targets": [
+      {
+        "label": "Intendance",
+        "is_correct": true
+      },
+      {
+        "label": "CDI",
+        "is_correct": false
+      },
+      {
+        "label": "Salle SVT",
+        "is_correct": false
+      },
+      {
+        "label": "Gymnase",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_CPS_054",
+    "subject": "vie_au_college",
+    "skill_code": "COL_LIEUX",
+    "elo_difficulty": 950,
+    "hud_prompt": "Gros stress ou mal au ventre ?",
+    "explanation_flash": "L'infirmière scolaire t'accueille aussi pour t'écouter et te rassurer !",
+    "targets": [
+      {
+        "label": "Infirmière",
+        "is_correct": true
+      },
+      {
+        "label": "Cuisinier",
+        "is_correct": false
+      },
+      {
+        "label": "Gardien",
+        "is_correct": false
+      },
+      {
+        "label": "Jardinier",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "id": "COL_CPS_055",
+    "subject": "vie_au_college",
+    "skill_code": "COL_LIEUX",
+    "elo_difficulty": 900,
+    "hud_prompt": "La Vie Scolaire sert surtout à ?",
+    "explanation_flash": "La Vie Scolaire n'est pas là que pour punir : elle t'écoute et t'aide !",
+    "targets": [
+      {
+        "label": "Aider et écouter",
+        "is_correct": true
+      },
+      {
+        "label": "Seulement punir",
+        "is_correct": false
+      },
+      {
+        "label": "Noter",
+        "is_correct": false
+      },
+      {
+        "label": "Cuisiner",
+        "is_correct": false
+      }
+    ]
   }
 ]

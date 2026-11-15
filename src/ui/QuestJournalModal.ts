@@ -8,6 +8,7 @@ import type {
   QuestStatus,
 } from '../types/cctp';
 import type { LocalSQLiteDB } from '../db/LocalSQLiteDB';
+import { soundManager } from '../services/SoundManager';
 
 export interface IQuestJournalService {
   getAllQuestsWithStatus(): Array<{ quest: ICampusQuest; progress: IQuestProgressRecord }>;
@@ -26,6 +27,7 @@ export interface IQuestJournalOpenOptions {
   onClose?: () => void;
   onStartCampusExploration?: () => void;
   onQuestSelected?: () => void;
+  onTeleportToQuestRoom?: (roomId: CampusRoomId) => void;
 }
 
 const CAMPUS_ROOM_LABELS: Record<CampusRoomId, string> = {
@@ -252,6 +254,13 @@ export class QuestJournalModal {
            </button>`
         : '';
 
+      const claimAllBtnHtml =
+        claimableCount > 0
+          ? `<button id="qj-claim-all-btn" type="button" class="pulse-glow" style="padding:7px 14px; border-radius:10px; border:none; background:linear-gradient(135deg,#4ade80,#22c55e); color:#0f172a; font-weight:900; font-size:13px; cursor:pointer; box-shadow:0 4px 14px rgba(74,222,128,0.38);">
+               🎁 Tout récupérer (${claimableCount})
+             </button>`
+          : '';
+
       const claimedBannerHtml = claimedBanner
         ? `<div style="margin-bottom:14px; padding:12px 14px; border-radius:12px; background:rgba(74,222,128,0.14); border:1px solid #4ade80; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px;">
              <div>
@@ -308,9 +317,12 @@ export class QuestJournalModal {
             <span style="font-size:14px; font-weight:900; color:#f8fafc;">
               Progression globale : <span style="color:#4ade80;">${completedCount} / ${totalCount} quêtes accomplies</span>
             </span>
-            <span style="font-size:12px; font-weight:800; color:${claimableCount > 0 ? '#4ade80' : '#94a3b8'};">
-              ${claimableCount > 0 ? `🎁 ${claimableCount} récompense(s) prête(s) à récupérer !` : `${progressPct}% complété`}
-            </span>
+            <div style="display:flex; align-items:center; flex-wrap:wrap; gap:8px;">
+              <span style="font-size:12px; font-weight:800; color:${claimableCount > 0 ? '#4ade80' : '#94a3b8'};">
+                ${claimableCount > 0 ? `🎁 ${claimableCount} récompense(s) prête(s) à récupérer !` : `${progressPct}% complété`}
+              </span>
+              ${claimAllBtnHtml}
+            </div>
           </div>
           <div style="height:10px; background:#0f172a; border-radius:999px; overflow:hidden; border:1px solid #334155;">
             <div style="width:${progressPct}%; height:100%; background:linear-gradient(90deg, #38bdf8, #4ade80, #facc15); transition:width 0.25s ease;"></div>
@@ -375,6 +387,15 @@ export class QuestJournalModal {
                       })
                       .join('');
 
+                    const canGoToRoom = Boolean(
+                      options?.onTeleportToQuestRoom || options?.onStartCampusExploration
+                    );
+                    const goQuestRoomBtnHtml = canGoToRoom
+                      ? `<button data-go-quest-room="${escapeHtml(quest.id)}" type="button" style="padding:8px 12px; border-radius:10px; border:none; background:linear-gradient(135deg,#facc15,#f59e0b); color:#0f172a; font-weight:900; font-size:12px; cursor:pointer; box-shadow:0 3px 10px rgba(250,204,21,0.3);">
+                           🚀 Y aller
+                         </button>`
+                      : '';
+
                     let actionAreaHtml = '';
                     if (progress.status === 'COMPLETED') {
                       actionAreaHtml = `
@@ -384,15 +405,21 @@ export class QuestJournalModal {
                       `;
                     } else if (progress.status === 'AVAILABLE') {
                       actionAreaHtml = `
-                        <button data-select-quest="${escapeHtml(quest.id)}" style="padding:8px 14px; border-radius:10px; border:1px solid #38bdf8; background:rgba(56,189,248,0.16); color:#7dd3fc; font-weight:900; font-size:12px; cursor:pointer;">
-                          📍 Suivre cette quête
-                        </button>
+                        <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:flex-end;">
+                          <button data-select-quest="${escapeHtml(quest.id)}" style="padding:8px 14px; border-radius:10px; border:1px solid #38bdf8; background:rgba(56,189,248,0.16); color:#7dd3fc; font-weight:900; font-size:12px; cursor:pointer;">
+                            📍 Suivre cette quête
+                          </button>
+                          ${goQuestRoomBtnHtml}
+                        </div>
                       `;
                     } else if (progress.status === 'ACTIVE') {
                       actionAreaHtml = `
-                        <span style="padding:6px 12px; border-radius:10px; background:rgba(250,204,21,0.16); border:1px solid rgba(250,204,21,0.5); color:#facc15; font-weight:900; font-size:12px;">
-                          📍 Suivie actuellement
-                        </span>
+                        <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:flex-end;">
+                          <span style="padding:6px 12px; border-radius:10px; background:rgba(250,204,21,0.16); border:1px solid rgba(250,204,21,0.5); color:#facc15; font-weight:900; font-size:12px;">
+                            📍 Suivie actuellement
+                          </span>
+                          ${goQuestRoomBtnHtml}
+                        </div>
                       `;
                     } else if (progress.status === 'CLAIMED') {
                       actionAreaHtml = `
@@ -454,6 +481,53 @@ export class QuestJournalModal {
         options.onStartCampusExploration();
       });
 
+      modal.querySelector<HTMLButtonElement>('#qj-claim-all-btn')?.addEventListener('click', () => {
+        const claimableEntries = allEntries.filter(
+          (entry) => entry.progress.status === 'COMPLETED'
+        );
+        if (claimableEntries.length === 0) return;
+
+        const totalReward: IQuestReward = {
+          coins: 0,
+          trophies: 0,
+          combat_stars: 0,
+          knowledge_points: 0,
+          starr_drop_bonus: 0,
+        };
+        const unlockedBadges: string[] = [];
+        const claimedTitles: string[] = [];
+
+        for (const entry of claimableEntries) {
+          const reward = this.questService.claimQuestReward(entry.quest.id);
+          if (!reward) continue;
+          claimedTitles.push(entry.quest.title);
+          totalReward.coins += Math.max(0, reward.coins);
+          totalReward.trophies += Math.max(0, reward.trophies);
+          totalReward.combat_stars += Math.max(0, reward.combat_stars);
+          totalReward.knowledge_points += Math.max(0, reward.knowledge_points);
+          totalReward.starr_drop_bonus =
+            (totalReward.starr_drop_bonus ?? 0) + Math.max(0, reward.starr_drop_bonus ?? 0);
+          if (reward.unlocked_title_or_badge) {
+            unlockedBadges.push(reward.unlocked_title_or_badge);
+          }
+        }
+
+        if (claimedTitles.length === 0) return;
+        if (unlockedBadges.length > 0) {
+          totalReward.unlocked_title_or_badge = unlockedBadges.join(' • ');
+        }
+
+        soundManager.playStarrDropReveal('EPIQUE');
+        claimedBanner = {
+          title:
+            claimedTitles.length === 1
+              ? claimedTitles[0]
+              : `${claimedTitles.length} quêtes récupérées !`,
+          reward: totalReward,
+        };
+        render();
+      });
+
       modal.querySelectorAll<HTMLButtonElement>('[data-quest-filter]').forEach((btn) => {
         btn.addEventListener('click', () => {
           const filter = btn.dataset.questFilter as QuestFilterCategory | undefined;
@@ -475,6 +549,27 @@ export class QuestJournalModal {
         });
       });
 
+      modal.querySelectorAll<HTMLButtonElement>('[data-go-quest-room]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const questId = btn.dataset.goQuestRoom;
+          if (!questId) return;
+          const entry = allEntries.find((item) => item.quest.id === questId);
+          const currentObjective = entry
+            ? entry.quest.objectives[entry.progress.current_objective_index] ??
+              entry.quest.objectives[0]
+            : undefined;
+          const targetRoomId: CampusRoomId = currentObjective?.target_room_id ?? 'COUR_HONNEUR';
+
+          this.questService.selectActiveQuest(questId);
+          cleanupDom();
+          if (options?.onTeleportToQuestRoom) {
+            options.onTeleportToQuestRoom(targetRoomId);
+          } else {
+            options?.onStartCampusExploration?.();
+          }
+        });
+      });
+
       modal.querySelectorAll<HTMLButtonElement>('[data-claim-quest]').forEach((btn) => {
         btn.addEventListener('click', () => {
           const questId = btn.dataset.claimQuest;
@@ -483,6 +578,7 @@ export class QuestJournalModal {
             allEntries.find((entry) => entry.quest.id === questId)?.quest.title ?? questId;
           const reward = this.questService.claimQuestReward(questId);
           if (reward) {
+            soundManager.playStarrDropReveal('RARE');
             claimedBanner = { title: questTitle, reward };
             render();
           }

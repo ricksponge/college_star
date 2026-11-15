@@ -66,6 +66,13 @@ export function updateSkillElo(
 }
 
 /**
+ * Indique si l'élève traverse une série d'échecs nécessitant une question de confiance.
+ */
+export function isConfidenceBoostNeeded(consecutiveFailures: number): boolean {
+  return consecutiveFailures >= 2;
+}
+
+/**
  * Ajuste la vitesse des cibles en temps réel selon le niveau Elo (0.75x à 1.45x).
  */
 export function computeTargetSpeedMultiplier(eloRating: number): number {

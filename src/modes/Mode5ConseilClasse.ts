@@ -30,6 +30,8 @@ export class ConseilClasseSession {
   private laserSweepY = 90;
   private laserDirection = 1;
   private safeCorridorIndex = 0;
+  private readonly reachedMilestones = new Set<number>();
+  private pendingMilestoneBanner: string | null = null;
 
   constructor(boss: BossArchetype = 'GIGA_FRACTION') {
     this.bossName =
@@ -62,7 +64,29 @@ export class ConseilClasseSession {
 
   public damageBoss(amount: number): boolean {
     this.bossHp = Math.max(0, this.bossHp - Math.max(0, amount));
+    const ratio = this.bossHp / this.bossMaxHp;
+
+    if (this.bossHp === 0 && !this.reachedMilestones.has(0)) {
+      this.reachedMilestones.add(0);
+      this.reachedMilestones.add(1);
+      this.reachedMilestones.add(2);
+      this.pendingMilestoneBanner = '🏆 Félicitations du Conseil de Classe !';
+    } else if (ratio < 0.33 && !this.reachedMilestones.has(2)) {
+      this.reachedMilestones.add(2);
+      this.reachedMilestones.add(1);
+      this.pendingMilestoneBanner = '🌟 Palier 2 : Encouragements du Prof Principal !';
+    } else if (ratio < 0.66 && !this.reachedMilestones.has(1)) {
+      this.reachedMilestones.add(1);
+      this.pendingMilestoneBanner = '🌟 Palier 1 : Compliments de la classe !';
+    }
+
     return this.bossHp === 0;
+  }
+
+  public consumeMilestoneBanner(): string | null {
+    const banner = this.pendingMilestoneBanner;
+    this.pendingMilestoneBanner = null;
+    return banner;
   }
 
   public getState(): IConseilClasseState {
