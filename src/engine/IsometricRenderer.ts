@@ -1,8 +1,10 @@
 import * as THREE from 'three';
-import type { BrawlerId, GameModeId } from '../types/cctp';
+import type { BrawlerId, GameModeId, ICampusRoomZone } from '../types/cctp';
 import {
   animateBrawler3DRig,
   createBrawler3DModel,
+  createCampusBadge3DModel,
+  createCampusNpc3DModel,
   createTarget3DModel,
   disposeObject3D,
   type IBrawler3DRig,
@@ -103,6 +105,42 @@ export interface IRenderFlashBubble {
   isPositive?: boolean;
 }
 
+export interface IRenderCampusNpc {
+  id: string;
+  name: string;
+  title: string;
+  x: number;
+  y: number;
+  primaryColor: string;
+  accentColor: string;
+  hasQuestMarker: boolean;
+  isPlayerNear: boolean;
+}
+
+export interface IRenderCampusBadge {
+  id: string;
+  x: number;
+  y: number;
+  label: string;
+}
+
+export interface IRenderQuestBanner {
+  questTitle: string;
+  objectiveText: string;
+  progressText: string;
+  currentRoomName: string;
+}
+
+export interface IRenderMinimapState {
+  worldWidth: number;
+  worldHeight: number;
+  rooms: ICampusRoomZone[];
+  playerX: number;
+  playerY: number;
+  objectivePos?: IRenderVec2 | null;
+  npcs: Array<{ x: number; y: number; hasQuest: boolean }>;
+}
+
 export interface IRenderFrameState {
   modeId: GameModeId;
   arenaWidth: number;
@@ -136,6 +174,11 @@ export interface IRenderFrameState {
   shakeIntensity?: number;
   leftStick: IRenderJoystick;
   rightStick: IRenderJoystick;
+  campusRooms?: ICampusRoomZone[];
+  campusNpcs?: IRenderCampusNpc[];
+  campusBadges?: IRenderCampusBadge[];
+  questBanner?: IRenderQuestBanner;
+  minimapState?: IRenderMinimapState;
 }
 
 const BRAWLER_COLORS: Record<BrawlerId, { primary: string; accent: string }> = {
@@ -162,6 +205,7 @@ export class IsometricRenderer {
   private readonly ctx: CanvasRenderingContext2D;
   private cameraX = 0;
   private cameraY = 0;
+  private cameraInitialized = false;
   private zoom = 1;
 
   // Sous-système 3D Three.js
@@ -172,6 +216,7 @@ export class IsometricRenderer {
   private camera3D: THREE.OrthographicCamera | null = null;
   private arenaGroup: THREE.Group | null = null;
   private arenaEnvGroup: THREE.Group | null = null;
+  private sunLight: THREE.DirectionalLight | null = null;
   private builtArenaKey = '';
 
   private playerRig: IBrawler3DRig | null = null;
@@ -182,6 +227,8 @@ export class IsometricRenderer {
   private currentTimeSec = 0;
 
   private readonly targetMeshes = new Map<string, ICachedTarget3D>();
+  private readonly npcMeshes = new Map<string, { group: THREE.Group; hasQuestMarker: boolean }>();
+  private readonly badgeMeshes = new Map<string, THREE.Group>();
   private readonly projectilePool: THREE.Mesh[] = [];
   private readonly projectileGeo = new THREE.SphereGeometry(0.24, 10, 10);
   private turretMesh3D: THREE.Group | null = null;
@@ -237,6 +284,7 @@ export class IsometricRenderer {
       sunLight.shadow.camera.bottom = -24;
       sunLight.shadow.bias = -0.0005;
       scene.add(sunLight);
+      scene.add(sunLight.target);
 
       const camera = new THREE.OrthographicCamera(-12, 12, 7, -7, 0.1, 140);
       const arenaGroup = new THREE.Group();
@@ -279,6 +327,7 @@ export class IsometricRenderer {
       this.scene = scene;
       this.camera3D = camera;
       this.arenaGroup = arenaGroup;
+      this.sunLight = sunLight;
       this.turretMesh3D = turretGroup;
       this.particleSystem = new ParticleSystem3D(scene);
       this.webglReady = true;
@@ -326,6 +375,16 @@ export class IsometricRenderer {
       disposeObject3D(cached.group);
     }
     this.targetMeshes.clear();
+    for (const cached of this.npcMeshes.values()) {
+      this.scene?.remove(cached.group);
+      disposeObject3D(cached.group);
+    }
+    this.npcMeshes.clear();
+    for (const badgeGroup of this.badgeMeshes.values()) {
+      this.scene?.remove(badgeGroup);
+      disposeObject3D(badgeGroup);
+    }
+    this.badgeMeshes.clear();
     for (const p of this.projectilePool) {
       this.scene?.remove(p);
       (p.material as THREE.Material).dispose();
@@ -346,6 +405,7 @@ export class IsometricRenderer {
     this.camera3D = null;
     this.arenaGroup = null;
     this.arenaEnvGroup = null;
+    this.sunLight = null;
     this.webglReady = false;
   }
 
@@ -440,9 +500,15 @@ export class IsometricRenderer {
     this.lastRenderMs = nowMs;
     this.currentTimeSec = nowMs / 1000;
 
-    // Caméra verrouillée sur le joueur avec léger lissage
-    this.cameraX += (state.player.x - this.cameraX) * 0.18;
-    this.cameraY += (state.player.y - this.cameraY) * 0.18;
+    // Caméra verrouillée sur le joueur avec léger lissage (instantanée à la première frame)
+    if (!this.cameraInitialized) {
+      this.cameraX = state.player.x;
+      this.cameraY = state.player.y;
+      this.cameraInitialized = true;
+    } else {
+      this.cameraX += (state.player.x - this.cameraX) * 0.18;
+      this.cameraY += (state.player.y - this.cameraY) * 0.18;
+    }
 
     // Tremblement de caméra sur impact / erreur / super
     const shakeAmp = state.shakeIntensity ?? 0;
@@ -523,11 +589,18 @@ export class IsometricRenderer {
     this.camera3D.lookAt(lookX, 0, lookZ);
     this.camera3D.updateMatrixWorld();
 
-    // Sol & obstacles 3D (reconstruits uniquement au changement de mode ou de carte)
+    if (this.sunLight) {
+      this.sunLight.position.set(lookX + 12, 28, lookZ + 14);
+      this.sunLight.target.position.set(lookX, 0, lookZ);
+      this.sunLight.target.updateMatrixWorld();
+    }
+
+    // Sol & obstacles 3D (reconstruits uniquement au changement de mode, d'obstacles ou de campus)
     const obsSig = state.obstacles
       .map((o) => `${o.kind[0]}${Math.round(o.x)},${Math.round(o.y)}`)
       .join(';');
-    const arenaKey = `${state.modeId}_${state.arenaWidth}x${state.arenaHeight}_${obsSig}`;
+    const campusFlag = state.campusRooms ? `CAMPUS_${state.campusRooms.length}` : '';
+    const arenaKey = `${state.modeId}_${state.arenaWidth}x${state.arenaHeight}_${campusFlag}_${obsSig}`;
     if (this.builtArenaKey !== arenaKey) {
       this.rebuildArena3D(state);
       this.builtArenaKey = arenaKey;
@@ -623,6 +696,86 @@ export class IsometricRenderer {
       }
     }
 
+    // PNJ 3D du campus
+    const activeNpcIds = new Set<string>();
+    for (const npc of state.campusNpcs ?? []) {
+      activeNpcIds.add(npc.id);
+      let cached = this.npcMeshes.get(npc.id);
+      if (!cached || cached.hasQuestMarker !== npc.hasQuestMarker) {
+        if (cached) {
+          this.scene.remove(cached.group);
+          disposeObject3D(cached.group);
+        }
+        const group = createCampusNpc3DModel(
+          npc.primaryColor,
+          npc.accentColor,
+          npc.hasQuestMarker
+        );
+        this.scene.add(group);
+        cached = { group, hasQuestMarker: npc.hasQuestMarker };
+        this.npcMeshes.set(npc.id, cached);
+      }
+
+      cached.group.position.set(npc.x * WORLD_SCALE_3D, 0, npc.y * WORLD_SCALE_3D);
+
+      const dx = state.player.x - npc.x;
+      const dz = state.player.y - npc.y;
+      const dist = Math.hypot(dx, dz);
+      const bodyGroup = cached.group.userData.bodyGroup as THREE.Object3D | undefined;
+      const turnTarget = bodyGroup ?? cached.group;
+      if (dist < 280 && dist > 1) {
+        turnTarget.rotation.y = Math.atan2(dx, dz);
+      } else {
+        turnTarget.rotation.y = Math.sin(timeSec * 0.9 + npc.x * 0.01) * 0.16;
+      }
+      if (bodyGroup) {
+        bodyGroup.position.y = Math.sin(timeSec * 2.6 + npc.y * 0.02) * 0.035;
+      }
+
+      const marker =
+        cached.group.getObjectByName('questMarker') ??
+        (cached.group.userData.questMarker as THREE.Object3D | undefined);
+      if (marker) {
+        const baseY = (cached.group.userData.questMarkerBaseY as number | undefined) ?? 2.28;
+        marker.position.y = baseY + Math.sin(timeSec * 4.2) * 0.14;
+        marker.rotation.y = timeSec * 1.8;
+      }
+    }
+
+    for (const [id, cached] of this.npcMeshes.entries()) {
+      if (!activeNpcIds.has(id)) {
+        this.scene.remove(cached.group);
+        disposeObject3D(cached.group);
+        this.npcMeshes.delete(id);
+      }
+    }
+
+    // Badges collectables 3D du campus
+    const activeBadgeIds = new Set<string>();
+    for (const badge of state.campusBadges ?? []) {
+      activeBadgeIds.add(badge.id);
+      let badgeGroup = this.badgeMeshes.get(badge.id);
+      if (!badgeGroup) {
+        badgeGroup = createCampusBadge3DModel();
+        this.scene.add(badgeGroup);
+        this.badgeMeshes.set(badge.id, badgeGroup);
+      }
+      badgeGroup.position.set(
+        badge.x * WORLD_SCALE_3D,
+        Math.sin(timeSec * 3.1 + badge.x * 0.02) * 0.1,
+        badge.y * WORLD_SCALE_3D
+      );
+      badgeGroup.rotation.y = timeSec * 1.6;
+    }
+
+    for (const [id, badgeGroup] of this.badgeMeshes.entries()) {
+      if (!activeBadgeIds.has(id)) {
+        this.scene.remove(badgeGroup);
+        disposeObject3D(badgeGroup);
+        this.badgeMeshes.delete(id);
+      }
+    }
+
     // Projectiles 3D
     while (this.projectilePool.length < state.projectiles.length) {
       const mat = new THREE.MeshStandardMaterial({
@@ -667,15 +820,131 @@ export class IsometricRenderer {
 
     const w3d = state.arenaWidth * WORLD_SCALE_3D;
     const h3d = state.arenaHeight * WORLD_SCALE_3D;
-    const envGroup = buildArenaEnvironment3D(
-      state.modeId,
-      w3d,
-      h3d,
-      state.obstacles,
-      WORLD_SCALE_3D
+
+    if (!state.campusRooms || state.campusRooms.length === 0) {
+      const envGroup = buildArenaEnvironment3D(
+        state.modeId,
+        w3d,
+        h3d,
+        state.obstacles,
+        WORLD_SCALE_3D
+      );
+      this.arenaGroup.add(envGroup);
+      this.arenaEnvGroup = envGroup;
+      return;
+    }
+
+    this.arenaEnvGroup = null;
+
+    // Cour / Couloirs du collège 3D
+    const floor = new THREE.Mesh(
+      new THREE.PlaneGeometry(w3d, h3d),
+      new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.85 })
     );
-    this.arenaGroup.add(envGroup);
-    this.arenaEnvGroup = envGroup;
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.set(w3d * 0.5, 0, h3d * 0.5);
+    floor.receiveShadow = true;
+    this.arenaGroup.add(floor);
+
+    // Quadrillage & bordures dorées
+    const grid = new THREE.GridHelper(Math.max(w3d, h3d), 32, 0x64748b, 0x475569);
+    grid.position.set(w3d * 0.5, 0.008, h3d * 0.5);
+    grid.scale.set(w3d / Math.max(w3d, h3d), 1, h3d / Math.max(w3d, h3d));
+    this.arenaGroup.add(grid);
+
+    // Salles du campus surélevées (y = 0.02) avec bordure lumineuse
+    for (const room of state.campusRooms) {
+      const rw = room.bounds.width * WORLD_SCALE_3D;
+      const rd = room.bounds.height * WORLD_SCALE_3D;
+      const rx = (room.bounds.x + room.bounds.width * 0.5) * WORLD_SCALE_3D;
+      const rz = (room.bounds.y + room.bounds.height * 0.5) * WORLD_SCALE_3D;
+
+      const slab = new THREE.Mesh(
+        new THREE.BoxGeometry(rw, 0.04, rd),
+        new THREE.MeshStandardMaterial({
+          color: new THREE.Color(room.floor_color),
+          roughness: 0.8,
+          metalness: 0.05,
+        })
+      );
+      slab.position.set(rx, 0.02, rz);
+      slab.receiveShadow = true;
+      this.arenaGroup.add(slab);
+
+      const accentColor = new THREE.Color(room.accent_color);
+      const borderMatRoom = new THREE.MeshStandardMaterial({
+        color: accentColor,
+        emissive: accentColor,
+        emissiveIntensity: 0.4,
+        roughness: 0.35,
+      });
+      const trimT = 0.14;
+      const trimH = 0.05;
+      const roomEdges: Array<[number, number, number, number]> = [
+        [rx, room.bounds.y * WORLD_SCALE_3D + trimT * 0.5, rw, trimT],
+        [rx, (room.bounds.y + room.bounds.height) * WORLD_SCALE_3D - trimT * 0.5, rw, trimT],
+        [room.bounds.x * WORLD_SCALE_3D + trimT * 0.5, rz, trimT, rd],
+        [(room.bounds.x + room.bounds.width) * WORLD_SCALE_3D - trimT * 0.5, rz, trimT, rd],
+      ];
+      for (const [ex, ez, ew, ed] of roomEdges) {
+        const edgeMesh = new THREE.Mesh(new THREE.BoxGeometry(ew, trimH, ed), borderMatRoom);
+        edgeMesh.position.set(ex, 0.045, ez);
+        this.arenaGroup.add(edgeMesh);
+      }
+    }
+
+    const borderMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, roughness: 0.4 });
+    const wallThickness = 0.4;
+    const borders: Array<[number, number, number, number]> = [
+      [w3d * 0.5, 0, w3d + wallThickness, wallThickness],
+      [w3d * 0.5, h3d, w3d + wallThickness, wallThickness],
+      [0, h3d * 0.5, wallThickness, h3d],
+      [w3d, h3d * 0.5, wallThickness, h3d],
+    ];
+    for (const [bx, bz, bw, bd] of borders) {
+      const bMesh = new THREE.Mesh(new THREE.BoxGeometry(bw, 0.65, bd), borderMat);
+      bMesh.position.set(bx, 0.32, bz);
+      bMesh.castShadow = true;
+      this.arenaGroup.add(bMesh);
+    }
+
+    // Obstacles 3D volumétriques du campus
+    for (const obs of state.obstacles) {
+      const ow = obs.width * WORLD_SCALE_3D;
+      const od = obs.height * WORLD_SCALE_3D;
+      const ox = obs.x * WORLD_SCALE_3D + ow * 0.5;
+      const oz = obs.y * WORLD_SCALE_3D + od * 0.5;
+
+      if (obs.kind === 'goal_left' || obs.kind === 'goal_right' || obs.kind === 'safe_zone') {
+        const zoneColor =
+          obs.kind === 'goal_left'
+            ? 0x3b82f6
+            : obs.kind === 'goal_right'
+              ? 0xeab308
+              : 0x22c55e;
+        const zoneMesh = new THREE.Mesh(
+          new THREE.BoxGeometry(ow, 0.12, od),
+          new THREE.MeshStandardMaterial({
+            color: zoneColor,
+            transparent: true,
+            opacity: 0.55,
+          })
+        );
+        zoneMesh.position.set(ox, 0.06, oz);
+        this.arenaGroup.add(zoneMesh);
+      } else {
+        const h = obs.kind === 'wall' ? 1.1 : 0.85;
+        const color = obs.kind === 'bush' ? 0x16a34a : obs.kind === 'desk' ? 0x92400e : 0x64748b;
+        const block = new THREE.Mesh(
+          new THREE.BoxGeometry(ow, h, od),
+          new THREE.MeshStandardMaterial({ color, roughness: 0.6 })
+        );
+        block.position.set(ox, h * 0.5, oz);
+        block.castShadow = true;
+        block.receiveShadow = true;
+        this.arenaGroup.add(block);
+      }
+    }
   }
 
   private draw2DOverlaysOn3D(state: IRenderFrameState): void {
@@ -683,6 +952,12 @@ export class IsometricRenderer {
     for (const obs of state.obstacles) {
       if (!obs.label) continue;
       this.drawObstacleLabelBadge(obs);
+    }
+    if (state.campusBadges?.length) {
+      this.drawCampusBadgesOverlay(state.campusBadges);
+    }
+    if (state.campusNpcs?.length) {
+      this.drawCampusNpcsOverlay(state.campusNpcs);
     }
     const labelOffsets = this.computeTargetLabelOffsets(state.targets);
     for (const target of state.targets) {
@@ -719,6 +994,9 @@ export class IsometricRenderer {
     }
     if (state.rivalBot) {
       this.drawRivalBot(state.rivalBot);
+    }
+    if (state.campusRooms?.length) {
+      this.drawCampusRoomLabels(state.campusRooms);
     }
     if (state.compassTargetPos) {
       this.drawCompassArrow(state.player, state.compassTargetPos);
@@ -944,11 +1222,20 @@ export class IsometricRenderer {
     ctx.fillRect(0, 0, cssW, cssH);
 
     this.drawArenaFloor(state);
+    if (state.campusRooms?.length) {
+      this.drawCampusRooms2D(state.campusRooms);
+    }
     this.drawObstacles(state.obstacles);
     this.drawSharedWorldOverlays(state);
 
     if (state.turretPos) {
       this.drawTurret(state.turretPos);
+    }
+    if (state.campusBadges?.length) {
+      this.drawCampusBadges2D(state.campusBadges);
+    }
+    if (state.campusNpcs?.length) {
+      this.drawCampusNpcs2D(state.campusNpcs);
     }
 
     const labelOffsets = this.computeTargetLabelOffsets(state.targets);
@@ -974,7 +1261,11 @@ export class IsometricRenderer {
     const h = br.y - tl.y;
 
     ctx.save();
-    ctx.fillStyle = state.modeId === 'MATCH_DES_ACCORDS' ? '#166534' : '#334155';
+    ctx.fillStyle = state.campusRooms
+      ? '#1e293b'
+      : state.modeId === 'MATCH_DES_ACCORDS'
+        ? '#166534'
+        : '#334155';
     ctx.strokeStyle = '#fbbf24';
     ctx.lineWidth = 4;
     ctx.fillRect(tl.x, tl.y, w, h);
@@ -990,7 +1281,14 @@ export class IsometricRenderer {
       const w = br.x - tl.x;
       const h = br.y - tl.y;
       ctx.save();
-      ctx.fillStyle = obs.kind === 'bush' ? '#15803d' : '#475569';
+      ctx.fillStyle =
+        obs.kind === 'bush'
+          ? '#15803d'
+          : obs.kind === 'safe_zone'
+            ? 'rgba(34, 197, 94, 0.45)'
+            : obs.kind === 'desk'
+              ? '#92400e'
+              : '#475569';
       ctx.fillRect(tl.x, tl.y, w, h);
       ctx.restore();
       if (obs.label) {
@@ -1317,14 +1615,39 @@ export class IsometricRenderer {
     const ctx = this.ctx;
     const p1 = this.worldToScreen(player.x, player.y, 8);
     const p2 = this.worldToScreen(target.x, target.y, 8);
+    const dist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+    if (dist < 18) return;
+
     const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+    const lineEndDist = Math.min(dist, 220 * this.zoom);
+    const startDist = 34 * this.zoom;
+
     ctx.save();
     ctx.strokeStyle = '#facc15';
     ctx.lineWidth = 4;
     ctx.setLineDash([8, 6]);
     ctx.beginPath();
-    ctx.moveTo(p1.x + Math.cos(angle) * 35, p1.y + Math.sin(angle) * 35);
-    ctx.lineTo(p2.x, p2.y);
+    ctx.moveTo(p1.x + Math.cos(angle) * startDist, p1.y + Math.sin(angle) * startDist);
+    ctx.lineTo(p1.x + Math.cos(angle) * lineEndDist, p1.y + Math.sin(angle) * lineEndDist);
+    ctx.stroke();
+
+    // Pointe directionnelle dorée toujours lisible autour du joueur
+    const tipDist = Math.min(dist, 64 * this.zoom);
+    const tipX = p1.x + Math.cos(angle) * tipDist;
+    const tipY = p1.y + Math.sin(angle) * tipDist;
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#facc15';
+    ctx.strokeStyle = '#0f172a';
+    ctx.lineWidth = 2;
+    ctx.translate(tipX, tipY);
+    ctx.rotate(angle);
+    ctx.beginPath();
+    ctx.moveTo(11, 0);
+    ctx.lineTo(-7, -7);
+    ctx.lineTo(-4, 0);
+    ctx.lineTo(-7, 7);
+    ctx.closePath();
+    ctx.fill();
     ctx.stroke();
     ctx.restore();
   }
@@ -1465,19 +1788,313 @@ export class IsometricRenderer {
     }
   }
 
+  private drawCampusRooms2D(rooms: ICampusRoomZone[]): void {
+    const ctx = this.ctx;
+    for (const room of rooms) {
+      const tl = this.worldToScreen(room.bounds.x, room.bounds.y);
+      const br = this.worldToScreen(
+        room.bounds.x + room.bounds.width,
+        room.bounds.y + room.bounds.height
+      );
+      const w = br.x - tl.x;
+      const h = br.y - tl.y;
+
+      ctx.save();
+      ctx.fillStyle = room.floor_color;
+      ctx.strokeStyle = room.accent_color;
+      ctx.lineWidth = 3;
+      ctx.fillRect(tl.x, tl.y, w, h);
+      ctx.strokeRect(tl.x, tl.y, w, h);
+      ctx.restore();
+    }
+  }
+
+  private drawCampusRoomLabels(rooms: ICampusRoomZone[]): void {
+    const ctx = this.ctx;
+    const cssW = this.canvas.clientWidth || 960;
+    const cssH = this.canvas.clientHeight || 540;
+    const fontSize = Math.max(11, Math.round(12 * this.zoom));
+
+    for (const room of rooms) {
+      const anchor = this.worldToScreen(
+        room.bounds.x + room.bounds.width * 0.5,
+        room.bounds.y + 24,
+        2
+      );
+      if (anchor.x < -180 || anchor.x > cssW + 180 || anchor.y < -60 || anchor.y > cssH + 60) {
+        continue;
+      }
+
+      const label = `${room.name} • ${room.floor_label}`;
+      ctx.save();
+      ctx.font = `700 ${fontSize}px system-ui, sans-serif`;
+      const textW = ctx.measureText(label).width;
+      const pillW = textW + 18 * this.zoom;
+      const pillH = 22 * this.zoom;
+      const pillX = anchor.x - pillW * 0.5;
+      const pillY = anchor.y - pillH * 0.5;
+
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.78)';
+      ctx.strokeStyle = room.accent_color;
+      ctx.lineWidth = 1.5;
+      this.roundRect(pillX, pillY, pillW, pillH, 7);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#f8fafc';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(label, anchor.x, anchor.y);
+      ctx.restore();
+    }
+  }
+
+  private drawCampusBadges2D(badges: IRenderCampusBadge[]): void {
+    const ctx = this.ctx;
+    for (const badge of badges) {
+      const screen = this.worldToScreen(badge.x, badge.y, 12);
+      const r = 16 * this.zoom;
+      ctx.save();
+      ctx.fillStyle = '#facc15';
+      ctx.strokeStyle = '#22d3ee';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(screen.x, screen.y, r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+      this.drawCampusBadgeLabel(badge);
+    }
+  }
+
+  private drawCampusBadgesOverlay(badges: IRenderCampusBadge[]): void {
+    for (const badge of badges) {
+      this.drawCampusBadgeLabel(badge);
+    }
+  }
+
+  private drawCampusBadgeLabel(badge: IRenderCampusBadge): void {
+    const ctx = this.ctx;
+    const headPos = this.worldToScreen(badge.x, badge.y, 44);
+    const fontSize = Math.max(11, Math.round(12 * this.zoom));
+    const text = `★ ${badge.label}`;
+
+    ctx.save();
+    ctx.font = `800 ${fontSize}px system-ui, sans-serif`;
+    const pillW = Math.max(60 * this.zoom, ctx.measureText(text).width + 18 * this.zoom);
+    const pillH = 22 * this.zoom;
+    const pillX = headPos.x - pillW * 0.5;
+    const pillY = headPos.y - pillH;
+
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+    ctx.strokeStyle = '#facc15';
+    ctx.lineWidth = 2;
+    this.roundRect(pillX, pillY, pillW, pillH, 8);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#fef08a';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, headPos.x, pillY + pillH * 0.5);
+    ctx.restore();
+  }
+
+  private drawCampusNpcs2D(npcs: IRenderCampusNpc[]): void {
+    const ctx = this.ctx;
+    for (const npc of npcs) {
+      const screen = this.worldToScreen(npc.x, npc.y, 14);
+      const r = 21 * this.zoom;
+      ctx.save();
+      ctx.fillStyle = npc.primaryColor;
+      ctx.strokeStyle = npc.accentColor;
+      ctx.lineWidth = 3.5;
+      ctx.beginPath();
+      ctx.arc(screen.x, screen.y, r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      if (npc.hasQuestMarker) {
+        ctx.fillStyle = '#facc15';
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(screen.x, screen.y - r - 12 * this.zoom, 10 * this.zoom, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = '#0f172a';
+        ctx.font = `900 ${Math.max(12, Math.round(13 * this.zoom))}px system-ui, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('!', screen.x, screen.y - r - 12 * this.zoom);
+      }
+      ctx.restore();
+
+      this.drawCampusNpcLabel(npc);
+    }
+  }
+
+  private drawCampusNpcsOverlay(npcs: IRenderCampusNpc[]): void {
+    for (const npc of npcs) {
+      this.drawCampusNpcLabel(npc);
+    }
+  }
+
+  private drawCampusNpcLabel(npc: IRenderCampusNpc): void {
+    const ctx = this.ctx;
+    const headPos = this.worldToScreen(npc.x, npc.y, 76);
+    const nameSize = Math.max(12, Math.round(13 * this.zoom));
+    const titleSize = Math.max(10, Math.round(11 * this.zoom));
+
+    ctx.save();
+    ctx.font = `800 ${nameSize}px system-ui, sans-serif`;
+    const nameW = ctx.measureText(npc.name).width;
+    ctx.font = `600 ${titleSize}px system-ui, sans-serif`;
+    const titleW = ctx.measureText(npc.title).width;
+
+    const pillW = Math.max(82 * this.zoom, Math.max(nameW, titleW) + 20 * this.zoom);
+    const pillH = 34 * this.zoom;
+    const pillX = headPos.x - pillW * 0.5;
+    const pillY = headPos.y - pillH - 6 * this.zoom;
+
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+    ctx.strokeStyle = npc.hasQuestMarker ? '#facc15' : npc.accentColor;
+    ctx.lineWidth = npc.hasQuestMarker ? 2.5 : 1.8;
+    this.roundRect(pillX, pillY, pillW, pillH, 8);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#f8fafc';
+    ctx.font = `800 ${nameSize}px system-ui, sans-serif`;
+    ctx.fillText(npc.name, headPos.x, pillY + pillH * 0.34);
+
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = `600 ${titleSize}px system-ui, sans-serif`;
+    ctx.fillText(npc.title, headPos.x, pillY + pillH * 0.72);
+
+    if (npc.isPlayerNear) {
+      const promptText = '[Parler / Défi]';
+      const promptSize = Math.max(11, Math.round(12 * this.zoom));
+      ctx.font = `900 ${promptSize}px system-ui, sans-serif`;
+      const promptW = Math.max(112 * this.zoom, ctx.measureText(promptText).width + 20 * this.zoom);
+      const promptH = 24 * this.zoom;
+      const promptX = headPos.x - promptW * 0.5;
+      const promptY = pillY - promptH - 6 * this.zoom;
+
+      ctx.fillStyle = '#facc15';
+      ctx.strokeStyle = '#fef08a';
+      ctx.lineWidth = 2;
+      this.roundRect(promptX, promptY, promptW, promptH, 9);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#0f172a';
+      ctx.fillText(promptText, headPos.x, promptY + promptH * 0.5);
+    }
+
+    ctx.restore();
+  }
+
+  private drawMinimap(minimap: IRenderMinimapState, cssW: number): void {
+    const ctx = this.ctx;
+    const mapW = 176;
+    const mapH = 132;
+    const mapX = cssW - 190;
+    const mapY = 68;
+    const pad = 6;
+    const innerW = mapW - pad * 2;
+    const innerH = mapH - pad * 2;
+    const scaleX = innerW / Math.max(1, minimap.worldWidth);
+    const scaleY = innerH / Math.max(1, minimap.worldHeight);
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 2;
+    this.roundRect(mapX, mapY, mapW, mapH, 10);
+    ctx.fill();
+    ctx.stroke();
+
+    // Salles colorées
+    for (const room of minimap.rooms) {
+      const rx = mapX + pad + room.bounds.x * scaleX;
+      const ry = mapY + pad + room.bounds.y * scaleY;
+      const rw = room.bounds.width * scaleX;
+      const rh = room.bounds.height * scaleY;
+      ctx.fillStyle = room.floor_color;
+      ctx.strokeStyle = room.accent_color;
+      ctx.lineWidth = 1;
+      ctx.fillRect(rx, ry, rw, rh);
+      ctx.strokeRect(rx, ry, rw, rh);
+    }
+
+    // Points PNJ (doré si quête active)
+    for (const npc of minimap.npcs) {
+      const nx = mapX + pad + npc.x * scaleX;
+      const ny = mapY + pad + npc.y * scaleY;
+      ctx.fillStyle = npc.hasQuest ? '#facc15' : '#94a3b8';
+      ctx.beginPath();
+      ctx.arc(nx, ny, npc.hasQuest ? 3.2 : 2.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Marqueur pulsant d'objectif actif
+    if (minimap.objectivePos) {
+      const ox = mapX + pad + minimap.objectivePos.x * scaleX;
+      const oy = mapY + pad + minimap.objectivePos.y * scaleY;
+      const pulse = 0.5 + 0.5 * Math.sin(performance.now() * 0.008);
+      ctx.strokeStyle = '#facc15';
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.arc(ox, oy, 4.5 + pulse * 3.5, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.fillStyle = '#fef08a';
+      ctx.beginPath();
+      ctx.arc(ox, oy, 2.8, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Point joueur vert / blanc
+    const px = mapX + pad + minimap.playerX * scaleX;
+    const py = mapY + pad + minimap.playerY * scaleY;
+    ctx.fillStyle = '#22c55e';
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.arc(px, py, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
   private drawHudOverlay(state: IRenderFrameState, cssW: number): void {
     const ctx = this.ctx;
     ctx.save();
 
     const leftW = Math.min(184, cssW * 0.22);
     const rightW = Math.min(202, cssW * 0.24);
+    const trimmedPrompt = state.hudPrompt.trim();
+    const isGenericOrEmpty =
+      trimmedPrompt.length === 0 ||
+      trimmedPrompt === state.questBanner?.objectiveText ||
+      /^explore/i.test(trimmedPrompt);
+
     const bannerW = Math.min(540, Math.max(240, cssW - leftW - rightW - 56));
-    const bannerH = 48;
+    const bannerH = state.questBanner && isGenericOrEmpty ? 54 : 48;
     const bannerY = 16;
     const bannerCenterX = cssW * 0.5;
     const bannerCenterY = bannerY + bannerH * 0.5;
 
-    // 1. Bannière centrale "Défi Flash" style Brawl Stars Esports
+    // 1. Bannière centrale "Défi Flash" (ou Bannière Quête Campus M4)
+    const bannerTopText = state.questBanner
+      ? isGenericOrEmpty
+        ? `${state.questBanner.questTitle.slice(0, 26)} • ${state.questBanner.currentRoomName}`
+        : `DÉFI FLASH • ${state.questBanner.currentRoomName}`
+      : 'DÉFI FLASH';
     this.drawSkewedPill(
       bannerCenterX,
       bannerCenterY,
@@ -1487,20 +2104,19 @@ export class IsometricRenderer {
       -0.12,
       '#1e293b',
       '#090d16',
-      '#facc15',
+      state.questBanner && isGenericOrEmpty ? '#38bdf8' : '#facc15',
       4.5
     );
 
-    // Pastille supérieure "DÉFI FLASH"
     this.drawSkewedPill(
       bannerCenterX,
       bannerY - 1,
-      106,
+      Math.max(106, Math.min(340, bannerTopText.length * 7 + 30)),
       18,
       5,
       -0.14,
-      '#fde047',
-      '#eab308',
+      state.questBanner && isGenericOrEmpty ? '#38bdf8' : '#fde047',
+      state.questBanner && isGenericOrEmpty ? '#0284c7' : '#eab308',
       null,
       2.5
     );
@@ -1508,26 +2124,32 @@ export class IsometricRenderer {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#090d16';
-    ctx.fillText('DÉFI FLASH', bannerCenterX, bannerY - 0.5);
+    ctx.fillText(bannerTopText.toUpperCase(), bannerCenterX, bannerY - 0.5);
 
-    // Texte principal de la question avec ajustement auto de taille
-    let promptSize = 18;
+    const promptText = !isGenericOrEmpty
+      ? state.hudPrompt
+      : state.questBanner
+        ? `${state.questBanner.objectiveText} (${state.questBanner.progressText})`
+        : state.hudPrompt;
+
+    // Texte principal de la question ou de l'objectif avec ajustement auto de taille
+    let promptSize = state.questBanner && isGenericOrEmpty ? 15 : 18;
     ctx.font = `900 ${promptSize}px system-ui, sans-serif`;
     const maxPromptW = bannerW - 34;
-    const promptW = ctx.measureText(state.hudPrompt).width;
+    const promptW = ctx.measureText(promptText).width;
     if (promptW > maxPromptW && promptW > 0) {
-      promptSize = Math.max(12, Math.floor((promptSize * maxPromptW) / promptW));
+      promptSize = Math.max(11, Math.floor((promptSize * maxPromptW) / promptW));
       ctx.font = `900 ${promptSize}px system-ui, sans-serif`;
     }
-    this.drawOutlinedText(state.hudPrompt, bannerCenterX, bannerCenterY + 3, '#fef9c3', 4.5);
+    this.drawOutlinedText(promptText, bannerCenterX, bannerCenterY + 3, '#fef9c3', 4.5);
 
     // 2. Cartouche gauche : Chrono & Objectif
     const mins = Math.floor(state.remainingSeconds / 60);
     const secs = Math.floor(state.remainingSeconds % 60);
     const timeText = `${mins}:${secs.toString().padStart(2, '0')}`;
-    const isUrgent = state.remainingSeconds <= 15;
+    const isUrgent = !state.campusRooms && state.remainingSeconds <= 15;
     const leftCenterX = 16 + leftW * 0.5;
-    const sideCenterY = bannerCenterY;
+    const sideCenterY = bannerY + 24;
 
     this.drawSkewedPill(
       leftCenterX,
@@ -1559,6 +2181,10 @@ export class IsometricRenderer {
       '#fde047',
       3
     );
+
+    if (state.minimapState) {
+      this.drawMinimap(state.minimapState, cssW);
+    }
 
     // 3. Cartouche droite : Combo, Super animé & Gadgets
     const rightCenterX = cssW - 16 - rightW * 0.5;
@@ -1620,6 +2246,27 @@ export class IsometricRenderer {
     );
 
     let stackCenterY = bannerY + bannerH + 14;
+    if (state.questBanner && !isGenericOrEmpty) {
+      const subText = `📜 ${state.questBanner.questTitle} : ${state.questBanner.objectiveText} (${state.questBanner.progressText})`;
+      ctx.font = '800 11px system-ui, sans-serif';
+      const subW = Math.min(bannerW, Math.max(260, ctx.measureText(subText).width + 36));
+      this.drawSkewedPill(
+        bannerCenterX,
+        stackCenterY + 4,
+        subW,
+        24,
+        7,
+        -0.1,
+        '#0f172a',
+        '#090d16',
+        '#38bdf8',
+        2.5
+      );
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      this.drawOutlinedText(subText, bannerCenterX, stackCenterY + 4.5, '#e2e8f0', 2.5);
+      stackCenterY += 28;
+    }
     if ((state.reflexRemainingRatio ?? 0) > 0) {
       const ratio = Math.max(0, Math.min(1, state.reflexRemainingRatio ?? 0));
       const barW = Math.min(240, bannerW * 0.65);
