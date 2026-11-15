@@ -18,6 +18,7 @@ import {
 } from './IsometricRenderer';
 import { SuperSystem, type ITargetEntity } from './SuperSystem';
 import { TwinStickController } from './TwinStickController';
+import { soundManager } from '../services/SoundManager';
 
 export interface IHitTelemetryEvent {
   question: IQuestion;
@@ -331,6 +332,7 @@ export class GameEngine {
   }
 
   private spawnPlayerProjectiles(angle: number): void {
+    soundManager.playShoot(this.brawler.id);
     const count = this.brawler.basic_attack.projectiles_count;
     const speed = this.brawler.id === 'TIMO' ? 680 : this.brawler.id === 'ZACK' ? 760 : 580;
     const color =
@@ -434,6 +436,7 @@ export class GameEngine {
     });
 
     if (target.isCorrect) {
+      const wasSuperReady = this.superSystem.getSuperGaugePct() >= 100;
       target.hp = Math.max(0, target.hp - impact.final_damage);
       this.lastDamageDealt = impact.final_damage;
       this.consecutiveCorrectHits += 1;
@@ -441,7 +444,19 @@ export class GameEngine {
       this.correctHits += 1;
       this.superSystem.addSuperCharge(impact.super_charge_gain_pct);
 
-      if (target.hp <= 0) {
+      const targetKilled = target.hp <= 0;
+      this.renderer.spawnHitBurst(
+        target.x,
+        target.y,
+        targetKilled ? 0xfacc15 : 0x38e54d,
+        targetKilled ? 18 : 12
+      );
+      soundManager.playHitCorrect(this.comboMultiplier);
+      if (!wasSuperReady && this.superSystem.getSuperGaugePct() >= 100) {
+        soundManager.playSuperReady();
+      }
+
+      if (targetKilled) {
         this.objectiveScore += 1;
         this.flashBubble = {
           text: `✔ Bravo ! +${impact.final_damage} (${impact.super_charge_gain_pct}% Super)`,
@@ -464,6 +479,8 @@ export class GameEngine {
     }
 
     // Cible erronée : rebond métallique, reset combo, pénalité 12% PV_max + bulle corrective 1,2s
+    this.renderer.spawnHitBurst(target.x, target.y, 0xef4444, 14);
+    soundManager.playHitError();
     proj.isRebounding = true;
     proj.vx = -proj.vx * 0.65;
     proj.vy = -proj.vy * 0.65;
@@ -508,6 +525,17 @@ export class GameEngine {
       this.turretRemainingMs = result.durationMs;
     }
 
+    const superColor =
+      this.brawler.id === 'TIMO'
+        ? 0xfacc15
+        : this.brawler.id === 'LEO'
+          ? 0xa855f7
+          : this.brawler.id === 'MAYA'
+            ? 0x84cc16
+            : 0x22d3ee;
+    this.renderer.spawnSuperShockwave(this.playerX, this.playerY, superColor);
+    soundManager.playSuperCast();
+
     this.objectiveScore += result.bonusObjectivePoints;
     this.correctHits += 1;
     this.flashBubble = {
@@ -529,6 +557,9 @@ export class GameEngine {
       this.compassTargetPos = result.compassTargetPos;
       this.compassRemainingMs = result.durationMs;
     }
+
+    this.renderer.spawnHitBurst(this.playerX, this.playerY, 0x38e54d, 12);
+    soundManager.playGadget();
 
     this.flashBubble = {
       text: `🟢 ${result.gadgetName} (${result.remainingCharges} restants)`,
@@ -680,6 +711,7 @@ export class GameEngine {
     const played = Math.round(this.mode.duration_seconds - this.remainingSeconds);
     const victory = this.objectiveScore >= 2 || this.correctHits >= 3;
     const starsEarned = victory ? (this.objectiveScore >= 6 ? 3 : 2) : 1;
+    soundManager.playMatchEnd(victory);
 
     this.onMatchFinished?.({
       modeId: this.mode.id,

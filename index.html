@@ -6,6 +6,10 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
     />
+    <meta name="theme-color" content="#020617" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="manifest" href="/manifest.webmanifest" />
     <title>Brawl Collège : Opération 6ème</title>
     <style>
       * {
@@ -29,10 +33,142 @@
         width: 100%;
         min-height: 100%;
       }
+      .arena-container {
+        position: relative;
+        width: 100dvw;
+        height: 100dvh;
+        overflow: hidden;
+        background: #020617;
+        touch-action: none;
+        overscroll-behavior: none;
+      }
+      @keyframes sdShake {
+        0%,
+        100% {
+          transform: translate3d(0, 0, 0) rotate(0deg);
+        }
+        20% {
+          transform: translate3d(-7px, -3px, 0) rotate(-5deg);
+        }
+        40% {
+          transform: translate3d(7px, 2px, 0) rotate(5deg);
+        }
+        60% {
+          transform: translate3d(-5px, 3px, 0) rotate(-4deg);
+        }
+        80% {
+          transform: translate3d(5px, -2px, 0) rotate(3deg);
+        }
+      }
+      @keyframes sdFlash {
+        0% {
+          opacity: 0;
+          transform: scale(0.75);
+        }
+        30% {
+          opacity: 0.95;
+          transform: scale(1.12);
+        }
+        100% {
+          opacity: 0;
+          transform: scale(1.4);
+        }
+      }
+      @keyframes pulseGlow {
+        0%,
+        100% {
+          box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.55), 0 0 12px rgba(250, 204, 21, 0.45);
+          transform: scale(1);
+        }
+        50% {
+          box-shadow: 0 0 0 6px rgba(250, 204, 21, 0), 0 0 22px rgba(250, 204, 21, 0.9);
+          transform: scale(1.04);
+        }
+      }
+      .sd-shaking {
+        animation: sdShake 0.36s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+      }
+      .sd-flash-burst {
+        animation: sdFlash 0.5s ease-out forwards;
+      }
+      .pulse-glow {
+        animation: pulseGlow 1.6s ease-in-out infinite;
+      }
+      .portrait-banner {
+        display: none;
+      }
+      .portrait-banner.is-dismissed {
+        display: none !important;
+      }
+      @media (max-width: 760px) and (orientation: portrait) {
+        .portrait-banner {
+          display: flex;
+          position: fixed;
+          top: max(10px, env(safe-area-inset-top));
+          left: 12px;
+          right: 12px;
+          z-index: 9500;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+          padding: 10px 14px;
+          border-radius: 12px;
+          background: rgba(15, 23, 42, 0.94);
+          border: 1.5px solid #facc15;
+          color: #f8fafc;
+          font-size: 13px;
+          line-height: 1.35;
+          box-shadow: 0 10px 28px rgba(2, 6, 23, 0.72);
+          backdrop-filter: blur(8px);
+          pointer-events: auto;
+        }
+      }
+      @media (max-height: 520px) and (orientation: landscape) {
+        .lobby-shell {
+          padding: 8px 12px !important;
+          gap: 10px !important;
+          max-height: 100dvh;
+          overflow-y: auto;
+          -webkit-overflow-scrolling: touch;
+          overscroll-behavior-y: contain;
+        }
+        .lobby-shell header {
+          padding: 8px 12px !important;
+          gap: 8px !important;
+        }
+        .lobby-shell h1 {
+          font-size: 17px !important;
+        }
+        .lobby-shell section {
+          padding: 10px !important;
+        }
+      }
     </style>
   </head>
   <body>
+    <div id="portrait-banner" class="portrait-banner" role="status" aria-live="polite">
+      <span>📱↻ Pivote ton téléphone en mode <strong>Paysage</strong> pour un confort maximal en arène !</span>
+      <button
+        id="portrait-banner-close"
+        type="button"
+        aria-label="Masquer le bandeau d'orientation"
+        style="flex-shrink:0; padding:5px 10px; border-radius:8px; border:1px solid #475569; background:#1e293b; color:#f8fafc; font-weight:800; font-size:12px; cursor:pointer;"
+      >
+        Masquer
+      </button>
+    </div>
     <div id="app"></div>
+    <script>
+      (function () {
+        var btn = document.getElementById('portrait-banner-close');
+        var banner = document.getElementById('portrait-banner');
+        if (btn && banner) {
+          btn.addEventListener('click', function () {
+            banner.classList.add('is-dismissed');
+          });
+        }
+      })();
+    </script>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

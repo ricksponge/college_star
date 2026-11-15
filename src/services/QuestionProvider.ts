@@ -3,6 +3,7 @@ import { INITIAL_QUESTIONS_200 } from '../data/questionsBank';
 import {
   computeTargetSpeedMultiplier,
   ELO_DEFAULT,
+  type ISpacedRepetitionEntry,
   SpacedRepetitionQueue,
   updateSkillElo,
 } from './EloEngine';
@@ -11,6 +12,7 @@ export interface INextQuestionParams {
   subject?: SubjectCategory;
   targetElo?: number;
   currentMatchIndex?: number;
+  preferSkillCode?: string;
 }
 
 /**
@@ -21,6 +23,7 @@ export class QuestionProvider {
   private readonly questions: IQuestion[];
   private readonly spacedQueue = new SpacedRepetitionQueue();
   private readonly recentIds: string[] = [];
+  private readonly pendingReviewStages = new Map<string, 'J+1' | 'J+3'>();
 
   constructor(questions: IQuestion[] = INITIAL_QUESTIONS_200) {
     this.questions = questions;
@@ -42,6 +45,15 @@ export class QuestionProvider {
     return this.spacedQueue;
   }
 
+  public hydrateSpacedQueue(entries: ISpacedRepetitionEntry[]): void {
+    this.pendingReviewStages.clear();
+    this.spacedQueue.hydrate(entries);
+  }
+
+  public serializeSpacedQueue(): ISpacedRepetitionEntry[] {
+    return this.spacedQueue.serialize();
+  }
+
   public getTargetSpeedMultiplier(eloRating: number): number {
     return computeTargetSpeedMultiplier(eloRating);
   }
@@ -51,24 +63,47 @@ export class QuestionProvider {
    * en priorisant les questions échouées dans la file de répétition espacée.
    */
   public getNextQuestion(params: INextQuestionParams = {}): IQuestion {
-    const { subject, targetElo = ELO_DEFAULT, currentMatchIndex = 0 } = params;
+    const {
+      subject,
+      targetElo = ELO_DEFAULT,
+      currentMatchIndex = 0,
+      preferSkillCode,
+    } = params;
 
-    const dueReview = this.spacedQueue.popDueQuestion(subject, currentMatchIndex);
-    if (dueReview) {
-      this.rememberId(dueReview.id);
-      return this.withShuffledTargets(dueReview);
+    const dueEntry = this.spacedQueue.popDueEntry(subject, currentMatchIndex);
+    if (dueEntry) {
+      let chosenReview = dueEntry.question;
+
+      if (dueEntry.reviewStage === 'J+1') {
+        const sisters = this.questions.filter(
+          (q) =>
+            q.skill_code === dueEntry.question.skill_code &&
+            q.id !== dueEntry.question.id &&
+            (!subject || q.subject === subject)
+        );
+        if (sisters.length > 0) {
+          const freshSisters = sisters.filter((q) => !this.recentIds.includes(q.id));
+          const sisterPool = freshSisters.length > 0 ? freshSisters : sisters;
+          chosenReview =
+            this.pickClosestByElo(sisterPool, targetElo, 3) ?? dueEntry.question;
+        }
+      }
+
+      this.pendingReviewStages.set(chosenReview.id, dueEntry.reviewStage);
+      this.rememberId(chosenReview.id);
+      return this.withShuffledTargets(chosenReview);
     }
 
     const pool = subject ? this.getQuestionsBySubject(subject) : this.questions;
     const candidates = pool.filter((q) => !this.recentIds.includes(q.id));
     const effectivePool = candidates.length > 0 ? candidates : pool;
 
-    const sorted = [...effectivePool].sort(
-      (a, b) => Math.abs(a.elo_difficulty - targetElo) - Math.abs(b.elo_difficulty - targetElo)
-    );
+    const preferredPool = preferSkillCode
+      ? effectivePool.filter((q) => q.skill_code === preferSkillCode)
+      : [];
+    const selectionPool = preferredPool.length > 0 ? preferredPool : effectivePool;
 
-    const topSlice = sorted.slice(0, Math.min(6, sorted.length));
-    const chosen = topSlice[Math.floor(Math.random() * topSlice.length)] ?? this.questions[0];
+    const chosen = this.pickClosestByElo(selectionPool, targetElo, 6) ?? this.questions[0];
 
     this.rememberId(chosen.id);
     return this.withShuffledTargets(chosen);
@@ -92,11 +127,32 @@ export class QuestionProvider {
       reactionTimeMs
     );
 
+    const pendingStage = this.pendingReviewStages.get(question.id);
+    this.pendingReviewStages.delete(question.id);
+
     if (result.queued_for_spaced_repetition) {
       this.spacedQueue.enqueueFailedQuestion(question, currentMatchIndex);
+    } else if (pendingStage === 'J+1' && result.actual_score >= 0.7) {
+      this.spacedQueue.promotePassedReview(question, 'J+1', currentMatchIndex);
     }
 
     return result;
+  }
+
+  private pickClosestByElo(
+    pool: readonly IQuestion[],
+    targetElo: number,
+    topSliceCount: number
+  ): IQuestion | undefined {
+    if (pool.length === 0) {
+      return undefined;
+    }
+    const sorted = [...pool].sort(
+      (a, b) =>
+        Math.abs(a.elo_difficulty - targetElo) - Math.abs(b.elo_difficulty - targetElo)
+    );
+    const topSlice = sorted.slice(0, Math.min(topSliceCount, sorted.length));
+    return topSlice[Math.floor(Math.random() * topSlice.length)];
   }
 
   private rememberId(id: string): void {

@@ -81,6 +81,73 @@ export interface ISpacedRepetitionEntry {
   dueAtTimestamp: number;
 }
 
+const VALID_SUBJECTS: ReadonlySet<string> = new Set<SubjectCategory>([
+  'mathematiques',
+  'francais',
+  'anglais',
+  'histoire_geo_sciences',
+  'vie_au_college',
+]);
+
+function cloneQuestion(question: IQuestion): IQuestion {
+  return {
+    ...question,
+    targets: question.targets.map((target) => ({ ...target })),
+  };
+}
+
+function cloneSpacedEntry(entry: ISpacedRepetitionEntry): ISpacedRepetitionEntry {
+  return {
+    question: cloneQuestion(entry.question),
+    dueAtMatch: entry.dueAtMatch,
+    reviewStage: entry.reviewStage,
+    dueAtTimestamp: entry.dueAtTimestamp,
+  };
+}
+
+function isValidQuestion(value: unknown): value is IQuestion {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+  const q = value as Partial<IQuestion>;
+  return (
+    typeof q.id === 'string' &&
+    q.id.length > 0 &&
+    typeof q.subject === 'string' &&
+    VALID_SUBJECTS.has(q.subject) &&
+    typeof q.skill_code === 'string' &&
+    q.skill_code.length > 0 &&
+    typeof q.elo_difficulty === 'number' &&
+    Number.isFinite(q.elo_difficulty) &&
+    typeof q.hud_prompt === 'string' &&
+    typeof q.explanation_flash === 'string' &&
+    Array.isArray(q.targets) &&
+    q.targets.length > 0 &&
+    q.targets.every(
+      (t) =>
+        typeof t === 'object' &&
+        t !== null &&
+        typeof t.label === 'string' &&
+        typeof t.is_correct === 'boolean'
+    )
+  );
+}
+
+function isValidSpacedEntry(value: unknown): value is ISpacedRepetitionEntry {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+  const entry = value as Partial<ISpacedRepetitionEntry>;
+  return (
+    isValidQuestion(entry.question) &&
+    typeof entry.dueAtMatch === 'number' &&
+    Number.isFinite(entry.dueAtMatch) &&
+    (entry.reviewStage === 'J+1' || entry.reviewStage === 'J+3') &&
+    typeof entry.dueAtTimestamp === 'number' &&
+    Number.isFinite(entry.dueAtTimestamp)
+  );
+}
+
 /**
  * File prioritaire de répétition espacée :
  * - Réapparition 2 parties plus tard (CCTP 6.2)
@@ -102,18 +169,44 @@ export class SpacedRepetitionQueue {
 
     const dayOffset = reviewStage === 'J+1' ? ONE_DAY_MS : 3 * ONE_DAY_MS;
     this.entries.push({
-      question,
+      question: cloneQuestion(question),
       dueAtMatch: currentMatchIndex + SPACED_REPETITION_MATCH_DELAY,
       reviewStage,
       dueAtTimestamp: nowMs + dayOffset,
     });
   }
 
-  public popDueQuestion(
+  public serialize(): ISpacedRepetitionEntry[] {
+    return this.entries.map((entry) => cloneSpacedEntry(entry));
+  }
+
+  public hydrate(entries: ISpacedRepetitionEntry[]): void {
+    if (!Array.isArray(entries)) {
+      this.entries = [];
+      return;
+    }
+
+    const seenIds = new Set<string>();
+    const hydrated: ISpacedRepetitionEntry[] = [];
+    for (const candidate of entries) {
+      if (!isValidSpacedEntry(candidate)) {
+        continue;
+      }
+      if (seenIds.has(candidate.question.id)) {
+        continue;
+      }
+      seenIds.add(candidate.question.id);
+      hydrated.push(cloneSpacedEntry(candidate));
+    }
+
+    this.entries = hydrated;
+  }
+
+  public popDueEntry(
     subject?: SubjectCategory,
     currentMatchIndex = 0,
     nowMs = Date.now()
-  ): IQuestion | null {
+  ): ISpacedRepetitionEntry | null {
     const idx = this.entries.findIndex((entry) => {
       if (subject && entry.question.subject !== subject) {
         return false;
@@ -126,7 +219,15 @@ export class SpacedRepetitionQueue {
     }
 
     const [item] = this.entries.splice(idx, 1);
-    return item.question;
+    return item;
+  }
+
+  public popDueQuestion(
+    subject?: SubjectCategory,
+    currentMatchIndex = 0,
+    nowMs = Date.now()
+  ): IQuestion | null {
+    return this.popDueEntry(subject, currentMatchIndex, nowMs)?.question ?? null;
   }
 
   public promotePassedReview(

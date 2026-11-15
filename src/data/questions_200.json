@@ -211,7 +211,7 @@
     "id": "MATH_MUL_009",
     "subject": "mathematiques",
     "skill_code": "MATH_MUL",
-    "elo_difficulty": 1100,
+    "elo_difficulty": 1210,
     "hud_prompt": "12 × 6 ?",
     "explanation_flash": "Table de 12 : 12 × 6 = 72 !",
     "targets": [
@@ -263,7 +263,7 @@
     "id": "MATH_MUL_011",
     "subject": "mathematiques",
     "skill_code": "MATH_MUL",
-    "elo_difficulty": 1150,
+    "elo_difficulty": 1310,
     "hud_prompt": "11 × 11 ?",
     "explanation_flash": "Table de 11 : 11 × 11 = 121 !",
     "targets": [
@@ -393,7 +393,7 @@
     "id": "MATH_MUL_016",
     "subject": "mathematiques",
     "skill_code": "MATH_MUL",
-    "elo_difficulty": 1040,
+    "elo_difficulty": 1160,
     "hud_prompt": "11 × 9 ?",
     "explanation_flash": "Table de 11 : 11 × 9 = 99 !",
     "targets": [
@@ -523,7 +523,7 @@
     "id": "MATH_DIV_005",
     "subject": "mathematiques",
     "skill_code": "MATH_DIV",
-    "elo_difficulty": 1120,
+    "elo_difficulty": 1280,
     "hud_prompt": "84 ÷ 12 ?",
     "explanation_flash": "12 × 7 = 84, donc 84 ÷ 12 = 7 !",
     "targets": [
@@ -549,7 +549,7 @@
     "id": "MATH_DIV_006",
     "subject": "mathematiques",
     "skill_code": "MATH_DIV",
-    "elo_difficulty": 1080,
+    "elo_difficulty": 1240,
     "hud_prompt": "Reste de 25 ÷ 4 ?",
     "explanation_flash": "25 = (4 × 6) + 1, reste 1 !",
     "targets": [
@@ -601,7 +601,7 @@
     "id": "MATH_FRAC_002",
     "subject": "mathematiques",
     "skill_code": "MATH_FRAC",
-    "elo_difficulty": 980,
+    "elo_difficulty": 1100,
     "hud_prompt": "Fraction 1/4 en décimal ?",
     "explanation_flash": "Un quart (1/4) vaut 0,25 !",
     "targets": [
@@ -627,7 +627,7 @@
     "id": "MATH_FRAC_003",
     "subject": "mathematiques",
     "skill_code": "MATH_FRAC",
-    "elo_difficulty": 1050,
+    "elo_difficulty": 1220,
     "hud_prompt": "Fraction 3/4 en décimal ?",
     "explanation_flash": "3 × 0,25 = 0,75 !",
     "targets": [
@@ -679,7 +679,7 @@
     "id": "MATH_FRAC_005",
     "subject": "mathematiques",
     "skill_code": "MATH_FRAC",
-    "elo_difficulty": 1080,
+    "elo_difficulty": 1340,
     "hud_prompt": "Fraction 1/5 en décimal ?",
     "explanation_flash": "1 ÷ 5 = 0,2 !",
     "targets": [
@@ -705,7 +705,7 @@
     "id": "MATH_FRAC_006",
     "subject": "mathematiques",
     "skill_code": "MATH_FRAC",
-    "elo_difficulty": 940,
+    "elo_difficulty": 1140,
     "hud_prompt": "Double de 0,25 ?",
     "explanation_flash": "0,25 + 0,25 = 0,5 !",
     "targets": [
@@ -757,7 +757,7 @@
     "id": "MATH_CONV_002",
     "subject": "mathematiques",
     "skill_code": "MATH_CONV",
-    "elo_difficulty": 1020,
+    "elo_difficulty": 1150,
     "hud_prompt": "2,5 kg en grammes ?",
     "explanation_flash": "1 kg = 1000 g, donc 2,5 kg = 2500 g !",
     "targets": [
@@ -783,7 +783,7 @@
     "id": "MATH_CONV_003",
     "subject": "mathematiques",
     "skill_code": "MATH_CONV",
-    "elo_difficulty": 1060,
+    "elo_difficulty": 1260,
     "hud_prompt": "1,5 L en centilitres ?",
     "explanation_flash": "1 L = 100 cL, donc 1,5 L = 150 cL !",
     "targets": [
@@ -861,7 +861,7 @@
     "id": "MATH_CONV_006",
     "subject": "mathematiques",
     "skill_code": "MATH_CONV",
-    "elo_difficulty": 1040,
+    "elo_difficulty": 1200,
     "hud_prompt": "2 h 30 en minutes ?",
     "explanation_flash": "2 × 60 + 30 = 150 minutes !",
     "targets": [
@@ -913,7 +913,7 @@
     "id": "MATH_GEO_002",
     "subject": "mathematiques",
     "skill_code": "MATH_GEOM",
-    "elo_difficulty": 980,
+    "elo_difficulty": 1120,
     "hud_prompt": "Aire carré côté 6 cm ?",
     "explanation_flash": "Aire carré = côté × côté = 36 cm² !",
     "targets": [
@@ -939,7 +939,7 @@
     "id": "MATH_GEO_003",
     "subject": "mathematiques",
     "skill_code": "MATH_GEOM",
-    "elo_difficulty": 1020,
+    "elo_difficulty": 1180,
     "hud_prompt": "Périmètre rectangle 6 × 4 cm ?",
     "explanation_flash": "2 × (6 + 4) = 20 cm !",
     "targets": [
@@ -991,7 +991,7 @@
     "id": "MATH_GEO_005",
     "subject": "mathematiques",
     "skill_code": "MATH_PRIO",
-    "elo_difficulty": 1120,
+    "elo_difficulty": 1420,
     "hud_prompt": "Calcul : 2 + 3 × 4 ?",
     "explanation_flash": "Multiplication prioritaire : 2 + 12 = 14 !",
     "targets": [
@@ -1017,7 +1017,7 @@
     "id": "MATH_GEO_006",
     "subject": "mathematiques",
     "skill_code": "MATH_PRIO",
-    "elo_difficulty": 1050,
+    "elo_difficulty": 1360,
     "hud_prompt": "Calcul : (2 + 3) × 4 ?",
     "explanation_flash": "Parenthèses d'abord : 5 × 4 = 20 !",
     "targets": [
@@ -1199,7 +1199,7 @@
     "id": "FR_6E_007",
     "subject": "francais",
     "skill_code": "FR_HOMO",
-    "elo_difficulty": 1050,
+    "elo_difficulty": 1200,
     "hud_prompt": "___ chaussures sont neuves.",
     "explanation_flash": "Désigne ici (démonstratif) = Ces !",
     "targets": [
@@ -1225,7 +1225,7 @@
     "id": "FR_6E_008",
     "subject": "francais",
     "skill_code": "FR_HOMO",
-    "elo_difficulty": 1020,
+    "elo_difficulty": 1150,
     "hud_prompt": "Il lave ___ mains propres.",
     "explanation_flash": "Les siennes (possessif) = ses !",
     "targets": [
@@ -1355,7 +1355,7 @@
     "id": "FR_6E_013",
     "subject": "francais",
     "skill_code": "FR_TERM",
-    "elo_difficulty": 1000,
+    "elo_difficulty": 1120,
     "hud_prompt": "Les joueurs ont ___.",
     "explanation_flash": "Auxiliaire avoir : on dit vendu -> gagné !",
     "targets": [
@@ -1407,7 +1407,7 @@
     "id": "FR_6E_015",
     "subject": "francais",
     "skill_code": "FR_ACC",
-    "elo_difficulty": 1120,
+    "elo_difficulty": 1370,
     "hud_prompt": "Dans la cour ___ les enfants.",
     "explanation_flash": "Sujet inversé pluriel (les enfants) -> jouent !",
     "targets": [
@@ -1433,7 +1433,7 @@
     "id": "FR_6E_016",
     "subject": "francais",
     "skill_code": "FR_ACC",
-    "elo_difficulty": 1100,
+    "elo_difficulty": 1320,
     "hud_prompt": "Le chat des voisins ___.",
     "explanation_flash": "Sujet = Le chat (singulier) -> dort !",
     "targets": [
@@ -1459,7 +1459,7 @@
     "id": "FR_6E_017",
     "subject": "francais",
     "skill_code": "FR_ACC",
-    "elo_difficulty": 1080,
+    "elo_difficulty": 1250,
     "hud_prompt": "Les fleurs du jardin ___.",
     "explanation_flash": "Sujet = Les fleurs (pluriel) -> poussent !",
     "targets": [
@@ -1485,7 +1485,7 @@
     "id": "FR_6E_018",
     "subject": "francais",
     "skill_code": "FR_TERM",
-    "elo_difficulty": 1020,
+    "elo_difficulty": 1220,
     "hud_prompt": "Elles ___ vite hier.",
     "explanation_flash": "Imparfait 3e pers. pluriel -> -aient !",
     "targets": [
@@ -1589,7 +1589,7 @@
     "id": "FR_6E_022",
     "subject": "francais",
     "skill_code": "FR_ACC",
-    "elo_difficulty": 980,
+    "elo_difficulty": 1140,
     "hud_prompt": "Des robes ___ et jolies.",
     "explanation_flash": "Féminin pluriel (robes) -> bleues !",
     "targets": [
@@ -1641,7 +1641,7 @@
     "id": "FR_6E_024",
     "subject": "francais",
     "skill_code": "FR_ACC",
-    "elo_difficulty": 1150,
+    "elo_difficulty": 1420,
     "hud_prompt": "Elles sont ___ en 6ème.",
     "explanation_flash": "Avec être, accord féminin pluriel -> entrées !",
     "targets": [
@@ -1719,7 +1719,7 @@
     "id": "FR_6E_027",
     "subject": "francais",
     "skill_code": "FR_NAT",
-    "elo_difficulty": 1040,
+    "elo_difficulty": 1210,
     "hud_prompt": "Nature de « rapidement » ?",
     "explanation_flash": "Un mot en -ment qui précise l'action est un adverbe !",
     "targets": [
@@ -1901,7 +1901,7 @@
     "id": "FR_6E_034",
     "subject": "francais",
     "skill_code": "FR_PREF",
-    "elo_difficulty": 1020,
+    "elo_difficulty": 1170,
     "hud_prompt": "Préfixe de « impossible » ?",
     "explanation_flash": "im- devant p/b/m indique le contraire !",
     "targets": [
@@ -1953,7 +1953,7 @@
     "id": "FR_6E_036",
     "subject": "francais",
     "skill_code": "FR_PREF",
-    "elo_difficulty": 1040,
+    "elo_difficulty": 1240,
     "hud_prompt": "Suffixe de « boulangerie » ?",
     "explanation_flash": "Le suffixe -erie désigne un lieu de métier !",
     "targets": [
@@ -1979,7 +1979,7 @@
     "id": "FR_6E_037",
     "subject": "francais",
     "skill_code": "FR_PREF",
-    "elo_difficulty": 1060,
+    "elo_difficulty": 1280,
     "hud_prompt": "Préfixe signifiant « avant » ?",
     "explanation_flash": "pré- signifie avant (ex: préhistoire) !",
     "targets": [
@@ -2005,7 +2005,7 @@
     "id": "FR_6E_038",
     "subject": "francais",
     "skill_code": "FR_NAT",
-    "elo_difficulty": 1080,
+    "elo_difficulty": 1300,
     "hud_prompt": "Nature de « dans » ?",
     "explanation_flash": "dans est un mot invariable : une préposition !",
     "targets": [
@@ -2239,7 +2239,7 @@
     "id": "ANG_6E_007",
     "subject": "anglais",
     "skill_code": "ANG_VOC",
-    "elo_difficulty": 950,
+    "elo_difficulty": 1100,
     "hud_prompt": "Traduire : « trousse »",
     "explanation_flash": "Trousse = pencil case !",
     "targets": [
@@ -2265,7 +2265,7 @@
     "id": "ANG_6E_008",
     "subject": "anglais",
     "skill_code": "ANG_VOC",
-    "elo_difficulty": 960,
+    "elo_difficulty": 1140,
     "hud_prompt": "Traduire : « gomme »",
     "explanation_flash": "Gomme = rubber (ou eraser) !",
     "targets": [
@@ -2317,7 +2317,7 @@
     "id": "ANG_6E_010",
     "subject": "anglais",
     "skill_code": "ANG_VOC",
-    "elo_difficulty": 980,
+    "elo_difficulty": 1200,
     "hud_prompt": "Traduire : « mercredi »",
     "explanation_flash": "Wednesday = mercredi !",
     "targets": [
@@ -2473,7 +2473,7 @@
     "id": "ANG_6E_016",
     "subject": "anglais",
     "skill_code": "ANG_NUM",
-    "elo_difficulty": 960,
+    "elo_difficulty": 1120,
     "hud_prompt": "Nombre « 15 » en anglais ?",
     "explanation_flash": "15 = fifteen (50 = fifty) !",
     "targets": [
@@ -2499,7 +2499,7 @@
     "id": "ANG_6E_017",
     "subject": "anglais",
     "skill_code": "ANG_NUM",
-    "elo_difficulty": 980,
+    "elo_difficulty": 1220,
     "hud_prompt": "Nombre « 40 » en anglais ?",
     "explanation_flash": "40 = forty !",
     "targets": [
@@ -2577,7 +2577,7 @@
     "id": "ANG_6E_020",
     "subject": "anglais",
     "skill_code": "ANG_NUM",
-    "elo_difficulty": 980,
+    "elo_difficulty": 1180,
     "hud_prompt": "Nombre « 80 » en anglais ?",
     "explanation_flash": "80 = eighty !",
     "targets": [
@@ -2681,7 +2681,7 @@
     "id": "ANG_6E_024",
     "subject": "anglais",
     "skill_code": "ANG_PRON",
-    "elo_difficulty": 920,
+    "elo_difficulty": 1160,
     "hud_prompt": "Pronom pour un objet ?",
     "explanation_flash": "Pour un objet ou animal : It !",
     "targets": [
@@ -2785,7 +2785,7 @@
     "id": "ANG_6E_028",
     "subject": "anglais",
     "skill_code": "ANG_AUX",
-    "elo_difficulty": 960,
+    "elo_difficulty": 1210,
     "hud_prompt": "He ___ a blue bike.",
     "explanation_flash": "Possession avec He/She/It = has !",
     "targets": [
@@ -2863,7 +2863,7 @@
     "id": "ANG_6E_031",
     "subject": "anglais",
     "skill_code": "ANG_INT",
-    "elo_difficulty": 940,
+    "elo_difficulty": 1230,
     "hud_prompt": "Mot interrogatif pour « Où » ?",
     "explanation_flash": "Where = Où ? (lieu) !",
     "targets": [
@@ -2889,7 +2889,7 @@
     "id": "ANG_6E_032",
     "subject": "anglais",
     "skill_code": "ANG_INT",
-    "elo_difficulty": 940,
+    "elo_difficulty": 1260,
     "hud_prompt": "Mot interrogatif pour « Quand » ?",
     "explanation_flash": "When = Quand ? (temps) !",
     "targets": [
@@ -2915,7 +2915,7 @@
     "id": "ANG_6E_033",
     "subject": "anglais",
     "skill_code": "ANG_INT",
-    "elo_difficulty": 920,
+    "elo_difficulty": 1300,
     "hud_prompt": "Mot interrogatif pour « Qui » ?",
     "explanation_flash": "Who = Qui ? (personne) !",
     "targets": [
@@ -2941,7 +2941,7 @@
     "id": "ANG_6E_034",
     "subject": "anglais",
     "skill_code": "ANG_INT",
-    "elo_difficulty": 1020,
+    "elo_difficulty": 1410,
     "hud_prompt": "Mot interrogatif pour « Combien » ?",
     "explanation_flash": "How many = Combien ? (quantité) !",
     "targets": [
@@ -3045,7 +3045,7 @@
     "id": "ANG_6E_038",
     "subject": "anglais",
     "skill_code": "ANG_VOC",
-    "elo_difficulty": 980,
+    "elo_difficulty": 1320,
     "hud_prompt": "Traduire : « bibliothèque »",
     "explanation_flash": "Bibliothèque = library (CDI) !",
     "targets": [
@@ -3071,7 +3071,7 @@
     "id": "ANG_6E_039",
     "subject": "anglais",
     "skill_code": "ANG_VOC",
-    "elo_difficulty": 1020,
+    "elo_difficulty": 1360,
     "hud_prompt": "Traduire : « récréation »",
     "explanation_flash": "La récréation = break (ou playtime) !",
     "targets": [
@@ -3097,7 +3097,7 @@
     "id": "ANG_6E_040",
     "subject": "anglais",
     "skill_code": "ANG_VOC",
-    "elo_difficulty": 960,
+    "elo_difficulty": 1290,
     "hud_prompt": "Traduire : « devoirs »",
     "explanation_flash": "Les devoirs = homework !",
     "targets": [
@@ -3149,7 +3149,7 @@
     "id": "HGS_6E_002",
     "subject": "histoire_geo_sciences",
     "skill_code": "HG_PER",
-    "elo_difficulty": 960,
+    "elo_difficulty": 1160,
     "hud_prompt": "Invention vers -3300 ?",
     "explanation_flash": "L'écriture naît vers -3300 en Mésopotamie !",
     "targets": [
@@ -3175,7 +3175,7 @@
     "id": "HGS_6E_003",
     "subject": "histoire_geo_sciences",
     "skill_code": "HG_PER",
-    "elo_difficulty": 1040,
+    "elo_difficulty": 1280,
     "hud_prompt": "Chute de Rome en 476 ?",
     "explanation_flash": "476 marque la fin de l'Antiquité et le début du Moyen Âge !",
     "targets": [
@@ -3201,7 +3201,7 @@
     "id": "HGS_6E_004",
     "subject": "histoire_geo_sciences",
     "skill_code": "HG_PER",
-    "elo_difficulty": 1040,
+    "elo_difficulty": 1340,
     "hud_prompt": "Découverte de l'Amérique (1492) ?",
     "explanation_flash": "1492 ouvre la période des Temps Modernes !",
     "targets": [
@@ -3227,7 +3227,7 @@
     "id": "HGS_6E_005",
     "subject": "histoire_geo_sciences",
     "skill_code": "HG_PER",
-    "elo_difficulty": 1060,
+    "elo_difficulty": 1390,
     "hud_prompt": "Révolution française (1789) ?",
     "explanation_flash": "1789 ouvre l'Époque Contemporaine !",
     "targets": [
@@ -3357,7 +3357,7 @@
     "id": "HGS_6E_010",
     "subject": "histoire_geo_sciences",
     "skill_code": "HG_PER",
-    "elo_difficulty": 1020,
+    "elo_difficulty": 1210,
     "hud_prompt": "Roi de la Renaissance ?",
     "explanation_flash": "François Ier invite Léonard de Vinci en France !",
     "targets": [
@@ -3383,7 +3383,7 @@
     "id": "HGS_6E_011",
     "subject": "histoire_geo_sciences",
     "skill_code": "HG_PER",
-    "elo_difficulty": 1020,
+    "elo_difficulty": 1240,
     "hud_prompt": "Inventeur de l'imprimerie (1450) ?",
     "explanation_flash": "Gutenberg invente l'imprimerie à caractères mobiles !",
     "targets": [
@@ -3695,7 +3695,7 @@
     "id": "HGS_6E_023",
     "subject": "histoire_geo_sciences",
     "skill_code": "HG_GEO",
-    "elo_difficulty": 1040,
+    "elo_difficulty": 1420,
     "hud_prompt": "Métropole célèbre pour les canuts ?",
     "explanation_flash": "Lyon est au confluent du Rhône et de la Saône !",
     "targets": [
@@ -3721,7 +3721,7 @@
     "id": "HGS_6E_024",
     "subject": "histoire_geo_sciences",
     "skill_code": "HG_GEO",
-    "elo_difficulty": 1020,
+    "elo_difficulty": 1260,
     "hud_prompt": "Ville du Parlement européen ?",
     "explanation_flash": "Strasbourg accueille le Parlement européen !",
     "targets": [
@@ -3799,7 +3799,7 @@
     "id": "HGS_6E_027",
     "subject": "histoire_geo_sciences",
     "skill_code": "HG_GEO",
-    "elo_difficulty": 980,
+    "elo_difficulty": 1200,
     "hud_prompt": "Ligne imaginaire à 0° latitude ?",
     "explanation_flash": "L'Équateur sépare hémisphère Nord et Sud !",
     "targets": [
@@ -4007,7 +4007,7 @@
     "id": "HGS_6E_035",
     "subject": "histoire_geo_sciences",
     "skill_code": "SCI_MAT",
-    "elo_difficulty": 1080,
+    "elo_difficulty": 1360,
     "hud_prompt": "Passage liquide vers gaz ?",
     "explanation_flash": "De liquide à gaz, c'est la vaporisation !",
     "targets": [
@@ -4033,7 +4033,7 @@
     "id": "HGS_6E_036",
     "subject": "histoire_geo_sciences",
     "skill_code": "SCI_MAT",
-    "elo_difficulty": 1020,
+    "elo_difficulty": 1220,
     "hud_prompt": "Passage solide vers liquide ?",
     "explanation_flash": "La glace qui fond réalise une fusion !",
     "targets": [
@@ -4085,7 +4085,7 @@
     "id": "HGS_6E_038",
     "subject": "histoire_geo_sciences",
     "skill_code": "SCI_VIV",
-    "elo_difficulty": 1020,
+    "elo_difficulty": 1250,
     "hud_prompt": "Qui produit sa propre matière ?",
     "explanation_flash": "Les plantes sont les producteurs primaires !",
     "targets": [
@@ -4137,7 +4137,7 @@
     "id": "HGS_6E_040",
     "subject": "histoire_geo_sciences",
     "skill_code": "SCI_VIV",
-    "elo_difficulty": 1040,
+    "elo_difficulty": 1310,
     "hud_prompt": "Recycle les feuilles mortes ?",
     "explanation_flash": "Vers et champignons sont des décomposeurs !",
     "targets": [
@@ -4267,7 +4267,7 @@
     "id": "COL_ORG_004",
     "subject": "vie_au_college",
     "skill_code": "COL_EDT",
-    "elo_difficulty": 980,
+    "elo_difficulty": 1240,
     "hud_prompt": "Emploi du temps : Semaine A/B ?",
     "explanation_flash": "Certains cours ont lieu une semaine sur deux (A ou B) !",
     "targets": [
@@ -4423,7 +4423,7 @@
     "id": "COL_ORG_010",
     "subject": "vie_au_college",
     "skill_code": "COL_EDT",
-    "elo_difficulty": 1020,
+    "elo_difficulty": 1290,
     "hud_prompt": "Cours en « M1 » le matin ?",
     "explanation_flash": "M1 signifie 1ère heure du Matin (souvent 8h) !",
     "targets": [
@@ -4449,7 +4449,7 @@
     "id": "COL_ORG_011",
     "subject": "vie_au_college",
     "skill_code": "COL_EDT",
-    "elo_difficulty": 1040,
+    "elo_difficulty": 1350,
     "hud_prompt": "Cours en « S1 » l'après-midi ?",
     "explanation_flash": "S1 = 1ère heure du Soir / après-midi !",
     "targets": [
@@ -4657,7 +4657,7 @@
     "id": "COL_ORG_020",
     "subject": "vie_au_college",
     "skill_code": "COL_ADU",
-    "elo_difficulty": 1020,
+    "elo_difficulty": 1260,
     "hud_prompt": "Qui encadre la cour ?",
     "explanation_flash": "Les AED (assistants d'éducation) surveillent cour et permanence !",
     "targets": [
@@ -4839,7 +4839,7 @@
     "id": "COL_ORG_027",
     "subject": "vie_au_college",
     "skill_code": "COL_SAC",
-    "elo_difficulty": 920,
+    "elo_difficulty": 1140,
     "hud_prompt": "Clé oubliée pour cadenas ?",
     "explanation_flash": "Garde toujours un double de clé du casier chez toi !",
     "targets": [
@@ -4891,7 +4891,7 @@
     "id": "COL_ORG_029",
     "subject": "vie_au_college",
     "skill_code": "COL_CONS",
-    "elo_difficulty": 960,
+    "elo_difficulty": 1210,
     "hud_prompt": "« Souligne puis recopie » ?",
     "explanation_flash": "Consigne double : 1) souligner, 2) recopier !",
     "targets": [
@@ -4917,7 +4917,7 @@
     "id": "COL_ORG_030",
     "subject": "vie_au_college",
     "skill_code": "COL_CONS",
-    "elo_difficulty": 960,
+    "elo_difficulty": 1310,
     "hud_prompt": "« Entoure et barre l'intrus » ?",
     "explanation_flash": "Il faut bien réaliser les deux étapes dans l'ordre !",
     "targets": [
@@ -4943,7 +4943,7 @@
     "id": "COL_ORG_031",
     "subject": "vie_au_college",
     "skill_code": "COL_CONS",
-    "elo_difficulty": 980,
+    "elo_difficulty": 1400,
     "hud_prompt": "« Justifie ta réponse » signifie ?",
     "explanation_flash": "Justifier = prouver ou expliquer sa réponse !",
     "targets": [
@@ -4969,7 +4969,7 @@
     "id": "COL_ORG_032",
     "subject": "vie_au_college",
     "skill_code": "COL_CONS",
-    "elo_difficulty": 940,
+    "elo_difficulty": 1180,
     "hud_prompt": "« Ordre croissant » ?",
     "explanation_flash": "Croissant = du plus petit vers le plus grand !",
     "targets": [
@@ -4995,7 +4995,7 @@
     "id": "COL_ORG_033",
     "subject": "vie_au_college",
     "skill_code": "COL_CONS",
-    "elo_difficulty": 940,
+    "elo_difficulty": 1200,
     "hud_prompt": "« Ordre décroissant » ?",
     "explanation_flash": "Décroissant = du plus grand au plus petit !",
     "targets": [
@@ -5021,7 +5021,7 @@
     "id": "COL_ORG_034",
     "subject": "vie_au_college",
     "skill_code": "COL_CONS",
-    "elo_difficulty": 920,
+    "elo_difficulty": 1160,
     "hud_prompt": "« Cite deux exemples » ?",
     "explanation_flash": "Citer = nommer précisément le nombre demandé !",
     "targets": [
@@ -5151,7 +5151,7 @@
     "id": "COL_ORG_039",
     "subject": "vie_au_college",
     "skill_code": "COL_EDT",
-    "elo_difficulty": 960,
+    "elo_difficulty": 1220,
     "hud_prompt": "Salle 210 à 10h : où aller ?",
     "explanation_flash": "Salle 210 = 2e étage, porte 10 !",
     "targets": [

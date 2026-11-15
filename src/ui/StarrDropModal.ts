@@ -1,5 +1,6 @@
 import type { IStarrDropReward, StarrDropRarity } from '../types/cctp';
 import type { LocalSQLiteDB } from '../db/LocalSQLiteDB';
+import { soundManager } from '../services/SoundManager';
 
 export interface ITrophyMilestone {
   trophies: number;
@@ -57,18 +58,40 @@ export function getCurrentTrophyRank(trophies: number): ITrophyMilestone {
   return current;
 }
 
-export function renderTrophyRoadHtml(trophies: number): string {
+export function renderTrophyRoadHtml(
+  trophies: number,
+  claimedMilestones: number[] = []
+): string {
   const pct = Math.min(100, Math.max(0, Math.round((trophies / 1000) * 100)));
   const rank = getCurrentTrophyRank(trophies);
   const stepsHtml = TROPHY_ROAD_MILESTONES.map((m) => {
     const reached = trophies >= m.trophies;
+    const isClaimed = claimedMilestones.includes(m.trophies);
+
+    let actionHtml = '';
+    if (m.trophies > 0) {
+      if (isClaimed) {
+        actionHtml =
+          '<div style="margin-top:5px; font-size:10px; font-weight:800; color:#4ade80;">✔ Réclamé</div>';
+      } else if (reached) {
+        actionHtml = `<button type="button" data-claim-milestone="${m.trophies}" class="pulse-glow"
+          style="margin-top:5px; padding:4px 8px; border:none; border-radius:7px; cursor:pointer;
+                 background:linear-gradient(135deg, #facc15, #f97316); color:#0f172a;
+                 font-size:10px; font-weight:900;">🎁 Réclamer</button>`;
+      }
+    }
+
     return `
-      <div style="flex:1; min-width:85px; text-align:center; padding:6px 4px; border-radius:8px;
+      <div style="flex:1; min-width:96px; text-align:center; padding:6px 6px; border-radius:8px;
+                  display:flex; flex-direction:column; justify-content:space-between; align-items:center;
                   background:${reached ? 'rgba(250,204,21,0.18)' : 'rgba(15,23,42,0.55)'};
-                  border:1px solid ${reached ? '#facc15' : '#334155'};">
-        <div style="font-size:11px; font-weight:800; color:${reached ? '#facc15' : '#94a3b8'};">🏆 ${m.trophies}</div>
-        <div style="font-size:11px; font-weight:700; color:#f8fafc;">${m.title}</div>
-        <div style="font-size:10px; color:#cbd5e1;">${m.rewardLabel}</div>
+                  border:1px solid ${isClaimed ? '#4ade80' : reached ? '#facc15' : '#334155'};">
+        <div>
+          <div style="font-size:11px; font-weight:800; color:${reached ? '#facc15' : '#94a3b8'};">🏆 ${m.trophies}</div>
+          <div style="font-size:11px; font-weight:700; color:#f8fafc;">${m.title}</div>
+          <div style="font-size:10px; color:#cbd5e1;">${m.rewardLabel}</div>
+        </div>
+        ${actionHtml}
       </div>
     `;
   }).join('');
@@ -82,7 +105,7 @@ export function renderTrophyRoadHtml(trophies: number): string {
       <div style="height:10px; background:#1e293b; border-radius:999px; overflow:hidden; margin-bottom:10px;">
         <div style="width:${pct}%; height:100%; background:linear-gradient(90deg, #38bdf8, #facc15); transition:width 0.3s;"></div>
       </div>
-      <div style="display:flex; gap:6px; overflow-x:auto;">
+      <div style="display:flex; gap:6px; overflow-x:auto; padding-bottom:2px;">
         ${stepsHtml}
       </div>
     </div>
@@ -156,89 +179,211 @@ export class StarrDropModal {
       return;
     }
 
-    let taps = 0;
-    let rarity: StarrDropRarity = 'RARE';
-    let reward: IStarrDropReward | null = null;
-
     const overlay = document.createElement('div');
     overlay.style.cssText =
       'position:fixed; inset:0; background:rgba(2,6,23,0.88); display:flex; align-items:center; justify-content:center; z-index:9999; font-family:system-ui,sans-serif;';
 
     const card = document.createElement('div');
     card.style.cssText =
-      'width:min(440px, 92vw); background:#0f172a; border:3px solid #facc15; border-radius:20px; padding:24px; text-align:center; color:#ffffff; box-shadow:0 20px 60px rgba(0,0,0,0.65);';
+      'position:relative; overflow:hidden; width:min(440px, 92vw); background:#0f172a; border:3px solid #facc15; border-radius:20px; padding:24px; text-align:center; color:#ffffff; box-shadow:0 20px 60px rgba(0,0,0,0.65);';
     overlay.appendChild(card);
 
-    const renderCard = (): void => {
-      const style = RARITY_STYLES[rarity];
-      if (taps < 4) {
-        const remainingTaps = 4 - taps;
-        card.innerHTML = `
-          <div style="font-size:13px; letter-spacing:1px; color:#94a3b8; font-weight:700;">CASIER MYSTÈRE (STARR DROP)</div>
-          <h2 style="margin:8px 0 4px; color:${style.color}; font-size:26px; font-weight:900;">${style.label}</h2>
-          <p style="margin:0 0 18px; color:#cbd5e1; font-size:14px;">Tapote encore <strong>${remainingTaps}</strong> fois pour ouvrir le casier !</p>
-          <button id="sd-tap-btn" style="width:154px; height:154px; border-radius:24px; border:4px solid ${style.color};
-                  background:${style.bg}; box-shadow:${style.glow}; color:#fff; font-size:58px; cursor:pointer;
-                  transform:scale(${1 + taps * 0.05}); transition:transform 0.15s;">
-            🎒
-          </button>
-          <div style="margin-top:16px; display:flex; justify-content:center; gap:8px;">
-            ${[0, 1, 2, 3]
-              .map(
-                (idx) =>
-                  `<span style="width:14px; height:14px; border-radius:999px; background:${idx < taps ? style.color : '#334155'}; display:inline-block;"></span>`
-              )
-              .join('')}
-          </div>
-        `;
-        const btn = card.querySelector<HTMLButtonElement>('#sd-tap-btn');
-        btn?.addEventListener('click', () => {
-          taps += 1;
-          rarity = this.rollUpgradeRarity(rarity);
-          if (taps >= 4) {
-            reward = this.buildReward(rarity);
-            this.applyReward(reward);
-          }
-          renderCard();
-        });
-      } else if (reward) {
-        const badgeLine = reward.unlocked_badge_or_skin
-          ? `<div style="margin-top:8px; padding:8px; border-radius:10px; background:rgba(250,204,21,0.16); color:#fef08a; font-weight:700;">🏅 ${reward.unlocked_badge_or_skin}</div>`
-          : '';
-        card.innerHTML = `
-          <div style="font-size:13px; color:#94a3b8; font-weight:700;">CASIER DÉVERROUILLÉ !</div>
-          <h2 style="margin:6px 0 12px; color:${style.color}; font-size:28px; font-weight:900;">★ ${style.label} ★</h2>
-          <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:12px;">
-            <div style="background:#1e293b; padding:10px; border-radius:12px;">
-              <div style="font-size:20px; font-weight:900; color:#facc15;">+${reward.coins_granted}</div>
-              <div style="font-size:12px; color:#cbd5e1;">Pièces 🪙</div>
-            </div>
-            <div style="background:#1e293b; padding:10px; border-radius:12px;">
-              <div style="font-size:20px; font-weight:900; color:#38bdf8;">+${reward.trophies_granted}</div>
-              <div style="font-size:12px; color:#cbd5e1;">Trophées 🏆</div>
-            </div>
-            <div style="background:#1e293b; padding:10px; border-radius:12px;">
-              <div style="font-size:20px; font-weight:900; color:#4ade80;">+${reward.knowledge_points_granted}</div>
-              <div style="font-size:12px; color:#cbd5e1;">Savoir 📖</div>
-            </div>
-          </div>
-          ${badgeLine}
-          <button id="sd-claim-btn" style="margin-top:16px; width:100%; padding:12px; border-radius:12px; border:none;
-                  background:#facc15; color:#0f172a; font-weight:900; font-size:16px; cursor:pointer;">
-            RÉCUPÉRER ET CONTINUER
-          </button>
-        `;
-        const claimBtn = card.querySelector<HTMLButtonElement>('#sd-claim-btn');
-        claimBtn?.addEventListener('click', () => {
-          overlay.remove();
-          if (reward) {
-            onCompleted?.(reward);
-          }
-        });
+    let floatTimeout: number | null = null;
+    const clearTimers = (): void => {
+      if (floatTimeout !== null) {
+        window.clearTimeout(floatTimeout);
+        floatTimeout = null;
       }
     };
 
-    renderCard();
+    const startDropSequence = (): void => {
+      clearTimers();
+      if (this.db.getPlayerProfile().starr_drops_available <= 0) {
+        return;
+      }
+
+      let taps = 0;
+      let rarity: StarrDropRarity = 'RARE';
+      let reward: IStarrDropReward | null = null;
+      const initialStyle = RARITY_STYLES[rarity];
+
+      card.innerHTML = `
+        <div id="sd-flash-layer" style="pointer-events:none; position:absolute; inset:0; border-radius:18px;
+             background:radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(250,204,21,0.35) 45%, transparent 75%); opacity:0;"></div>
+        <div style="position:relative; z-index:1;">
+          <div style="font-size:13px; letter-spacing:1px; color:#94a3b8; font-weight:700;">CASIER MYSTÈRE (STARR DROP)</div>
+          <h2 id="sd-rarity-badge" style="margin:8px 0 4px; color:${initialStyle.color}; font-size:26px; font-weight:900; transition:color 0.2s;">${initialStyle.label}</h2>
+          <p id="sd-status-text" style="margin:0 0 22px; color:#cbd5e1; font-size:14px;">Tapote encore <strong>4</strong> fois pour ouvrir le casier !</p>
+          <div style="position:relative; display:inline-flex; align-items:center; justify-content:center;">
+            <div id="sd-upgrade-float" style="pointer-events:none; position:absolute; top:-28px; left:50%; transform:translateX(-50%);
+                 white-space:nowrap; font-size:13px; font-weight:900; color:#fef08a; text-shadow:0 2px 10px rgba(0,0,0,0.9);
+                 opacity:0; transition:opacity 0.2s, transform 0.25s;"></div>
+            <button id="sd-tap-btn" type="button" style="width:154px; height:154px; border-radius:24px; border:4px solid ${initialStyle.color};
+                    background:${initialStyle.bg}; box-shadow:${initialStyle.glow}; color:#fff; font-size:58px; cursor:pointer;
+                    transform:scale(1); transition:transform 0.15s, border-color 0.2s, box-shadow 0.2s; touch-action:manipulation;">
+              🎒
+            </button>
+          </div>
+          <div id="sd-progress-dots" style="margin-top:18px; display:flex; justify-content:center; gap:8px;">
+            <span data-dot="0" style="width:14px; height:14px; border-radius:999px; background:#334155; display:inline-block; transition:background 0.15s, transform 0.15s;"></span>
+            <span data-dot="1" style="width:14px; height:14px; border-radius:999px; background:#334155; display:inline-block; transition:background 0.15s, transform 0.15s;"></span>
+            <span data-dot="2" style="width:14px; height:14px; border-radius:999px; background:#334155; display:inline-block; transition:background 0.15s, transform 0.15s;"></span>
+            <span data-dot="3" style="width:14px; height:14px; border-radius:999px; background:#334155; display:inline-block; transition:background 0.15s, transform 0.15s;"></span>
+          </div>
+        </div>
+      `;
+
+      const tapBtn = card.querySelector<HTMLButtonElement>('#sd-tap-btn');
+      const rarityBadge = card.querySelector<HTMLElement>('#sd-rarity-badge');
+      const statusText = card.querySelector<HTMLElement>('#sd-status-text');
+      const upgradeFloat = card.querySelector<HTMLElement>('#sd-upgrade-float');
+      const flashLayer = card.querySelector<HTMLElement>('#sd-flash-layer');
+      const dots = Array.from(card.querySelectorAll<HTMLElement>('#sd-progress-dots [data-dot]'));
+
+      if (!tapBtn) return;
+
+      const renderRewardView = (finalReward: IStarrDropReward): void => {
+        clearTimers();
+        const style = RARITY_STYLES[finalReward.final_rarity];
+        const remaining = this.db.getPlayerProfile().starr_drops_available;
+        const badgeLine = finalReward.unlocked_badge_or_skin
+          ? `<div style="margin-top:8px; padding:8px; border-radius:10px; background:rgba(250,204,21,0.16); color:#fef08a; font-weight:700;">🏅 ${finalReward.unlocked_badge_or_skin}</div>`
+          : '';
+        const nextBtnHtml =
+          remaining > 0
+            ? `<button id="sd-next-btn" type="button" class="pulse-glow" style="margin-top:14px; width:100%; padding:12px; border-radius:12px; border:none;
+                      background:linear-gradient(135deg, #38bdf8, #2563eb); color:#ffffff; font-weight:900; font-size:15px; cursor:pointer;">
+                 🎁 OUVRIR LE SUIVANT (${remaining})
+               </button>`
+            : '';
+
+        card.innerHTML = `
+          <div class="sd-flash-burst" style="pointer-events:none; position:absolute; inset:0; border-radius:18px;
+               background:radial-gradient(circle, rgba(255,255,255,0.85) 0%, ${style.color}44 50%, transparent 75%);"></div>
+          <div style="position:relative; z-index:1;">
+            <div style="font-size:13px; color:#94a3b8; font-weight:700;">CASIER DÉVERROUILLÉ !</div>
+            <h2 style="margin:6px 0 12px; color:${style.color}; font-size:28px; font-weight:900;">★ ${style.label} ★</h2>
+            <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:12px;">
+              <div style="background:#1e293b; padding:10px; border-radius:12px;">
+                <div style="font-size:20px; font-weight:900; color:#facc15;">+${finalReward.coins_granted}</div>
+                <div style="font-size:12px; color:#cbd5e1;">Pièces 🪙</div>
+              </div>
+              <div style="background:#1e293b; padding:10px; border-radius:12px;">
+                <div style="font-size:20px; font-weight:900; color:#38bdf8;">+${finalReward.trophies_granted}</div>
+                <div style="font-size:12px; color:#cbd5e1;">Trophées 🏆</div>
+              </div>
+              <div style="background:#1e293b; padding:10px; border-radius:12px;">
+                <div style="font-size:20px; font-weight:900; color:#4ade80;">+${finalReward.knowledge_points_granted}</div>
+                <div style="font-size:12px; color:#cbd5e1;">Savoir 📖</div>
+              </div>
+            </div>
+            ${badgeLine}
+            ${nextBtnHtml}
+            <button id="sd-claim-btn" type="button" style="margin-top:${remaining > 0 ? '10px' : '16px'}; width:100%; padding:12px; border-radius:12px; border:none;
+                    background:#facc15; color:#0f172a; font-weight:900; font-size:16px; cursor:pointer;">
+              RÉCUPÉRER ET CONTINUER
+            </button>
+          </div>
+        `;
+
+        card.querySelector<HTMLButtonElement>('#sd-next-btn')?.addEventListener('click', () => {
+          startDropSequence();
+        });
+
+        card.querySelector<HTMLButtonElement>('#sd-claim-btn')?.addEventListener('click', () => {
+          clearTimers();
+          overlay.remove();
+          onCompleted?.(finalReward);
+        });
+      };
+
+      const handleTap = (): void => {
+        if (taps >= 4) {
+          return;
+        }
+        taps += 1;
+        const prevRarity = rarity;
+        rarity = this.rollUpgradeRarity(rarity);
+        const upgraded = rarity !== prevRarity;
+
+        soundManager.playStarrDropTap(taps, upgraded);
+
+        if (taps < 4) {
+          const style = RARITY_STYLES[rarity];
+          const remainingTaps = 4 - taps;
+
+          if (rarityBadge) {
+            rarityBadge.textContent = style.label;
+            rarityBadge.style.color = style.color;
+          }
+          if (statusText) {
+            statusText.innerHTML = `Tapote encore <strong>${remainingTaps}</strong> fois pour ouvrir le casier !`;
+          }
+
+          tapBtn.style.borderColor = style.color;
+          tapBtn.style.background = style.bg;
+          tapBtn.style.boxShadow = style.glow;
+          tapBtn.style.transform = `scale(${1 + taps * 0.05})`;
+
+          tapBtn.classList.remove('sd-shaking');
+          void tapBtn.offsetWidth;
+          tapBtn.classList.add('sd-shaking');
+
+          dots.forEach((dot, idx) => {
+            dot.style.background = idx < taps ? style.color : '#334155';
+            dot.style.transform = idx < taps ? 'scale(1.15)' : 'scale(1)';
+          });
+
+          if (upgraded) {
+            const prevLabel = RARITY_STYLES[prevRarity].label;
+            if (upgradeFloat) {
+              upgradeFloat.textContent = `✨ ${prevLabel} ➔ ${style.label} !`;
+              upgradeFloat.style.color = style.color;
+              upgradeFloat.style.opacity = '1';
+              upgradeFloat.style.transform = 'translateX(-50%) translateY(-8px)';
+              clearTimers();
+              floatTimeout = window.setTimeout(() => {
+                upgradeFloat.style.opacity = '0';
+                upgradeFloat.style.transform = 'translateX(-50%) translateY(0)';
+              }, 900);
+            }
+            if (flashLayer) {
+              flashLayer.classList.remove('sd-flash-burst');
+              void flashLayer.offsetWidth;
+              flashLayer.classList.add('sd-flash-burst');
+            }
+          }
+        } else {
+          reward = this.buildReward(rarity);
+          this.applyReward(reward);
+          soundManager.playStarrDropReveal(reward.final_rarity);
+          renderRewardView(reward);
+        }
+      };
+
+      let suppressClick = false;
+      tapBtn.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        suppressClick = true;
+        handleTap();
+      });
+      const clearSuppressionSoon = (): void => {
+        window.setTimeout(() => {
+          suppressClick = false;
+        }, 80);
+      };
+      tapBtn.addEventListener('pointercancel', clearSuppressionSoon);
+      tapBtn.addEventListener('pointerleave', clearSuppressionSoon);
+      tapBtn.addEventListener('click', () => {
+        if (suppressClick) {
+          suppressClick = false;
+          return;
+        }
+        handleTap();
+      });
+    };
+
+    startDropSequence();
     document.body.appendChild(overlay);
   }
 

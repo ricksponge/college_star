@@ -1,10 +1,14 @@
-import type { IRenderJoystick, IRenderVec2 } from './IsometricRenderer';
+import { ISO_Y_SCALE, type IRenderJoystick, type IRenderVec2 } from './IsometricRenderer';
 
 export interface ITwinStickFireCommand {
   angle: number;
+  autoAim?: boolean;
 }
 
 const STICK_MAX_RADIUS = 48;
+const STICK_DEADZONE = 8;
+const CANCEL_ZONE_RADIUS = 12;
+const AIM_ACTIVATION_DIST = 14;
 
 /**
  * Contrôleur Double Stick Tactile + Clavier/Souris (Zéro Friction Scolaire).
@@ -40,6 +44,7 @@ export class TwinStickController {
 
   private readonly keysPressed = new Set<string>();
   private aimAngle = -Math.PI / 2;
+  private rightStickMaxDist = 0;
   private pendingFire: ITwinStickFireCommand | null = null;
   private pendingSuper = false;
   private pendingGadget = false;
@@ -86,8 +91,26 @@ export class TwinStickController {
     this.pendingGadget = true;
   }
 
+  public isAiming(): boolean {
+    if (!this.rightStick.active) return false;
+    const dx = this.rightStick.currentX - this.rightStick.originX;
+    const dy = this.rightStick.currentY - this.rightStick.originY;
+    return Math.hypot(dx, dy) >= CANCEL_ZONE_RADIUS;
+  }
+
+  public isCancellingAim(): boolean {
+    if (!this.rightStick.active) return false;
+    const dx = this.rightStick.currentX - this.rightStick.originX;
+    const dy = this.rightStick.currentY - this.rightStick.originY;
+    const currentDist = Math.hypot(dx, dy);
+    return this.rightStickMaxDist > AIM_ACTIVATION_DIST && currentDist < CANCEL_ZONE_RADIUS;
+  }
+
   public requestAutoFire(angle?: number): void {
-    this.pendingFire = { angle: angle ?? this.aimAngle };
+    this.pendingFire = {
+      angle: angle ?? this.aimAngle,
+      autoAim: angle === undefined,
+    };
   }
 
   public getMoveVector(): IRenderVec2 {
@@ -95,8 +118,15 @@ export class TwinStickController {
     let dy = 0;
 
     if (this.leftStick.active) {
-      dx = (this.leftStick.currentX - this.leftStick.originX) / STICK_MAX_RADIUS;
-      dy = (this.leftStick.currentY - this.leftStick.originY) / STICK_MAX_RADIUS;
+      const rawDx = this.leftStick.currentX - this.leftStick.originX;
+      const rawDy = this.leftStick.currentY - this.leftStick.originY;
+      const rawDist = Math.hypot(rawDx, rawDy);
+      if (rawDist > STICK_DEADZONE) {
+        const effectiveDist = Math.min(rawDist, STICK_MAX_RADIUS) - STICK_DEADZONE;
+        const normScale = effectiveDist / (STICK_MAX_RADIUS - STICK_DEADZONE);
+        dx = (rawDx / rawDist) * normScale;
+        dy = (rawDy / rawDist) * normScale;
+      }
     }
 
     if (this.keysPressed.has('KeyA') || this.keysPressed.has('KeyQ') || this.keysPressed.has('ArrowLeft')) {
@@ -159,7 +189,7 @@ export class TwinStickController {
       const worldTarget = this.screenToWorldFn(x, y);
       const playerPos = this.getPlayerWorldFn();
       this.aimAngle = Math.atan2(worldTarget.y - playerPos.y, worldTarget.x - playerPos.x);
-      this.pendingFire = { angle: this.aimAngle };
+      this.pendingFire = { angle: this.aimAngle, autoAim: false };
       return;
     }
 
@@ -176,6 +206,7 @@ export class TwinStickController {
       };
     } else if (x >= rect.width * 0.5 && this.rightPointerId === null) {
       this.rightPointerId = ev.pointerId;
+      this.rightStickMaxDist = 0;
       this.rightStick = {
         ...this.rightStick,
         active: true,
@@ -209,8 +240,12 @@ export class TwinStickController {
       this.rightStick.currentY = clamped.y;
       const dx = clamped.x - this.rightStick.originX;
       const dy = clamped.y - this.rightStick.originY;
-      if (Math.hypot(dx, dy) > 8) {
-        this.aimAngle = Math.atan2(dy, dx);
+      const dist = Math.hypot(dx, dy);
+      if (dist > this.rightStickMaxDist) {
+        this.rightStickMaxDist = dist;
+      }
+      if (dist >= CANCEL_ZONE_RADIUS) {
+        this.aimAngle = Math.atan2(dy / ISO_Y_SCALE, dx);
       }
     }
   };
@@ -222,12 +257,24 @@ export class TwinStickController {
     } else if (ev.pointerId === this.rightPointerId) {
       const dx = this.rightStick.currentX - this.rightStick.originX;
       const dy = this.rightStick.currentY - this.rightStick.originY;
-      if (Math.hypot(dx, dy) > 10) {
-        this.aimAngle = Math.atan2(dy, dx);
+      const currentDist = Math.hypot(dx, dy);
+      const cancelling =
+        this.rightStickMaxDist > AIM_ACTIVATION_DIST && currentDist < CANCEL_ZONE_RADIUS;
+
+      if (!cancelling) {
+        if (this.rightStickMaxDist <= CANCEL_ZONE_RADIUS) {
+          this.pendingFire = { angle: this.aimAngle, autoAim: true };
+        } else {
+          if (currentDist >= CANCEL_ZONE_RADIUS) {
+            this.aimAngle = Math.atan2(dy / ISO_Y_SCALE, dx);
+          }
+          this.pendingFire = { angle: this.aimAngle, autoAim: false };
+        }
       }
-      this.pendingFire = { angle: this.aimAngle };
+
       this.rightPointerId = null;
       this.rightStick.active = false;
+      this.rightStickMaxDist = 0;
     }
   };
 
@@ -239,7 +286,7 @@ export class TwinStickController {
     } else if (ev.code === 'KeyE' || ev.code === 'KeyG') {
       this.pendingGadget = true;
     } else if (ev.code === 'KeyF') {
-      this.pendingFire = { angle: this.aimAngle };
+      this.pendingFire = { angle: this.aimAngle, autoAim: false };
     }
   };
 

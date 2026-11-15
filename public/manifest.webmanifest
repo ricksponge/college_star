@@ -1,0 +1,11 @@
+{
+  "name": "Brawl Collège : Opération 6ème",
+  "short_name": "Brawl Collège",
+  "description": "Arène éducative double stick CM2-6ème 100% hors-ligne",
+  "lang": "fr",
+  "start_url": "/",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#020617",
+  "theme_color": "#facc15"
+}

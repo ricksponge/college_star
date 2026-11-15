@@ -12,11 +12,18 @@ export const MODE_CHASSE_AUX_BONNES_NOTES: IGameMode = {
   victory_condition: 'Collecter 10 cristaux bleus et tenir 15 secondes (ou score le plus élevé à 2m15).',
 };
 
+export interface IDroppedCrystal {
+  id: string;
+  x: number;
+  y: number;
+}
+
 export interface IChasseNotesState {
   crystalsCollected: number;
   countdownActive: boolean;
   countdownRemainingSec: number;
   promptCycleRemainingSec: number;
+  droppedCrystals: IDroppedCrystal[];
 }
 
 export class ChasseNotesSession {
@@ -25,6 +32,8 @@ export class ChasseNotesSession {
   private countdownActive = false;
   private countdownRemainingSec = 15;
   private promptCycleRemainingSec = 12;
+  private droppedCrystals: IDroppedCrystal[] = [];
+  private crystalSeq = 0;
 
   public tick(dtSec: number): { shouldRotatePrompt: boolean; victoryByCountdown: boolean } {
     let shouldRotatePrompt = false;
@@ -45,6 +54,34 @@ export class ChasseNotesSession {
     return { shouldRotatePrompt, victoryByCountdown };
   }
 
+  public spawnDroppedCrystal(x: number, y: number): void {
+    this.crystalSeq += 1;
+    this.droppedCrystals.push({
+      id: `crystal_${this.crystalSeq}`,
+      x,
+      y,
+    });
+  }
+
+  public tryPickupCrystals(playerX: number, playerY: number, pickupRadius = 58): number {
+    const remaining: IDroppedCrystal[] = [];
+    let pickedCount = 0;
+
+    for (const crystal of this.droppedCrystals) {
+      if (Math.hypot(crystal.x - playerX, crystal.y - playerY) <= pickupRadius) {
+        pickedCount += 1;
+      } else {
+        remaining.push(crystal);
+      }
+    }
+
+    this.droppedCrystals = remaining;
+    if (pickedCount > 0) {
+      this.collectCrystal(pickedCount);
+    }
+    return pickedCount;
+  }
+
   public collectCrystal(amount = 1): void {
     this.crystalsCollected += amount;
     if (this.crystalsCollected >= 10 && !this.countdownActive) {
@@ -59,6 +96,7 @@ export class ChasseNotesSession {
       countdownActive: this.countdownActive,
       countdownRemainingSec: this.countdownRemainingSec,
       promptCycleRemainingSec: this.promptCycleRemainingSec,
+      droppedCrystals: this.droppedCrystals.map((crystal) => ({ ...crystal })),
     };
   }
 }

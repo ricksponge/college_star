@@ -1,3 +1,4 @@
+import './styles/brawl-theme.css';
 import type { BrawlerId, GameModeId, IGameMode, IQuestion } from './types/cctp';
 import { LocalSQLiteDB } from './db/LocalSQLiteDB';
 import { GameEngine, type IMatchSummary } from './engine/GameEngine';
@@ -5,6 +6,7 @@ import { getAllBrawlers, getBrawlerById } from './entities/Brawlers';
 import { ALL_GAME_MODES, getGameModeById, getHourlyRotatedMode } from './modes/ModesRegistry';
 import { ELO_DEFAULT } from './services/EloEngine';
 import { QuestionProvider } from './services/QuestionProvider';
+import { soundManager } from './services/SoundManager';
 import { ParentDashboard } from './ui/ParentDashboard';
 import { LobbyBrawlerPreview3D } from './ui/LobbyBrawlerPreview3D';
 import { renderTrophyRoadHtml, StarrDropModal } from './ui/StarrDropModal';
@@ -19,9 +21,23 @@ const SUBJECT_NAMES: Record<string, string> = {
 
 const BRAWLER_BADGE_COLORS: Record<BrawlerId, string> = {
   TIMO: '#facc15',
-  LEO: '#a855f7',
-  MAYA: '#84cc16',
+  LEO: '#c084fc',
+  MAYA: '#4ade80',
   ZACK: '#22d3ee',
+};
+
+const BRAWLER_PORTRAITS: Record<BrawlerId, string> = {
+  TIMO: '/assets/timo.jpg',
+  LEO: '/assets/leo.jpg',
+  MAYA: '/assets/maya.jpg',
+  ZACK: '/assets/zack.jpg',
+};
+
+const BRAWLER_RING_CLASS: Record<BrawlerId, string> = {
+  TIMO: '',
+  LEO: 'brawl-portrait-ring-purple',
+  MAYA: 'brawl-portrait-ring-green',
+  ZACK: 'brawl-portrait-ring-blue',
 };
 
 class BrawlCollegeApp {
@@ -58,102 +74,113 @@ class BrawlCollegeApp {
     const hourlyMode = getHourlyRotatedMode();
     const stars = this.db.getCombatStars();
     const starsProgress = stars % 3;
+    const isMuted = soundManager.isMuted();
 
     this.root.innerHTML = `
-      <div style="max-width:1180px; margin:0 auto; padding:16px; display:flex; flex-direction:column; gap:16px;">
-        <!-- Header Bar -->
-        <header style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:12px; background:#0f172a; border:2px solid #1e293b; border-radius:16px; padding:12px 18px;">
-          <div>
-            <div style="font-size:11px; text-transform:uppercase; letter-spacing:1.2px; color:#38bdf8; font-weight:800;">Brawl Collège : Opération 6ème</div>
-            <h1 style="margin:2px 0 0; font-size:22px; font-weight:900; color:#facc15;">🎒 ${profile.nickname} — Prêt pour l'arène !</h1>
-          </div>
-          <div style="display:flex; flex-wrap:wrap; align-items:center; gap:10px;">
-            <div style="background:#1e293b; padding:8px 12px; border-radius:10px; font-weight:800; font-size:14px;">🏆 ${profile.trophies} / 1000</div>
-            <div style="background:#1e293b; padding:8px 12px; border-radius:10px; font-weight:800; font-size:14px; color:#facc15;">🪙 ${profile.coins}</div>
-            <div style="background:#1e293b; padding:8px 12px; border-radius:10px; font-weight:800; font-size:14px; color:#38bdf8;">⭐ ${starsProgress}/3</div>
-            <button id="btn-starr-drop" style="padding:9px 14px; border-radius:10px; border:2px solid ${profile.starr_drops_available > 0 ? '#facc15' : '#475569'};
-                    background:${profile.starr_drops_available > 0 ? 'linear-gradient(135deg,#eab308,#f97316)' : '#1e293b'};
-                    color:${profile.starr_drops_available > 0 ? '#0f172a' : '#94a3b8'}; font-weight:900; cursor:pointer;">
-              🎁 Casiers (${profile.starr_drops_available})
-            </button>
-            <button id="btn-parent-dash" style="padding:9px 14px; border-radius:10px; border:1px solid #38bdf8; background:#0f172a; color:#38bdf8; font-weight:800; cursor:pointer;">
-              🔒 Carnet Parent
-            </button>
-          </div>
-        </header>
-
-        <!-- Route vers la 6ème -->
-        ${renderTrophyRoadHtml(profile.trophies)}
-
-        <!-- Sélection Héros & Modes -->
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:16px;">
-          <!-- 4 Héros -->
-          <section style="background:#0f172a; border:1px solid #1e293b; border-radius:16px; padding:14px;">
-            <h2 style="margin:0 0 10px; font-size:16px; color:#facc15;">⚡ Les 4 Élèves-Héros</h2>
-            <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:10px;">
-              ${brawlers
-                .map((b) => {
-                  const isSelected = b.id === selectedBrawler.id;
-                  const accent = BRAWLER_BADGE_COLORS[b.id];
-                  return `
-                  <button data-brawler-id="${b.id}" style="text-align:left; padding:10px; border-radius:12px; cursor:pointer;
-                          background:${isSelected ? 'rgba(250,204,21,0.12)' : '#1e293b'};
-                          border:2px solid ${isSelected ? accent : '#334155'}; color:#f8fafc;">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                      <strong style="font-size:15px; color:${accent};">${b.name}</strong>
-                      <span style="font-size:11px; color:#cbd5e1;">❤️ ${b.base_hp}</span>
-                    </div>
-                    <div style="font-size:11px; color:#94a3b8; margin:2px 0 4px;">${b.title}</div>
-                    <div style="font-size:11px; color:#e2e8f0;">📚 ${SUBJECT_NAMES[b.favorite_subject]}</div>
-                    <div style="font-size:10px; color:#cbd5e1; margin-top:4px;">Super : <strong>${b.super_ability.name}</strong></div>
-                  </button>
-                `;
-                })
-                .join('')}
-            </div>
-            <div style="margin-top:12px; display:grid; grid-template-columns:minmax(180px, 240px) 1fr; gap:12px; align-items:stretch;">
-              <div style="background:radial-gradient(circle at 50% 45%, #1e293b 0%, #020617 85%); border:1px solid #334155; border-radius:12px; padding:6px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-                <div id="brawler-3d-preview" style="width:100%; height:195px;"></div>
-                <div style="font-size:10px; color:#94a3b8; margin-top:2px;">🧊 Modèle 3D — glisser pour pivoter</div>
-              </div>
-              <div style="background:#1e293b; border-radius:12px; padding:12px; font-size:12px; color:#cbd5e1; display:flex; flex-direction:column; justify-content:center; gap:6px;">
-                <div style="font-size:14px;"><strong style="color:${BRAWLER_BADGE_COLORS[selectedBrawler.id]};">${selectedBrawler.name}</strong> — ${selectedBrawler.title}</div>
-                <div style="color:#94a3b8;">${selectedBrawler.archetype} • Vitesse ${selectedBrawler.speed_value} • ❤️ ${selectedBrawler.base_hp} PV</div>
-                <div>🎯 <strong>${selectedBrawler.basic_attack.name}</strong> : ${selectedBrawler.basic_attack.projectiles_count}×${selectedBrawler.basic_attack.base_damage} dégâts</div>
-                <div>🟡 <strong>Super</strong> : ${selectedBrawler.super_ability.name}</div>
-                <div>🟢 <strong>Gadget (×3)</strong> : ${selectedBrawler.gadget.name}</div>
-              </div>
-            </div>
-          </section>
-
-          <!-- 5 Modes -->
-          <section style="background:#0f172a; border:1px solid #1e293b; border-radius:16px; padding:14px; display:flex; flex-direction:column; justify-content:space-between;">
+      <div class="brawl-bg" style="min-height:100dvh; padding:14px 16px;">
+        <div class="lobby-shell" style="max-width:1200px; margin:0 auto; display:flex; flex-direction:column; gap:14px;">
+          <!-- Header Bar -->
+          <header class="brawl-card" style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:12px; padding:12px 18px;">
             <div>
-              <h2 style="margin:0 0 10px; font-size:16px; color:#38bdf8;">🏟️ Les 5 Modes d'Arène (Rotation : ${hourlyMode.name})</h2>
-              <div style="display:flex; flex-direction:column; gap:8px;">
-                ${ALL_GAME_MODES.map((m) => {
-                  const active = m.id === selectedMode.id;
-                  return `
-                  <button data-mode-id="${m.id}" style="text-align:left; padding:9px 12px; border-radius:10px; cursor:pointer;
-                          background:${active ? 'rgba(56,189,248,0.16)' : '#1e293b'};
-                          border:2px solid ${active ? '#38bdf8' : '#334155'}; color:#f8fafc;">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                      <strong style="font-size:14px;">${m.mode_number}. ${m.name}</strong>
-                      <span style="font-size:11px; color:#facc15; font-weight:700;">${m.format} • ${m.duration_seconds}s</span>
-                    </div>
-                    <div style="font-size:11px; color:#94a3b8; margin-top:2px;">${m.description}</div>
-                  </button>
-                `;
-                }).join('')}
-              </div>
+              <div class="brawl-outline-text" style="font-size:11px; text-transform:uppercase; letter-spacing:1.3px; color:#38bdf8;">Brawl Collège : Opération 6ème</div>
+              <h1 class="brawl-title" style="margin:2px 0 0; font-size:22px; color:#ffd426;">🎒 ${profile.nickname} — Prêt pour l'arène !</h1>
             </div>
+            <div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px;">
+              <div class="brawl-outline-text" style="background:#0b1129; border:2.5px solid #090d16; padding:7px 12px; border-radius:11px; font-size:13px; box-shadow:0 3px 0 #090d16;">🏆 ${profile.trophies} / 1000</div>
+              <div class="brawl-outline-text" style="background:#0b1129; border:2.5px solid #090d16; padding:7px 12px; border-radius:11px; font-size:13px; color:#ffd426; box-shadow:0 3px 0 #090d16;">🪙 ${profile.coins}</div>
+              <div class="brawl-outline-text" style="background:#0b1129; border:2.5px solid #090d16; padding:7px 12px; border-radius:11px; font-size:13px; color:#22b8ff; box-shadow:0 3px 0 #090d16;">⭐ ${starsProgress}/3</div>
+              <button id="btn-starr-drop" class="brawl-btn brawl-btn-sm ${profile.starr_drops_available > 0 ? 'brawl-btn-yellow brawl-pulse' : ''}" ${profile.starr_drops_available === 0 ? 'disabled' : ''}>
+                🎁 Casiers (${profile.starr_drops_available})
+              </button>
+              <button id="btn-parent-dash" class="brawl-btn brawl-btn-sm brawl-btn-blue">
+                🔒 Carnet Parent
+              </button>
+              <button id="btn-toggle-mute" class="brawl-btn brawl-btn-sm" title="Activer ou couper les effets sonores">
+                ${isMuted ? '🔇 Muet' : '🔊 Son'}
+              </button>
+            </div>
+          </header>
 
-            <button id="btn-play-match" style="margin-top:14px; width:100%; padding:15px; border-radius:14px; border:none;
-                    background:linear-gradient(135deg, #facc15, #f97316); color:#0f172a; font-size:20px; font-weight:900;
-                    cursor:pointer; box-shadow:0 10px 30px rgba(250,204,21,0.35);">
-              ▶ JOUER (${selectedBrawler.name.toUpperCase()} — ${selectedMode.name.toUpperCase()})
-            </button>
-          </section>
+          <!-- Route vers la 6ème -->
+          ${renderTrophyRoadHtml(profile.trophies)}
+
+          <!-- Sélection Héros & Modes -->
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:16px;">
+            <!-- 4 Héros -->
+            <section class="brawl-card" style="padding:14px;">
+              <h2 class="brawl-outline-text" style="margin:0 0 10px; font-size:17px; color:#ffd426;">⚡ LES 4 ÉLÈVES-HÉROS</h2>
+              <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:10px;">
+                ${brawlers
+                  .map((b) => {
+                    const isSelected = b.id === selectedBrawler.id;
+                    const accent = BRAWLER_BADGE_COLORS[b.id];
+                    const ringClass = BRAWLER_RING_CLASS[b.id];
+                    return `
+                    <button data-brawler-id="${b.id}" class="brawl-card ${isSelected ? 'brawl-card-active' : ''}" style="text-align:left; padding:10px; cursor:pointer; display:flex; align-items:center; gap:10px;">
+                      <span class="brawl-portrait-ring ${ringClass}" style="width:52px; height:52px; flex-shrink:0;">
+                        <img src="${BRAWLER_PORTRAITS[b.id]}" alt="${b.name}" style="width:100%; height:100%; object-fit:cover; display:block;" />
+                      </span>
+                      <div style="min-width:0; flex:1;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:4px;">
+                          <strong class="brawl-outline-text" style="font-size:15px; color:${accent};">${b.name}</strong>
+                          <span style="font-size:11px; font-weight:800; color:#f8fafc;">❤️ ${b.base_hp}</span>
+                        </div>
+                        <div style="font-size:11px; color:#cbd5e1; margin:1px 0 3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${b.title}</div>
+                        <div style="font-size:11px; font-weight:700; color:#e2e8f0;">📚 ${SUBJECT_NAMES[b.favorite_subject]}</div>
+                        <div style="font-size:10px; color:#fde68a; margin-top:2px;">⚡ ${b.super_ability.name}</div>
+                      </div>
+                    </button>
+                  `;
+                  })
+                  .join('')}
+              </div>
+              <div style="margin-top:12px; display:grid; grid-template-columns:minmax(180px, 240px) 1fr; gap:12px; align-items:stretch;">
+                <div class="brawl-pd-subcard" style="background:radial-gradient(circle at 50% 45%, #263c9e 0%, #090e26 88%); padding:6px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                  <div id="brawler-3d-preview" style="width:100%; height:200px;"></div>
+                  <div style="font-size:10px; color:#cbd5e1; margin-top:2px; font-weight:700;">🧊 Modèle 3D — glisser pour pivoter</div>
+                </div>
+                <div class="brawl-pd-subcard" style="padding:12px; font-size:12px; color:#e2e8f0; display:flex; flex-direction:column; justify-content:center; gap:7px;">
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span class="brawl-portrait-ring ${BRAWLER_RING_CLASS[selectedBrawler.id]}" style="width:36px; height:36px; flex-shrink:0;">
+                      <img src="${BRAWLER_PORTRAITS[selectedBrawler.id]}" alt="${selectedBrawler.name}" style="width:100%; height:100%; object-fit:cover; display:block;" />
+                    </span>
+                    <div>
+                      <div style="font-size:15px;"><strong class="brawl-outline-text" style="color:${BRAWLER_BADGE_COLORS[selectedBrawler.id]};">${selectedBrawler.name}</strong> — <span style="font-weight:700;">${selectedBrawler.title}</span></div>
+                      <div style="font-size:11px; color:#93c5fd; font-weight:700;">${selectedBrawler.archetype} • ⚡ ${selectedBrawler.speed_value} • ❤️ ${selectedBrawler.base_hp} PV</div>
+                    </div>
+                  </div>
+                  <div>🎯 <strong>${selectedBrawler.basic_attack.name}</strong> : ${selectedBrawler.basic_attack.projectiles_count}×${selectedBrawler.basic_attack.base_damage} dégâts</div>
+                  <div>🟡 <strong>Super</strong> : ${selectedBrawler.super_ability.name}</div>
+                  <div>🟢 <strong>Gadget (×3)</strong> : ${selectedBrawler.gadget.name}</div>
+                </div>
+              </div>
+            </section>
+
+            <!-- 5 Modes -->
+            <section class="brawl-card" style="padding:14px; display:flex; flex-direction:column; justify-content:space-between;">
+              <div>
+                <h2 class="brawl-outline-text" style="margin:0 0 10px; font-size:17px; color:#22b8ff;">🏟️ LES 5 MODES D'ARÈNE <span style="font-size:12px; color:#fde047;">(Rotation : ${hourlyMode.name})</span></h2>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                  ${ALL_GAME_MODES.map((m) => {
+                    const active = m.id === selectedMode.id;
+                    return `
+                    <button data-mode-id="${m.id}" class="brawl-card ${active ? 'brawl-card-active' : ''}" style="text-align:left; padding:9px 12px; cursor:pointer;">
+                      <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                        <strong class="brawl-outline-text" style="font-size:14px; color:${active ? '#ffd426' : '#f8fafc'};">${m.mode_number}. ${m.name}</strong>
+                        <span style="font-size:11px; color:#ffd426; font-weight:900; background:#090e26; border:2px solid #090d16; border-radius:8px; padding:2px 7px;">${m.format} • ${m.duration_seconds}s</span>
+                      </div>
+                      <div style="font-size:11px; color:#cbd5e1; margin-top:3px;">${m.description}</div>
+                    </button>
+                  `;
+                  }).join('')}
+                </div>
+              </div>
+
+              <button id="btn-play-match" class="brawl-btn brawl-btn-lg brawl-btn-yellow brawl-pulse" style="margin-top:14px; width:100%;">
+                ▶ JOUER (${selectedBrawler.name.toUpperCase()} — ${selectedMode.name.toUpperCase()})
+              </button>
+            </section>
+          </div>
         </div>
       </div>
     `;
@@ -197,6 +224,13 @@ class BrawlCollegeApp {
       this.parentDashboard.open(() => this.renderLobby());
     });
 
+    // Audio Mute Toggle
+    const muteBtn = this.root.querySelector<HTMLButtonElement>('#btn-toggle-mute');
+    muteBtn?.addEventListener('click', () => {
+      const mutedNow = soundManager.toggleMute();
+      muteBtn.textContent = mutedNow ? '🔇 Muet' : '🔊 Son';
+    });
+
     // Lancer le combat 60 FPS
     this.root.querySelector('#btn-play-match')?.addEventListener('click', () => {
       this.startMatch(selectedBrawler.id, selectedMode);
@@ -212,29 +246,31 @@ class BrawlCollegeApp {
     const preferredSubject = mode.target_subject ?? brawler.favorite_subject;
 
     this.root.innerHTML = `
-      <div style="position:relative; width:100vw; height:100vh; overflow:hidden; background:#020617;">
+      <div class="arena-container">
         <canvas id="arena-canvas" style="display:block; width:100%; height:100%;"></canvas>
 
-        <!-- Bouton Quitter haut gauche sous HUD -->
-        <button id="btn-quit-match" style="position:absolute; top:64px; left:14px; padding:7px 14px; border-radius:10px;
-                border:1px solid #475569; background:rgba(15,23,42,0.85); color:#f8fafc; font-weight:800; cursor:pointer; z-index:10;">
-          ✖ Quitter
-        </button>
+        <!-- Boutons haut gauche sous HUD -->
+        <div style="position:absolute; top:68px; left:14px; display:flex; gap:8px; z-index:10;">
+          <button id="btn-quit-match" class="brawl-btn brawl-btn-sm">
+            ✖ Quitter
+          </button>
+          <button id="btn-match-mute" class="brawl-btn brawl-btn-sm" title="Son">
+            ${soundManager.isMuted() ? '🔇' : '🔊'}
+          </button>
+        </div>
 
         <!-- Aide commandes desktop/tactile -->
-        <div style="position:absolute; bottom:14px; left:16px; background:rgba(15,23,42,0.78); padding:6px 12px; border-radius:10px; font-size:11px; color:#cbd5e1; pointer-events:none;">
+        <div style="position:absolute; bottom:14px; left:16px; background:rgba(9,13,22,0.82); border:2px solid #090d16; padding:6px 12px; border-radius:11px; font-size:11px; font-weight:700; color:#e2e8f0; pointer-events:none;">
           🕹️ Gauche / ZQSD : Bouger • 🎯 Droite / Clic : Viser & Tirer • 🟡 Espace : Super • 🟢 E : Gadget
         </div>
 
         <!-- Boutons tactiles Super (Jaune) & Gadget (Vert) -->
         <div style="position:absolute; right:20px; bottom:20px; display:flex; align-items:flex-end; gap:14px; z-index:10;">
-          <button id="btn-hud-gadget" style="width:70px; height:70px; border-radius:999px; border:3px solid #86efac;
-                  background:#16a34a; color:#fff; font-weight:900; font-size:12px; cursor:pointer; box-shadow:0 6px 20px rgba(22,163,74,0.5);">
-            GADGET<br><span id="gadget-count-badge">3</span>
+          <button id="btn-hud-gadget" class="brawl-btn brawl-btn-green" style="width:72px; height:72px; padding:0; border-radius:999px; flex-direction:column; gap:1px; font-size:11px;">
+            <span>GADGET</span><span id="gadget-count-badge" style="font-size:14px;">3</span>
           </button>
-          <button id="btn-hud-super" style="width:88px; height:88px; border-radius:999px; border:4px solid #fef08a;
-                  background:#475569; color:#cbd5e1; font-weight:900; font-size:14px; cursor:pointer; transition:all 0.15s;">
-            SUPER<br><span id="super-pct-badge">0%</span>
+          <button id="btn-hud-super" class="brawl-btn" style="width:90px; height:90px; padding:0; border-radius:999px; flex-direction:column; gap:2px; font-size:13px;">
+            <span>SUPER</span><span id="super-pct-badge" style="font-size:15px;">0%</span>
           </button>
         </div>
       </div>
@@ -311,17 +347,17 @@ class BrawlCollegeApp {
         }
         if (btnSuper) {
           const ready = hud.superGaugePct >= 100;
-          btnSuper.style.background = ready
-            ? 'linear-gradient(135deg, #facc15, #f59e0b)'
-            : '#475569';
-          btnSuper.style.color = ready ? '#0f172a' : '#cbd5e1';
-          btnSuper.style.boxShadow = ready ? '0 0 28px rgba(250,204,21,0.9)' : 'none';
+          btnSuper.classList.toggle('brawl-btn-yellow', ready);
+          btnSuper.classList.toggle('brawl-pulse', ready);
+          btnSuper.style.boxShadow = ready
+            ? '0 5px 0 #090d16, 0 0 28px rgba(250,204,21,0.9)'
+            : '0 5px 0 #090d16';
         }
         if (gadgetBadge) {
           gadgetBadge.textContent = `${hud.gadgetCharges}`;
         }
         if (btnGadget) {
-          btnGadget.style.opacity = hud.gadgetCharges > 0 ? '1' : '0.4';
+          btnGadget.style.opacity = hud.gadgetCharges > 0 ? '1' : '0.45';
         }
       },
       onMatchFinished: (summary) => {
@@ -334,6 +370,11 @@ class BrawlCollegeApp {
 
     btnSuper?.addEventListener('click', () => engine.triggerSuperFromUI());
     btnGadget?.addEventListener('click', () => engine.triggerGadgetFromUI());
+    const matchMuteBtn = this.root.querySelector<HTMLButtonElement>('#btn-match-mute');
+    matchMuteBtn?.addEventListener('click', () => {
+      const mutedNow = soundManager.toggleMute();
+      matchMuteBtn.textContent = mutedNow ? '🔇' : '🔊';
+    });
     this.root.querySelector('#btn-quit-match')?.addEventListener('click', () => {
       engine.stop();
       this.renderLobby();
@@ -352,41 +393,43 @@ class BrawlCollegeApp {
     const starUpdate = this.db.addCombatStars(summary.starsEarned);
 
     const overlay = document.createElement('div');
-    overlay.style.cssText =
-      'position:fixed; inset:0; background:rgba(2,6,23,0.9); display:flex; align-items:center; justify-content:center; z-index:9998; padding:16px;';
+    overlay.className = 'brawl-modal-overlay';
 
     overlay.innerHTML = `
-      <div style="width:min(460px, 94vw); background:#0f172a; border:3px solid ${summary.victory ? '#facc15' : '#38bdf8'}; border-radius:20px; padding:24px; text-align:center;">
-        <h2 style="margin:0 0 6px; font-size:28px; color:${summary.victory ? '#facc15' : '#38bdf8'};">
-          ${summary.victory ? '🏆 VICTOIRE !' : '📘 FIN DE PARTIE'}
-        </h2>
-        <div style="font-size:14px; color:#cbd5e1; margin-bottom:16px;">
-          Score d'objectif : <strong>${summary.objectiveScore}</strong> • Bonnes cibles : <strong>${summary.correctHits}</strong>
+      <div class="brawl-modal-panel brawl-pop" style="width:min(460px, 94vw); padding:26px; text-align:center;">
+        ${summary.victory ? '<div class="brawl-rays"></div>' : ''}
+        <div style="position:relative; z-index:1;">
+          <h2 class="brawl-title" style="margin:0 0 8px; font-size:30px; color:${summary.victory ? '#ffd426' : '#22b8ff'};">
+            ${summary.victory ? '🏆 VICTOIRE !' : '📘 FIN DE PARTIE'}
+          </h2>
+          <div style="font-size:14px; color:#e2e8f0; margin-bottom:16px; font-weight:700;">
+            Score d'objectif : <strong style="color:#ffd426;">${summary.objectiveScore}</strong> • Bonnes cibles : <strong style="color:#38e54d;">${summary.correctHits}</strong>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px;">
+            <div class="brawl-reward-tile">
+              <div class="brawl-outline-text" style="font-size:20px; color:#ffd426;">+${trophiesGain}</div>
+              <div style="font-size:11px; font-weight:700; color:#cbd5e1;">Trophées 🏆</div>
+            </div>
+            <div class="brawl-reward-tile">
+              <div class="brawl-outline-text" style="font-size:20px; color:#fbbf24;">+${coinsGain}</div>
+              <div style="font-size:11px; font-weight:700; color:#cbd5e1;">Pièces 🪙</div>
+            </div>
+            <div class="brawl-reward-tile">
+              <div class="brawl-outline-text" style="font-size:20px; color:#22b8ff;">+${summary.starsEarned}</div>
+              <div style="font-size:11px; font-weight:700; color:#cbd5e1;">Étoiles ⭐</div>
+            </div>
+          </div>
+          ${
+            starUpdate.unlockedStarrDrops > 0
+              ? `<div class="brawl-pd-subcard" style="background:rgba(250,204,21,0.18); border-color:#ffd426; color:#fef08a; font-weight:900; margin-bottom:14px;">
+                  🎁 +${starUpdate.unlockedStarrDrops} Casier Mystère débloqué au Lobby !
+                 </div>`
+              : ''
+          }
+          <button id="btn-back-lobby" class="brawl-btn brawl-btn-lg brawl-btn-yellow" style="width:100%;">
+            RETOUR AU LOBBY
+          </button>
         </div>
-        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px;">
-          <div style="background:#1e293b; padding:10px; border-radius:12px;">
-            <div style="font-size:18px; font-weight:900; color:#facc15;">+${trophiesGain}</div>
-            <div style="font-size:11px; color:#94a3b8;">Trophées 🏆</div>
-          </div>
-          <div style="background:#1e293b; padding:10px; border-radius:12px;">
-            <div style="font-size:18px; font-weight:900; color:#fbbf24;">+${coinsGain}</div>
-            <div style="font-size:11px; color:#94a3b8;">Pièces 🪙</div>
-          </div>
-          <div style="background:#1e293b; padding:10px; border-radius:12px;">
-            <div style="font-size:18px; font-weight:900; color:#38bdf8;">+${summary.starsEarned}</div>
-            <div style="font-size:11px; color:#94a3b8;">Étoiles ⭐</div>
-          </div>
-        </div>
-        ${
-          starUpdate.unlockedStarrDrops > 0
-            ? `<div style="padding:10px; border-radius:10px; background:rgba(250,204,21,0.18); color:#fef08a; font-weight:800; margin-bottom:14px;">
-                🎁 +${starUpdate.unlockedStarrDrops} Casier Mystère débloqué au Lobby !
-               </div>`
-            : ''
-        }
-        <button id="btn-back-lobby" style="width:100%; padding:13px; border-radius:12px; border:none; background:#facc15; color:#0f172a; font-weight:900; font-size:16px; cursor:pointer;">
-          RETOUR AU LOBBY
-        </button>
       </div>
     `;
 

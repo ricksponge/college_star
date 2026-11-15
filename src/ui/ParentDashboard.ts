@@ -41,6 +41,15 @@ function formatSkillName(code: string): string {
   return SKILL_LABELS[code] ?? code;
 }
 
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 /**
  * Dashboard Parent ("Carnet Parent") verrouillé par code PIN à 4 chiffres (défaut '0000').
  * Affiche le radar des 5 matières, les taux de réussite, le temps de réaction moyen
@@ -63,60 +72,168 @@ export class ParentDashboard {
       'width:min(880px, 96vw); max-height:92vh; overflow-y:auto; background:#0f172a; border:2px solid #38bdf8; border-radius:18px; padding:22px; color:#f8fafc; box-shadow:0 24px 60px rgba(0,0,0,0.7);';
     overlay.appendChild(modal);
 
+    let activeKeyHandler: ((e: KeyboardEvent) => void) | null = null;
+
+    const cleanupPinListeners = (): void => {
+      if (activeKeyHandler) {
+        document.removeEventListener('keydown', activeKeyHandler);
+        activeKeyHandler = null;
+      }
+    };
+
+    const closeDashboard = (): void => {
+      cleanupPinListeners();
+      overlay.remove();
+      onClose?.();
+    };
+
     const renderPinPrompt = (errorMsg = ''): void => {
+      cleanupPinListeners();
+      let pinValue = '';
+
+      const keypadButtons = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '⌫', '0', 'OK'];
+
       modal.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
           <h2 style="margin:0; font-size:20px; color:#38bdf8;">🔒 Carnet Parent — Accès Protégé</h2>
-          <button id="pd-close-btn" style="background:#334155; color:#fff; border:none; border-radius:8px; padding:6px 12px; cursor:pointer; font-weight:700;">Fermer</button>
+          <button id="pd-close-btn" type="button" style="background:#334155; color:#fff; border:none; border-radius:8px; padding:6px 12px; cursor:pointer; font-weight:700;">Fermer</button>
         </div>
-        <p style="color:#cbd5e1; font-size:14px; margin-bottom:14px;">
-          Saisissez le code PIN parent à 4 chiffres pour consulter les statistiques pédagogiques (code par défaut : <strong>0000</strong>).
+        <p style="color:#cbd5e1; font-size:14px; margin:0 0 16px; text-align:center;">
+          Saisissez le code PIN parent à 4 chiffres (défaut : <strong>0000</strong>).
         </p>
-        <div style="display:flex; gap:10px; align-items:center; max-width:340px;">
-          <input id="pd-pin-input" type="password" inputmode="numeric" maxlength="4" placeholder="••••"
-                 style="flex:1; padding:10px 14px; border-radius:10px; border:2px solid #475569; background:#1e293b; color:#fff; font-size:20px; letter-spacing:8px; text-align:center;" />
-          <button id="pd-unlock-btn" style="padding:11px 18px; border-radius:10px; border:none; background:#38bdf8; color:#0f172a; font-weight:900; cursor:pointer;">Déverrouiller</button>
+
+        <div style="max-width:290px; margin:0 auto; display:flex; flex-direction:column; align-items:center; gap:14px;">
+          <div id="pd-pin-dots" aria-live="polite" style="display:flex; justify-content:center; gap:16px; padding:10px 20px; border-radius:14px; background:#1e293b; border:2px solid #334155;">
+            <span data-pin-dot="0" style="font-size:24px; line-height:1; color:#475569;">○</span>
+            <span data-pin-dot="1" style="font-size:24px; line-height:1; color:#475569;">○</span>
+            <span data-pin-dot="2" style="font-size:24px; line-height:1; color:#475569;">○</span>
+            <span data-pin-dot="3" style="font-size:24px; line-height:1; color:#475569;">○</span>
+          </div>
+
+          <div id="pd-pin-keypad" style="width:100%; display:grid; grid-template-columns:repeat(3, 1fr); gap:10px;">
+            ${keypadButtons
+              .map((key) => {
+                const isOk = key === 'OK';
+                const isBack = key === '⌫';
+                const bg = isOk ? '#38bdf8' : isBack ? '#334155' : '#1e293b';
+                const fg = isOk ? '#0f172a' : '#f8fafc';
+                const border = isOk ? '#38bdf8' : '#475569';
+                return `
+                  <button type="button" data-pin-key="${key}" style="min-height:50px; border-radius:12px; border:1px solid ${border};
+                          background:${bg}; color:${fg}; font-size:18px; font-weight:900; cursor:pointer; touch-action:manipulation;">
+                    ${key}
+                  </button>
+                `;
+              })
+              .join('')}
+          </div>
+
+          <div id="pd-pin-error" style="min-height:20px; color:#f87171; font-weight:700; font-size:13px; text-align:center;">
+            ${escapeHtml(errorMsg)}
+          </div>
         </div>
-        ${errorMsg ? `<div style="margin-top:10px; color:#f87171; font-weight:700; font-size:13px;">${errorMsg}</div>` : ''}
       `;
 
-      modal.querySelector('#pd-close-btn')?.addEventListener('click', () => {
-        overlay.remove();
-        onClose?.();
-      });
+      const dots = Array.from(modal.querySelectorAll<HTMLElement>('#pd-pin-dots [data-pin-dot]'));
+      const errorBox = modal.querySelector<HTMLElement>('#pd-pin-error');
 
-      const input = modal.querySelector<HTMLInputElement>('#pd-pin-input');
+      const updateDots = (): void => {
+        dots.forEach((dot, idx) => {
+          const filled = idx < pinValue.length;
+          dot.textContent = filled ? '●' : '○';
+          dot.style.color = filled ? '#38bdf8' : '#475569';
+        });
+      };
+
+      const appendDigit = (digit: string): void => {
+        if (pinValue.length >= 4) return;
+        pinValue += digit;
+        if (errorBox) errorBox.textContent = '';
+        updateDots();
+      };
+
+      const removeDigit = (): void => {
+        if (pinValue.length === 0) return;
+        pinValue = pinValue.slice(0, -1);
+        if (errorBox) errorBox.textContent = '';
+        updateDots();
+      };
+
       const tryUnlock = (): void => {
-        const value = input?.value ?? '';
-        if (this.db.verifyParentPin(value)) {
+        if (this.db.verifyParentPin(pinValue)) {
+          cleanupPinListeners();
           renderAnalytics();
         } else {
-          renderPinPrompt('Code PIN incorrect (défaut : 0000).');
+          pinValue = '';
+          updateDots();
+          if (errorBox) {
+            errorBox.textContent = 'Code PIN incorrect (défaut : 0000).';
+          }
         }
       };
 
-      modal.querySelector('#pd-unlock-btn')?.addEventListener('click', tryUnlock);
-      input?.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') tryUnlock();
+      modal.querySelector('#pd-close-btn')?.addEventListener('click', closeDashboard);
+
+      modal.querySelectorAll<HTMLButtonElement>('[data-pin-key]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const key = btn.dataset.pinKey;
+          btn.blur();
+          if (!key) return;
+          if (key === '⌫') {
+            removeDigit();
+          } else if (key === 'OK') {
+            tryUnlock();
+          } else if (/^\d$/.test(key)) {
+            appendDigit(key);
+          }
+        });
       });
-      input?.focus();
+
+      activeKeyHandler = (e: KeyboardEvent): void => {
+        if (/^\d$/.test(e.key)) {
+          e.preventDefault();
+          appendDigit(e.key);
+        } else if (e.key === 'Backspace') {
+          e.preventDefault();
+          removeDigit();
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          tryUnlock();
+        }
+      };
+      document.addEventListener('keydown', activeKeyHandler);
     };
 
     const renderAnalytics = (): void => {
+      cleanupPinListeners();
       const summaries = this.db.computeParentSubjectSummaries();
       const top5 = this.db.getTopSkillsToConsolidate(5);
       const logs = this.db.getTelemetryLogs(8);
       const profile = this.db.getPlayerProfile();
 
       modal.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:14px;">
           <div>
-            <h2 style="margin:0; font-size:22px; color:#38bdf8;">📊 Carnet Parent — Suivi 6ème de ${profile.nickname}</h2>
+            <h2 id="pd-header-title" style="margin:0; font-size:22px; color:#38bdf8;">📊 Carnet Parent — Suivi 6ème de ${escapeHtml(profile.nickname)}</h2>
             <div style="font-size:12px; color:#94a3b8;">Données 100% locales hors-ligne • Trophées : ${profile.trophies}/1000 • Savoir : ${this.db.getKnowledgePoints()} pts</div>
           </div>
-          <div style="display:flex; gap:8px;">
-            <button id="pd-export-sql" style="background:#1e293b; color:#facc15; border:1px solid #facc15; border-radius:8px; padding:7px 12px; cursor:pointer; font-weight:700; font-size:12px;">Exporter SQLite</button>
-            <button id="pd-close-btn" style="background:#334155; color:#fff; border:none; border-radius:8px; padding:7px 14px; cursor:pointer; font-weight:700;">Fermer</button>
+          <div style="display:flex; flex-wrap:wrap; gap:8px;">
+            <button id="pd-export-sql" type="button" style="background:#1e293b; color:#facc15; border:1px solid #facc15; border-radius:8px; padding:7px 12px; cursor:pointer; font-weight:700; font-size:12px;">Exporter SQLite</button>
+            <button id="pd-download-sql" type="button" style="background:#1e293b; color:#4ade80; border:1px solid #4ade80; border-radius:8px; padding:7px 12px; cursor:pointer; font-weight:700; font-size:12px;">⬇ Télécharger .sql</button>
+            <button id="pd-close-btn" type="button" style="background:#334155; color:#fff; border:none; border-radius:8px; padding:7px 14px; cursor:pointer; font-weight:700;">Fermer</button>
+          </div>
+        </div>
+
+        <div style="background:#1e293b; border-radius:12px; padding:10px 14px; border:1px solid #334155; margin-bottom:16px; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px;">
+          <div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px;">
+            <label for="pd-nickname-input" style="font-size:12px; font-weight:700; color:#cbd5e1;">Prénom / Pseudo de l'élève :</label>
+            <input id="pd-nickname-input" type="text" maxlength="24"
+                   style="padding:6px 10px; border-radius:8px; border:1px solid #475569; background:#0f172a; color:#f8fafc; font-size:13px; width:165px;" />
+            <button id="pd-save-nickname" type="button"
+                    style="padding:6px 12px; border-radius:8px; border:none; background:#38bdf8; color:#0f172a; font-size:12px; font-weight:800; cursor:pointer;">
+              Enregistrer
+            </button>
+            <span id="pd-nickname-feedback" style="display:none; font-size:11px; font-weight:800; padding:3px 8px; border-radius:999px;"></span>
           </div>
         </div>
 
@@ -155,9 +272,10 @@ export class ParentDashboard {
         <div style="background:#1e293b; border-radius:14px; padding:14px; border:1px solid #334155;">
           <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
             <h3 style="margin:0; font-size:14px; color:#e2e8f0;">Télémétrie Récente (${logs.length} derniers tirs)</h3>
-            <div style="display:flex; gap:6px; align-items:center;">
-              <input id="pd-new-pin" type="password" maxlength="4" placeholder="Nouveau PIN" style="width:105px; padding:5px 8px; border-radius:6px; border:1px solid #475569; background:#0f172a; color:#fff; font-size:12px;" />
-              <button id="pd-save-pin" style="padding:5px 10px; border-radius:6px; border:none; background:#475569; color:#fff; font-size:12px; cursor:pointer;">Changer PIN</button>
+            <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center;">
+              <input id="pd-new-pin" type="password" inputmode="numeric" maxlength="4" placeholder="Nouveau PIN" style="width:105px; padding:5px 8px; border-radius:6px; border:1px solid #475569; background:#0f172a; color:#fff; font-size:12px;" />
+              <button id="pd-save-pin" type="button" style="padding:5px 10px; border-radius:6px; border:none; background:#475569; color:#fff; font-size:12px; cursor:pointer; font-weight:700;">Changer PIN</button>
+              <span id="pd-pin-feedback" style="display:none; font-size:11px; font-weight:800; padding:3px 8px; border-radius:999px;"></span>
             </div>
           </div>
           ${
@@ -168,7 +286,7 @@ export class ParentDashboard {
                     .map(
                       (l) => `
                     <div style="background:#0f172a; padding:6px 10px; border-radius:8px; display:flex; justify-content:space-between;">
-                      <span>${l.is_hit_correct ? '✅' : '❌'} ${l.question_id} (${l.brawler_used})</span>
+                      <span>${l.is_hit_correct ? '✅' : '❌'} ${escapeHtml(l.question_id)} (${escapeHtml(l.brawler_used)})</span>
                       <span style="color:#94a3b8;">${(l.reaction_time_ms / 1000).toFixed(2)}s</span>
                     </div>`
                     )
@@ -179,10 +297,47 @@ export class ParentDashboard {
         <pre id="pd-sql-preview" style="display:none; margin-top:12px; max-height:160px; overflow:auto; background:#020617; padding:10px; border-radius:8px; font-size:11px; color:#86efac;"></pre>
       `;
 
-      modal.querySelector('#pd-close-btn')?.addEventListener('click', () => {
-        overlay.remove();
-        onClose?.();
+      const nicknameInput = modal.querySelector<HTMLInputElement>('#pd-nickname-input');
+      if (nicknameInput) {
+        nicknameInput.value = profile.nickname;
+      }
+
+      const showBadge = (el: HTMLElement | null, text: string, ok: boolean): void => {
+        if (!el) return;
+        el.style.display = 'inline-block';
+        el.textContent = text;
+        el.style.background = ok ? 'rgba(34, 197, 94, 0.18)' : 'rgba(248, 113, 113, 0.18)';
+        el.style.border = ok ? '1px solid #4ade80' : '1px solid #f87171';
+        el.style.color = ok ? '#4ade80' : '#f87171';
+      };
+
+      const saveNickname = (): void => {
+        const rawName = nicknameInput?.value.trim() ?? '';
+        const feedback = modal.querySelector<HTMLElement>('#pd-nickname-feedback');
+        if (!rawName) {
+          showBadge(feedback, 'Prénom requis', false);
+          return;
+        }
+        const updated = this.db.updatePlayerProfile({ nickname: rawName });
+        const headerTitle = modal.querySelector<HTMLElement>('#pd-header-title');
+        if (headerTitle) {
+          headerTitle.textContent = `📊 Carnet Parent — Suivi 6ème de ${updated.nickname}`;
+        }
+        if (nicknameInput) {
+          nicknameInput.value = updated.nickname;
+        }
+        showBadge(feedback, '✔ Prénom mis à jour !', true);
+      };
+
+      modal.querySelector('#pd-save-nickname')?.addEventListener('click', saveNickname);
+      nicknameInput?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          saveNickname();
+        }
       });
+
+      modal.querySelector('#pd-close-btn')?.addEventListener('click', closeDashboard);
 
       modal.querySelector('#pd-export-sql')?.addEventListener('click', () => {
         const pre = modal.querySelector<HTMLPreElement>('#pd-sql-preview');
@@ -192,12 +347,29 @@ export class ParentDashboard {
         }
       });
 
+      modal.querySelector('#pd-download-sql')?.addEventListener('click', () => {
+        const sqlDump = this.db.exportSqlDump();
+        const blob = new Blob([sqlDump], { type: 'application/sql;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'brawl_college_suivi.sql';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      });
+
       modal.querySelector('#pd-save-pin')?.addEventListener('click', () => {
         const pinInput = modal.querySelector<HTMLInputElement>('#pd-new-pin');
-        const val = pinInput?.value ?? '';
+        const pinFeedback = modal.querySelector<HTMLElement>('#pd-pin-feedback');
+        const val = pinInput?.value.trim() ?? '';
         if (/^\d{4}$/.test(val)) {
           this.db.updateParentPin(val);
           if (pinInput) pinInput.value = '';
+          showBadge(pinFeedback, '✔ Code PIN mis à jour !', true);
+        } else {
+          showBadge(pinFeedback, '4 chiffres requis', false);
         }
       });
     };

@@ -1,0 +1,680 @@
+/* ==========================================================================
+   Brawl Collège : Opération 6ème — Esports & Arcade Design System
+   Palette : Royal Indigo, Comic Ink (#090d16), Brawl Gold/Blue/Green/Purple
+   ========================================================================== */
+
+:root {
+  --brawl-ink: #090d16;
+  --brawl-bg-deep: #090e26;
+  --brawl-bg-mid: #15215c;
+  --brawl-bg-bright: #263c9e;
+  --brawl-surface: #131d47;
+  --brawl-surface-alt: #1b2961;
+  --brawl-surface-dark: #0b1129;
+
+  --brawl-yellow: #ffd426;
+  --brawl-yellow-deep: #f59e0b;
+  --brawl-blue: #22b8ff;
+  --brawl-blue-deep: #0284c7;
+  --brawl-green: #38e54d;
+  --brawl-green-deep: #16a34a;
+  --brawl-purple: #c084fc;
+  --brawl-purple-deep: #7e22ce;
+  --brawl-coral: #fb7185;
+  --brawl-text: #f8fafc;
+  --brawl-text-muted: #cbd5e1;
+
+  --brawl-font-display: 'Arial Black', 'Trebuchet MS', 'Segoe UI Black', Impact, system-ui, sans-serif;
+  --brawl-font-ui: 'Trebuchet MS', 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+.brawl-bg,
+.brawl-bg *,
+.brawl-modal-overlay,
+.brawl-modal-overlay *,
+.brawl-card,
+.brawl-card *,
+.brawl-btn,
+.brawl-trophy-road,
+.brawl-trophy-road * {
+  box-sizing: border-box;
+}
+
+/* --------------------------------------------------------------------------
+   1. Animated Radial Sunburst Background (.brawl-bg)
+   -------------------------------------------------------------------------- */
+
+.brawl-bg {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  font-family: var(--brawl-font-ui);
+  color: var(--brawl-text);
+  background: radial-gradient(
+    circle at 50% 38%,
+    var(--brawl-bg-bright) 0%,
+    var(--brawl-bg-mid) 46%,
+    var(--brawl-bg-deep) 100%
+  );
+}
+
+.brawl-bg::before {
+  content: '';
+  position: absolute;
+  top: 42%;
+  left: 50%;
+  width: 240vmax;
+  height: 240vmax;
+  margin-left: -120vmax;
+  margin-top: -120vmax;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.9;
+  background: repeating-conic-gradient(
+    from 0deg,
+    rgba(96, 165, 250, 0.11) 0deg 10deg,
+    rgba(255, 255, 255, 0.025) 10deg 20deg,
+    rgba(12, 18, 48, 0.14) 20deg 30deg
+  );
+  animation: brawl-spin-rays 46s linear infinite;
+}
+
+.brawl-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(circle at 50% 40%, transparent 35%, rgba(6, 9, 24, 0.62) 100%),
+    linear-gradient(180deg, rgba(56, 189, 248, 0.08) 0%, transparent 28%, rgba(9, 13, 22, 0.45) 100%);
+}
+
+.brawl-bg > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Reusable spinning rays backdrop (e.g. behind Starr Drop locker) */
+.brawl-rays {
+  position: absolute;
+  inset: -44%;
+  border-radius: 999px;
+  pointer-events: none;
+  background: repeating-conic-gradient(
+    from 0deg,
+    rgba(250, 204, 21, 0.34) 0deg 11deg,
+    transparent 11deg 24deg
+  );
+  -webkit-mask-image: radial-gradient(circle, rgba(0, 0, 0, 1) 18%, rgba(0, 0, 0, 0.65) 48%, transparent 72%);
+  mask-image: radial-gradient(circle, rgba(0, 0, 0, 1) 18%, rgba(0, 0, 0, 0.65) 48%, transparent 72%);
+  animation: brawl-spin-rays 14s linear infinite;
+}
+
+/* --------------------------------------------------------------------------
+   2. Comic / Arcade Typography
+   -------------------------------------------------------------------------- */
+
+.brawl-title {
+  font-family: var(--brawl-font-display);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  line-height: 1.1;
+  color: #ffffff;
+  -webkit-text-stroke: 2px var(--brawl-ink);
+  paint-order: stroke fill;
+  text-shadow:
+    -1.5px -1.5px 0 var(--brawl-ink),
+    1.5px -1.5px 0 var(--brawl-ink),
+    -1.5px 1.5px 0 var(--brawl-ink),
+    1.5px 1.5px 0 var(--brawl-ink),
+    0 4px 0 var(--brawl-ink),
+    0 7px 14px rgba(0, 0, 0, 0.55);
+}
+
+.brawl-outline-text {
+  font-family: var(--brawl-font-display);
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  -webkit-text-stroke: 1.5px var(--brawl-ink);
+  paint-order: stroke fill;
+  text-shadow:
+    -1px -1px 0 var(--brawl-ink),
+    1px -1px 0 var(--brawl-ink),
+    -1px 1px 0 var(--brawl-ink),
+    1px 1px 0 var(--brawl-ink),
+    0 2.5px 0 var(--brawl-ink);
+}
+
+/* --------------------------------------------------------------------------
+   3. Pressable 3D Arcade Buttons
+   -------------------------------------------------------------------------- */
+
+.brawl-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  overflow: hidden;
+  padding: 11px 20px;
+  border: 3px solid var(--brawl-ink);
+  border-radius: 14px;
+  background: linear-gradient(180deg, #475569 0%, #334155 58%, #1e293b 100%);
+  color: #ffffff;
+  font-family: var(--brawl-font-display);
+  font-size: 14px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-shadow: 0 2px 0 var(--brawl-ink);
+  box-shadow:
+    0 5px 0 var(--brawl-ink),
+    0 8px 16px rgba(9, 13, 22, 0.45),
+    inset 0 2px 0 rgba(255, 255, 255, 0.38),
+    inset 0 -3px 0 rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.09s ease, box-shadow 0.09s ease, filter 0.12s ease;
+}
+
+.brawl-btn::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 4px;
+  right: 4px;
+  height: 44%;
+  border-radius: 10px 10px 6px 6px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.44) 0%, rgba(255, 255, 255, 0.05) 100%);
+  pointer-events: none;
+}
+
+.brawl-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.07);
+}
+
+.brawl-btn:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow:
+    0 2px 0 var(--brawl-ink),
+    0 3px 8px rgba(9, 13, 22, 0.42),
+    inset 0 2px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.22);
+}
+
+.brawl-btn:focus-visible {
+  outline: 3px solid #fef08a;
+  outline-offset: 2px;
+}
+
+.brawl-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.brawl-btn-sm {
+  padding: 7px 13px;
+  font-size: 12px;
+  border-radius: 11px;
+}
+
+.brawl-btn-lg {
+  padding: 14px 26px;
+  font-size: 17px;
+  border-radius: 16px;
+}
+
+.brawl-btn-yellow {
+  background: linear-gradient(180deg, #ffe75e 0%, #ffc814 55%, #f59e0b 100%);
+  color: #1c1200;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.brawl-btn-blue {
+  background: linear-gradient(180deg, #56d4ff 0%, #0ea5e9 55%, #0369a1 100%);
+  color: #ffffff;
+}
+
+.brawl-btn-green {
+  background: linear-gradient(180deg, #62f578 0%, #22c55e 55%, #15803d 100%);
+  color: #ffffff;
+}
+
+.brawl-btn-purple {
+  background: linear-gradient(180deg, #d896ff 0%, #9333ea 55%, #6b21a8 100%);
+  color: #ffffff;
+}
+
+/* --------------------------------------------------------------------------
+   4. Hero & Mode Cards + Portrait Frames
+   -------------------------------------------------------------------------- */
+
+.brawl-card {
+  position: relative;
+  background: linear-gradient(180deg, var(--brawl-surface-alt) 0%, var(--brawl-surface) 100%);
+  border: 3px solid var(--brawl-ink);
+  border-radius: 16px;
+  color: var(--brawl-text);
+  box-shadow:
+    0 6px 0 var(--brawl-ink),
+    0 12px 22px rgba(5, 8, 22, 0.45),
+    inset 0 2px 0 rgba(255, 255, 255, 0.14);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.brawl-card:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 9px 0 var(--brawl-ink),
+    0 16px 28px rgba(5, 8, 22, 0.55),
+    inset 0 2px 0 rgba(255, 255, 255, 0.22);
+}
+
+.brawl-card-active {
+  border-color: var(--brawl-yellow);
+  background: linear-gradient(180deg, #2b3f8f 0%, #172357 100%);
+  box-shadow:
+    0 6px 0 var(--brawl-ink),
+    0 0 24px rgba(250, 204, 21, 0.45),
+    inset 0 2px 0 rgba(254, 240, 138, 0.42);
+  transform: translateY(-2px);
+}
+
+.brawl-card-active:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 9px 0 var(--brawl-ink),
+    0 0 30px rgba(250, 204, 21, 0.6),
+    inset 0 2px 0 rgba(254, 240, 138, 0.5);
+}
+
+.brawl-portrait-ring {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 3px solid var(--brawl-ink);
+  background: radial-gradient(circle at 35% 30%, #3b57b8 0%, #141e4d 100%);
+  box-shadow:
+    0 4px 0 var(--brawl-ink),
+    inset 0 0 0 3px var(--brawl-yellow),
+    0 0 16px rgba(250, 204, 21, 0.32);
+}
+
+.brawl-portrait-ring-blue {
+  box-shadow:
+    0 4px 0 var(--brawl-ink),
+    inset 0 0 0 3px var(--brawl-blue),
+    0 0 16px rgba(34, 184, 255, 0.35);
+}
+
+.brawl-portrait-ring-purple {
+  box-shadow:
+    0 4px 0 var(--brawl-ink),
+    inset 0 0 0 3px var(--brawl-purple),
+    0 0 16px rgba(192, 132, 252, 0.38);
+}
+
+.brawl-portrait-ring-green {
+  box-shadow:
+    0 4px 0 var(--brawl-ink),
+    inset 0 0 0 3px var(--brawl-green),
+    0 0 16px rgba(56, 229, 77, 0.35);
+}
+
+/* --------------------------------------------------------------------------
+   5. Modals, Trophy Road, Starr Drop & Parent Dashboard Helpers
+   -------------------------------------------------------------------------- */
+
+.brawl-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  font-family: var(--brawl-font-ui);
+  background:
+    radial-gradient(circle at 50% 35%, rgba(30, 48, 128, 0.65) 0%, rgba(4, 7, 20, 0.94) 75%);
+  backdrop-filter: blur(6px);
+}
+
+.brawl-modal-panel {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg, #172357 0%, #0d1433 100%);
+  border: 3px solid var(--brawl-ink);
+  border-radius: 22px;
+  color: var(--brawl-text);
+  box-shadow:
+    0 8px 0 var(--brawl-ink),
+    0 24px 64px rgba(0, 0, 0, 0.78),
+    inset 0 2px 0 rgba(255, 255, 255, 0.16);
+}
+
+.brawl-trophy-road {
+  background: linear-gradient(180deg, rgba(20, 31, 78, 0.95) 0%, rgba(11, 17, 42, 0.96) 100%);
+  border: 3px solid var(--brawl-ink);
+  border-radius: 18px;
+  padding: 14px;
+  box-shadow:
+    0 5px 0 var(--brawl-ink),
+    inset 0 2px 0 rgba(255, 255, 255, 0.12);
+}
+
+.brawl-progress-track {
+  position: relative;
+  height: 14px;
+  background: #090e24;
+  border: 2.5px solid var(--brawl-ink);
+  border-radius: 999px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.65);
+}
+
+.brawl-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #22b8ff 0%, #38e54d 52%, #ffd426 100%);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.48);
+  transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.brawl-trophy-step {
+  flex: 1;
+  min-width: 96px;
+  text-align: center;
+  padding: 8px 6px;
+  border-radius: 12px;
+  border: 2.5px solid var(--brawl-ink);
+  background: linear-gradient(180deg, #17214d 0%, #0e1534 100%);
+  box-shadow: 0 3px 0 var(--brawl-ink);
+  transition: transform 0.15s ease;
+}
+
+.brawl-trophy-step-reached {
+  border-color: #facc15;
+  background: linear-gradient(180deg, #3b3619 0%, #1c2246 100%);
+  box-shadow:
+    0 3px 0 var(--brawl-ink),
+    0 0 14px rgba(250, 204, 21, 0.32),
+    inset 0 1px 0 rgba(254, 240, 138, 0.35);
+}
+
+.brawl-trophy-step-current {
+  box-shadow:
+    0 3px 0 var(--brawl-ink),
+    0 0 0 2px rgba(250, 204, 21, 0.45),
+    0 0 18px rgba(250, 204, 21, 0.55);
+}
+
+.brawl-starr-stage {
+  position: relative;
+  width: 210px;
+  height: 196px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brawl-starr-locker {
+  position: relative;
+  z-index: 2;
+  width: 156px;
+  height: 156px;
+  border-radius: 26px;
+  border: 4px solid var(--brawl-ink);
+  color: #ffffff;
+  font-size: 62px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 6px 0 var(--brawl-ink),
+    inset 0 3px 0 rgba(255, 255, 255, 0.42),
+    inset 0 -4px 0 rgba(0, 0, 0, 0.28);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.12s ease;
+}
+
+.brawl-starr-locker:active {
+  transform: scale(0.94) translateY(3px);
+}
+
+.brawl-reward-tile {
+  background: linear-gradient(180deg, #1b2861 0%, #10173b 100%);
+  border: 3px solid var(--brawl-ink);
+  border-radius: 14px;
+  padding: 12px 8px;
+  box-shadow:
+    0 4px 0 var(--brawl-ink),
+    inset 0 2px 0 rgba(255, 255, 255, 0.16);
+}
+
+/* Parent Dashboard Analytics & PIN */
+.brawl-pd-card {
+  background: linear-gradient(180deg, #172356 0%, #0f173c 100%);
+  border: 3px solid var(--brawl-ink);
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow:
+    0 5px 0 var(--brawl-ink),
+    inset 0 2px 0 rgba(255, 255, 255, 0.12);
+}
+
+.brawl-pd-subcard {
+  background: linear-gradient(180deg, #10193f 0%, #0a102a 100%);
+  border: 2.5px solid var(--brawl-ink);
+  border-radius: 12px;
+  padding: 10px 12px;
+  box-shadow: 0 3px 0 var(--brawl-ink);
+}
+
+.brawl-pd-keypad {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(56px, 1fr));
+  gap: 8px;
+  max-width: 240px;
+  margin: 14px auto 0;
+}
+
+.brawl-pd-key {
+  padding: 10px 0;
+  border: 2.5px solid var(--brawl-ink);
+  border-radius: 12px;
+  background: linear-gradient(180deg, #27397d 0%, #192557 100%);
+  color: #ffffff;
+  font-family: var(--brawl-font-display);
+  font-size: 16px;
+  font-weight: 900;
+  box-shadow: 0 3px 0 var(--brawl-ink), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  transition: transform 0.08s ease, filter 0.1s ease;
+}
+
+.brawl-pd-key:hover {
+  filter: brightness(1.12);
+}
+
+.brawl-pd-key:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--brawl-ink);
+}
+
+.brawl-skill-bar-track {
+  width: 100%;
+  height: 8px;
+  background: #080d22;
+  border: 1.5px solid var(--brawl-ink);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 6px;
+}
+
+.brawl-skill-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+/* --------------------------------------------------------------------------
+   6. Keyframe Animations (Super Readiness & Starr Drop Opening)
+   -------------------------------------------------------------------------- */
+
+@keyframes brawl-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.045);
+    filter: brightness(1.14);
+  }
+}
+
+@keyframes brawl-shake {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1.06);
+  }
+  18% {
+    transform: translate3d(-7px, -3px, 0) rotate(-6deg) scale(1.1);
+  }
+  36% {
+    transform: translate3d(7px, 2px, 0) rotate(6deg) scale(1.08);
+  }
+  54% {
+    transform: translate3d(-5px, 2px, 0) rotate(-4deg) scale(1.06);
+  }
+  74% {
+    transform: translate3d(4px, -2px, 0) rotate(3deg) scale(1.03);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+  }
+}
+
+@keyframes brawl-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.65);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+  82% {
+    transform: scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes brawl-spin-rays {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.brawl-pulse {
+  animation: brawl-pulse 1.5s ease-in-out infinite;
+}
+
+.brawl-shake {
+  animation: brawl-shake 0.42s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+.brawl-pop {
+  animation: brawl-pop 0.36s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.brawl-spin-rays {
+  animation: brawl-spin-rays 14s linear infinite;
+}
+
+/* --------------------------------------------------------------------------
+   7. Responsive Rules — Landscape Tablets & Desktop
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 1180px) and (orientation: landscape) {
+  .brawl-modal-overlay {
+    padding: 10px;
+  }
+
+  .brawl-modal-panel {
+    border-radius: 18px;
+  }
+
+  .brawl-btn {
+    padding: 9px 15px;
+    font-size: 13px;
+  }
+
+  .brawl-btn-lg {
+    padding: 11px 20px;
+    font-size: 15px;
+  }
+
+  .brawl-trophy-road {
+    padding: 10px 12px;
+  }
+
+  .brawl-trophy-step {
+    min-width: 84px;
+    padding: 6px 5px;
+  }
+}
+
+@media (max-width: 720px) {
+  .brawl-title {
+    font-size: 20px;
+  }
+
+  .brawl-starr-stage {
+    width: 180px;
+    height: 170px;
+  }
+
+  .brawl-starr-locker {
+    width: 132px;
+    height: 132px;
+    font-size: 52px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .brawl-modal-panel {
+    border-radius: 24px;
+  }
+
+  .brawl-btn-lg {
+    padding: 15px 30px;
+    font-size: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brawl-bg::before,
+  .brawl-rays,
+  .brawl-pulse,
+  .brawl-shake,
+  .brawl-pop,
+  .brawl-spin-rays {
+    animation: none !important;
+  }
+}

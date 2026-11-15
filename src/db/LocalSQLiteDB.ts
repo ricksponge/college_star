@@ -1,10 +1,13 @@
 import type {
+  BrawlerId,
+  IDailyQuest,
   IParentSubjectSummary,
   IPlayerProfile,
   ISkillMastery,
   ITelemetryLog,
   SubjectCategory,
 } from '../types/cctp';
+import type { ISpacedRepetitionEntry } from '../services/EloEngine';
 
 export const SQLITE_SCHEMA_DDL = `
 CREATE TABLE IF NOT EXISTS player_profile (
@@ -41,6 +44,7 @@ const STORAGE_KEY = 'brawl_college_sqlite_v1';
 const IDB_NAME = 'BrawlCollegeSQLiteDB';
 const IDB_STORE = 'sqlite_snapshots';
 const IDB_KEY = 'main_db';
+const MAX_BRAWLER_LEVEL = 10;
 
 interface ISqliteInternalState {
   player_profile: IPlayerProfile;
@@ -50,6 +54,10 @@ interface ISqliteInternalState {
   combat_stars: number;
   knowledge_points: number;
   unlocked_rewards: string[];
+  brawler_levels: Record<BrawlerId, number>;
+  claimed_milestones: number[];
+  daily_quests: IDailyQuest[];
+  spaced_repetition_entries: ISpacedRepetitionEntry[];
 }
 
 const ALL_SUBJECTS: SubjectCategory[] = [
@@ -61,17 +69,74 @@ const ALL_SUBJECTS: SubjectCategory[] = [
 ];
 
 const DEFAULT_SKILLS: Array<{ code: string; subject: SubjectCategory }> = [
+  // Mathématiques (6)
   { code: 'MATH_MUL', subject: 'mathematiques' },
+  { code: 'MATH_DIV', subject: 'mathematiques' },
   { code: 'MATH_FRAC', subject: 'mathematiques' },
+  { code: 'MATH_CONV', subject: 'mathematiques' },
+  { code: 'MATH_GEOM', subject: 'mathematiques' },
+  { code: 'MATH_PRIO', subject: 'mathematiques' },
+  // Français (5)
   { code: 'FR_HOMO', subject: 'francais' },
   { code: 'FR_ACC', subject: 'francais' },
+  { code: 'FR_TERM', subject: 'francais' },
+  { code: 'FR_NAT', subject: 'francais' },
+  { code: 'FR_PREF', subject: 'francais' },
+  // Anglais (5)
   { code: 'ANG_VOC', subject: 'anglais' },
+  { code: 'ANG_PRON', subject: 'anglais' },
   { code: 'ANG_AUX', subject: 'anglais' },
+  { code: 'ANG_INT', subject: 'anglais' },
+  { code: 'ANG_NUM', subject: 'anglais' },
+  // Histoire-Géo, Sciences & EMC (5)
   { code: 'HG_PER', subject: 'histoire_geo_sciences' },
+  { code: 'HG_GEO', subject: 'histoire_geo_sciences' },
   { code: 'SCI_SOL', subject: 'histoire_geo_sciences' },
+  { code: 'SCI_MAT', subject: 'histoire_geo_sciences' },
+  { code: 'SCI_VIV', subject: 'histoire_geo_sciences' },
+  // Vie au Collège & Méthodologie (4)
   { code: 'COL_EDT', subject: 'vie_au_college' },
   { code: 'COL_ADU', subject: 'vie_au_college' },
+  { code: 'COL_CONS', subject: 'vie_au_college' },
+  { code: 'COL_SAC', subject: 'vie_au_college' },
 ];
+
+const VALID_BRAWLERS: BrawlerId[] = ['TIMO', 'LEO', 'MAYA', 'ZACK'];
+
+function createDefaultDailyQuests(): IDailyQuest[] {
+  return [
+    {
+      id: 'q_hits',
+      title: 'Toucher 8 bonnes cibles',
+      target: 8,
+      progress: 0,
+      reward_coins: 80,
+      reward_stars: 1,
+      claimed: false,
+      kind: 'CORRECT_HITS',
+    },
+    {
+      id: 'q_reflex',
+      title: '4 tirs Réflexe (< 2,5s)',
+      target: 4,
+      progress: 0,
+      reward_coins: 100,
+      reward_stars: 1,
+      claimed: false,
+      kind: 'FAST_REFLEX',
+    },
+    {
+      id: 'q_wins',
+      title: 'Remporter 2 parties',
+      target: 2,
+      progress: 0,
+      reward_coins: 120,
+      reward_stars: 2,
+      claimed: false,
+      kind: 'MATCH_WINS',
+    },
+  ];
+}
 
 function createDefaultState(): ISqliteInternalState {
   const nowIso = new Date().toISOString();
@@ -104,6 +169,32 @@ function createDefaultState(): ISqliteInternalState {
     combat_stars: 0,
     knowledge_points: 0,
     unlocked_rewards: [],
+    brawler_levels: {
+      TIMO: 1,
+      LEO: 1,
+      MAYA: 1,
+      ZACK: 1,
+    },
+    claimed_milestones: [],
+    daily_quests: createDefaultDailyQuests(),
+    spaced_repetition_entries: [],
+  };
+}
+
+function normalizeLevel(value: unknown): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    return 1;
+  }
+  return Math.max(1, Math.min(MAX_BRAWLER_LEVEL, Math.floor(value)));
+}
+
+function cloneSpacedEntry(entry: ISpacedRepetitionEntry): ISpacedRepetitionEntry {
+  return {
+    ...entry,
+    question: {
+      ...entry.question,
+      targets: entry.question.targets.map((t) => ({ ...t })),
+    },
   };
 }
 
@@ -125,8 +216,12 @@ export class LocalSQLiteDB {
     }
     try {
       const idbState = await this.loadFromIndexedDB();
-      if (idbState && idbState.next_log_id > this.state.next_log_id) {
-        this.state = idbState;
+      if (
+        idbState &&
+        typeof idbState.next_log_id === 'number' &&
+        idbState.next_log_id > this.state.next_log_id
+      ) {
+        this.state = this.normalizeState(idbState);
         this.saveToLocalStorage();
       } else {
         await this.saveToIndexedDB();
@@ -145,10 +240,16 @@ export class LocalSQLiteDB {
   }
 
   public updatePlayerProfile(patch: Partial<Omit<IPlayerProfile, 'id'>>): IPlayerProfile {
+    const trimmedNickname =
+      patch.nickname !== undefined
+        ? patch.nickname.trim() || this.state.player_profile.nickname
+        : this.state.player_profile.nickname;
+
     this.state.player_profile = {
       ...this.state.player_profile,
       ...patch,
       id: 1,
+      nickname: trimmedNickname,
       trophies: Math.max(0, Math.min(1000, patch.trophies ?? this.state.player_profile.trophies)),
       coins: Math.max(0, patch.coins ?? this.state.player_profile.coins),
       starr_drops_available: Math.max(
@@ -199,6 +300,210 @@ export class LocalSQLiteDB {
       this.persist();
     }
     return this.getUnlockedRewards();
+  }
+
+  public getBrawlerLevel(brawlerId: BrawlerId): number {
+    return this.state.brawler_levels[brawlerId] ?? 1;
+  }
+
+  public getUpgradeCost(level: number): { coins: number; knowledgePoints: number } {
+    const safeLevel = Math.max(1, Math.floor(level));
+    return {
+      coins: 60 * safeLevel,
+      knowledgePoints: 15 * safeLevel,
+    };
+  }
+
+  public upgradeBrawler(brawlerId: BrawlerId): {
+    success: boolean;
+    newLevel: number;
+    reason?: string;
+  } {
+    const currentLevel = this.getBrawlerLevel(brawlerId);
+    if (currentLevel >= MAX_BRAWLER_LEVEL) {
+      return {
+        success: false,
+        newLevel: currentLevel,
+        reason: `Niveau maximum atteint (${MAX_BRAWLER_LEVEL}).`,
+      };
+    }
+
+    const cost = this.getUpgradeCost(currentLevel);
+    const hasEnoughCoins = this.state.player_profile.coins >= cost.coins;
+    const hasEnoughKp = this.state.knowledge_points >= cost.knowledgePoints;
+
+    if (!hasEnoughCoins && !hasEnoughKp) {
+      return {
+        success: false,
+        newLevel: currentLevel,
+        reason: `Il faut ${cost.coins} Pièces et ${cost.knowledgePoints} pts de Savoir.`,
+      };
+    }
+    if (!hasEnoughCoins) {
+      return {
+        success: false,
+        newLevel: currentLevel,
+        reason: `Pièces insuffisantes (${cost.coins} requises).`,
+      };
+    }
+    if (!hasEnoughKp) {
+      return {
+        success: false,
+        newLevel: currentLevel,
+        reason: `Points de Savoir insuffisants (${cost.knowledgePoints} requis).`,
+      };
+    }
+
+    this.state.player_profile.coins -= cost.coins;
+    this.state.knowledge_points -= cost.knowledgePoints;
+    const newLevel = currentLevel + 1;
+    this.state.brawler_levels[brawlerId] = newLevel;
+    this.persist();
+
+    return {
+      success: true,
+      newLevel,
+    };
+  }
+
+  public getClaimedMilestones(): number[] {
+    return [...this.state.claimed_milestones];
+  }
+
+  public claimTrophyMilestone(milestoneTrophies: number): {
+    claimed: boolean;
+    rewardDescription: string;
+  } {
+    const validMilestones = [100, 250, 450, 650, 850, 1000];
+    if (!validMilestones.includes(milestoneTrophies)) {
+      return {
+        claimed: false,
+        rewardDescription: 'Palier de trophées inconnu.',
+      };
+    }
+
+    if (this.state.player_profile.trophies < milestoneTrophies) {
+      return {
+        claimed: false,
+        rewardDescription: `Atteins ${milestoneTrophies} trophées pour débloquer ce palier.`,
+      };
+    }
+
+    if (this.state.claimed_milestones.includes(milestoneTrophies)) {
+      return {
+        claimed: false,
+        rewardDescription: 'Palier déjà réclamé.',
+      };
+    }
+
+    let rewardDescription = '';
+    switch (milestoneTrophies) {
+      case 100:
+        this.state.player_profile.starr_drops_available += 1;
+        rewardDescription = '+1 Casier Mystère';
+        break;
+      case 250:
+        if (!this.state.unlocked_rewards.includes('Badge Équerre d’Or')) {
+          this.state.unlocked_rewards.push('Badge Équerre d’Or');
+        }
+        rewardDescription = 'Badge Équerre d’Or';
+        break;
+      case 450:
+        this.state.player_profile.coins += 150;
+        rewardDescription = '+150 Pièces';
+        break;
+      case 650:
+        if (!this.state.unlocked_rewards.includes('Skin Timo Survêt Bleu')) {
+          this.state.unlocked_rewards.push('Skin Timo Survêt Bleu');
+        }
+        rewardDescription = 'Skin Timo Survêt Bleu';
+        break;
+      case 850:
+        this.state.player_profile.starr_drops_available += 1;
+        rewardDescription = '+1 Casier Mystère';
+        break;
+      case 1000:
+        if (!this.state.unlocked_rewards.includes('Diplôme Suprême 6e')) {
+          this.state.unlocked_rewards.push('Diplôme Suprême 6e');
+        }
+        this.state.player_profile.coins += 200;
+        rewardDescription = 'Diplôme Suprême 6e + 200 Pièces';
+        break;
+    }
+
+    this.state.claimed_milestones.push(milestoneTrophies);
+    this.persist();
+
+    return {
+      claimed: true,
+      rewardDescription,
+    };
+  }
+
+  public getDailyQuests(): IDailyQuest[] {
+    return this.state.daily_quests.map((q) => ({ ...q }));
+  }
+
+  public recordQuestProgress(event: {
+    correctHits?: number;
+    fastReflexHits?: number;
+    matchWon?: boolean;
+  }): void {
+    let changed = false;
+
+    for (const quest of this.state.daily_quests) {
+      if (quest.claimed) continue;
+
+      let delta = 0;
+      if (quest.kind === 'CORRECT_HITS' && event.correctHits && event.correctHits > 0) {
+        delta = Math.floor(event.correctHits);
+      } else if (
+        quest.kind === 'FAST_REFLEX' &&
+        event.fastReflexHits &&
+        event.fastReflexHits > 0
+      ) {
+        delta = Math.floor(event.fastReflexHits);
+      } else if (quest.kind === 'MATCH_WINS' && event.matchWon) {
+        delta = 1;
+      }
+
+      if (delta > 0) {
+        const nextProgress = Math.min(quest.target, quest.progress + delta);
+        if (nextProgress !== quest.progress) {
+          quest.progress = nextProgress;
+          changed = true;
+        }
+      }
+    }
+
+    if (changed) {
+      this.persist();
+    }
+  }
+
+  public claimDailyQuest(questId: string): boolean {
+    const quest = this.state.daily_quests.find((q) => q.id === questId);
+    if (!quest || quest.claimed || quest.progress < quest.target) {
+      return false;
+    }
+
+    quest.claimed = true;
+    this.state.player_profile.coins += Math.max(0, quest.reward_coins);
+    if (quest.reward_stars > 0) {
+      this.addCombatStars(quest.reward_stars);
+    } else {
+      this.persist();
+    }
+    return true;
+  }
+
+  public getSpacedRepetitionEntries(): ISpacedRepetitionEntry[] {
+    return this.state.spaced_repetition_entries.map(cloneSpacedEntry);
+  }
+
+  public setSpacedRepetitionEntries(entries: ISpacedRepetitionEntry[]): void {
+    this.state.spaced_repetition_entries = entries.map(cloneSpacedEntry);
+    this.persist();
   }
 
   public verifyParentPin(pin: string): boolean {
@@ -345,24 +650,171 @@ export class LocalSQLiteDB {
    */
   public exportSqlDump(): string {
     const p = this.state.player_profile;
+    const esc = (val: string): string => val.replace(/'/g, "''");
     const lines: string[] = [
       SQLITE_SCHEMA_DDL,
-      `INSERT OR REPLACE INTO player_profile (id, nickname, trophies, coins, starr_drops_available, selected_brawler, parent_pin_hash) VALUES (1, '${p.nickname.replace(/'/g, "''")}', ${p.trophies}, ${p.coins}, ${p.starr_drops_available}, '${p.selected_brawler}', '${p.parent_pin_hash}');`,
+      `INSERT OR REPLACE INTO player_profile (id, nickname, trophies, coins, starr_drops_available, selected_brawler, parent_pin_hash) VALUES (1, '${esc(p.nickname)}', ${p.trophies}, ${p.coins}, ${p.starr_drops_available}, '${esc(p.selected_brawler)}', '${esc(p.parent_pin_hash)}');`,
     ];
 
     for (const s of Object.values(this.state.skill_mastery)) {
       lines.push(
-        `INSERT OR REPLACE INTO skill_mastery (skill_code, subject_category, elo_rating, attempts_count, success_count, avg_response_ms, last_seen_timestamp) VALUES ('${s.skill_code}', '${s.subject_category}', ${s.elo_rating}, ${s.attempts_count}, ${s.success_count}, ${s.avg_response_ms}, '${s.last_seen_timestamp}');`
+        `INSERT OR REPLACE INTO skill_mastery (skill_code, subject_category, elo_rating, attempts_count, success_count, avg_response_ms, last_seen_timestamp) VALUES ('${esc(s.skill_code)}', '${esc(s.subject_category)}', ${s.elo_rating}, ${s.attempts_count}, ${s.success_count}, ${s.avg_response_ms}, '${esc(s.last_seen_timestamp)}');`
       );
     }
 
     for (const log of this.state.combat_telemetry_log) {
       lines.push(
-        `INSERT INTO combat_telemetry_log (question_id, brawler_used, is_hit_correct, reaction_time_ms, recorded_at) VALUES ('${log.question_id}', '${log.brawler_used}', ${log.is_hit_correct ? 1 : 0}, ${log.reaction_time_ms}, '${log.recorded_at ?? ''}');`
+        `INSERT INTO combat_telemetry_log (question_id, brawler_used, is_hit_correct, reaction_time_ms, recorded_at) VALUES ('${esc(log.question_id)}', '${esc(log.brawler_used)}', ${log.is_hit_correct ? 1 : 0}, ${log.reaction_time_ms}, '${esc(log.recorded_at ?? '')}');`
       );
     }
 
     return lines.join('\n');
+  }
+
+  private normalizeState(
+    raw: Partial<ISqliteInternalState> | null | undefined
+  ): ISqliteInternalState {
+    const defaults = createDefaultState();
+    if (!raw || typeof raw !== 'object') {
+      return defaults;
+    }
+
+    const rawProfile = (raw.player_profile ?? {}) as Partial<IPlayerProfile>;
+    const selectedBrawler = VALID_BRAWLERS.includes(rawProfile.selected_brawler as BrawlerId)
+      ? (rawProfile.selected_brawler as BrawlerId)
+      : defaults.player_profile.selected_brawler;
+
+    const playerProfile: IPlayerProfile = {
+      id: 1,
+      nickname:
+        typeof rawProfile.nickname === 'string' && rawProfile.nickname.trim().length > 0
+          ? rawProfile.nickname.trim()
+          : defaults.player_profile.nickname,
+      trophies:
+        typeof rawProfile.trophies === 'number' && Number.isFinite(rawProfile.trophies)
+          ? Math.max(0, Math.min(1000, Math.floor(rawProfile.trophies)))
+          : defaults.player_profile.trophies,
+      coins:
+        typeof rawProfile.coins === 'number' && Number.isFinite(rawProfile.coins)
+          ? Math.max(0, Math.floor(rawProfile.coins))
+          : defaults.player_profile.coins,
+      starr_drops_available:
+        typeof rawProfile.starr_drops_available === 'number' &&
+        Number.isFinite(rawProfile.starr_drops_available)
+          ? Math.max(0, Math.floor(rawProfile.starr_drops_available))
+          : defaults.player_profile.starr_drops_available,
+      selected_brawler: selectedBrawler,
+      parent_pin_hash:
+        typeof rawProfile.parent_pin_hash === 'string' && /^\d{4}$/.test(rawProfile.parent_pin_hash)
+          ? rawProfile.parent_pin_hash
+          : defaults.player_profile.parent_pin_hash,
+    };
+
+    const skillMastery: Record<string, ISkillMastery> = { ...defaults.skill_mastery };
+    if (raw.skill_mastery && typeof raw.skill_mastery === 'object') {
+      for (const [code, entry] of Object.entries(raw.skill_mastery)) {
+        if (!entry || typeof entry !== 'object') continue;
+        const fallback = skillMastery[code];
+        skillMastery[code] = {
+          skill_code: typeof entry.skill_code === 'string' ? entry.skill_code : code,
+          subject_category: ALL_SUBJECTS.includes(entry.subject_category)
+            ? entry.subject_category
+            : fallback?.subject_category ?? 'mathematiques',
+          elo_rating:
+            typeof entry.elo_rating === 'number' && Number.isFinite(entry.elo_rating)
+              ? entry.elo_rating
+              : fallback?.elo_rating ?? 1000,
+          attempts_count:
+            typeof entry.attempts_count === 'number' && Number.isFinite(entry.attempts_count)
+              ? Math.max(0, Math.floor(entry.attempts_count))
+              : 0,
+          success_count:
+            typeof entry.success_count === 'number' && Number.isFinite(entry.success_count)
+              ? Math.max(0, Math.floor(entry.success_count))
+              : 0,
+          avg_response_ms:
+            typeof entry.avg_response_ms === 'number' && Number.isFinite(entry.avg_response_ms)
+              ? Math.max(0, Math.round(entry.avg_response_ms))
+              : 3500,
+          last_seen_timestamp:
+            typeof entry.last_seen_timestamp === 'string'
+              ? entry.last_seen_timestamp
+              : fallback?.last_seen_timestamp ?? new Date().toISOString(),
+        };
+      }
+    }
+
+    const rawLevels = (raw.brawler_levels ?? {}) as Partial<Record<BrawlerId, unknown>>;
+    const brawlerLevels: Record<BrawlerId, number> = {
+      TIMO: normalizeLevel(rawLevels.TIMO),
+      LEO: normalizeLevel(rawLevels.LEO),
+      MAYA: normalizeLevel(rawLevels.MAYA),
+      ZACK: normalizeLevel(rawLevels.ZACK),
+    };
+
+    const claimedMilestones = Array.isArray(raw.claimed_milestones)
+      ? Array.from(
+          new Set(
+            raw.claimed_milestones.filter(
+              (n): n is number => typeof n === 'number' && Number.isFinite(n)
+            )
+          )
+        )
+      : [];
+
+    const rawQuests = Array.isArray(raw.daily_quests) ? raw.daily_quests : [];
+    const dailyQuests: IDailyQuest[] = defaults.daily_quests.map((def) => {
+      const saved = rawQuests.find((q) => q && q.id === def.id);
+      if (!saved) return def;
+      return {
+        ...def,
+        progress:
+          typeof saved.progress === 'number' && Number.isFinite(saved.progress)
+            ? Math.max(0, Math.min(def.target, Math.floor(saved.progress)))
+            : def.progress,
+        claimed: Boolean(saved.claimed),
+      };
+    });
+
+    const spacedEntries = Array.isArray(raw.spaced_repetition_entries)
+      ? raw.spaced_repetition_entries
+          .filter(
+            (e): e is ISpacedRepetitionEntry =>
+              Boolean(e) &&
+              typeof e === 'object' &&
+              Boolean(e.question) &&
+              typeof e.question.id === 'string' &&
+              Array.isArray(e.question.targets)
+          )
+          .map(cloneSpacedEntry)
+      : [];
+
+    return {
+      player_profile: playerProfile,
+      skill_mastery: skillMastery,
+      combat_telemetry_log: Array.isArray(raw.combat_telemetry_log)
+        ? raw.combat_telemetry_log
+        : defaults.combat_telemetry_log,
+      next_log_id:
+        typeof raw.next_log_id === 'number' && Number.isFinite(raw.next_log_id)
+          ? Math.max(1, Math.floor(raw.next_log_id))
+          : defaults.next_log_id,
+      combat_stars:
+        typeof raw.combat_stars === 'number' && Number.isFinite(raw.combat_stars)
+          ? Math.max(0, Math.floor(raw.combat_stars))
+          : 0,
+      knowledge_points:
+        typeof raw.knowledge_points === 'number' && Number.isFinite(raw.knowledge_points)
+          ? Math.max(0, Math.floor(raw.knowledge_points))
+          : 0,
+      unlocked_rewards: Array.isArray(raw.unlocked_rewards)
+        ? raw.unlocked_rewards.filter((x): x is string => typeof x === 'string')
+        : [],
+      brawler_levels: brawlerLevels,
+      claimed_milestones: claimedMilestones,
+      daily_quests: dailyQuests,
+      spaced_repetition_entries: spacedEntries,
+    };
   }
 
   private persist(): void {
@@ -375,7 +827,8 @@ export class LocalSQLiteDB {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return null;
-      return JSON.parse(raw) as ISqliteInternalState;
+      const parsed = JSON.parse(raw) as Partial<ISqliteInternalState>;
+      return this.normalizeState(parsed);
     } catch {
       return null;
     }

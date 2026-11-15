@@ -111,6 +111,7 @@ export const BRAWLERS_ROSTER: Record<BrawlerId, IBrawler> = {
     title: 'Le Geek Bilingue',
     archetype: 'Assassin Furtif',
     favorite_subject: 'anglais',
+    secondary_subject: 'vie_au_college',
     visual_description: 'Casque audio néon cyan, veste teddy bicolore, rollers magnétiques.',
     base_hp: 3000,
     speed_tier: 'TRES_RAPIDE',

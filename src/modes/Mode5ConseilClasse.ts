@@ -51,6 +51,15 @@ export class ConseilClasseSession {
     this.safeCorridorIndex = Math.max(0, Math.min(3, index));
   }
 
+  public isHitByLaser(playerX: number, playerY: number, arenaW = 960): boolean {
+    if (Math.abs(playerY - this.laserSweepY) >= 16) {
+      return false;
+    }
+    const safeArenaW = arenaW > 0 ? arenaW : 960;
+    const playerCorridor = Math.min(3, Math.max(0, Math.floor(playerX / (safeArenaW / 4))));
+    return playerCorridor !== this.safeCorridorIndex;
+  }
+
   public damageBoss(amount: number): boolean {
     this.bossHp = Math.max(0, this.bossHp - Math.max(0, amount));
     return this.bossHp === 0;
