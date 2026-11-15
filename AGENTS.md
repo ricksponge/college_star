@@ -12,11 +12,11 @@ Chaque agent travaille de manière isolée sur sa branche dédiée et dans ses r
 
 | Agent | Code & Rôle | Branche Git | Répertoires Attribués | Issues GitHub Assignées |
 | :--- | :--- | :--- | :--- | :--- |
-| **Agent 0** | **ORCHESTRATOR** (Socle & Intégration) | `main` | `src/types/`, racine | **#16** Release: Recette et Production (M3) |
-| **Agent 1** | **GD-Core** (Gameplay, Moteur 60 FPS & Héros) | `feat/gd-core-combat` | `src/engine/`, `src/entities/` | **#5** Moteur de rendu 60 FPS isométrique (M1)<br>**#1** US-01: Contrôle double stick et tir (M0)<br>**#2** US-02: Attaque Super (M0)<br>**#8** Tech: Roster Initial - 4 Héros (M1) |
-| **Agent 2** | **PEDA-6e** (Programme 6e, Questions & Elo) | `feat/peda-6e-elo` | `src/services/`, `src/data/` | **#7** Tech: Service QuestionProvider (M1)<br>**#10** Tech: Algorithme d'Elo Pédagogique K=32 (M2)<br>**#9** Data: Import des 200 premières questions (M1) |
-| **Agent 3** | **MODES** (Level Design & 5 Modes d'Arène) | `feat/modes-arenas` | `src/modes/` | **#11** Mode 1: Chasse aux Bonnes Notes (M2)<br>**#12** Mode 2: Le Match des Accords (M2)<br>**#13** Mode 3: L'Interro Surprise (M2)<br>**#14** Mode 4: Changement de Salle (M2)<br>**#15** Mode 5: Le Conseil de Classe (M2) |
-| **Agent 4** | **META-Dash** (SQLite, Casiers & Dashboard Parent) | `feat/meta-parent-db` | `src/db/`, `src/ui/` | **#6** Tech: Base SQLite locale (M1)<br>**#3** US-03: Casier Mystère / Starr Drop (M0)<br>**#4** US-04: Dashboard Parent PIN (M0) |
+| **Agent 0** | **ORCHESTRATOR** (Socle & Intégration) | `main` | `src/types/`, racine | **#16** Release: Recette et Production (M3)<br>**#25** Intégration & Recette M4 Exploration du Collège |
+| **Agent 1** | **GD-Core** (Gameplay, Moteur 60 FPS & Héros) | `feat/gd-core-combat` / `feat/campus-map-engine` | `src/engine/`, `src/entities/` | **#5** Moteur de rendu 60 FPS isométrique (M1)<br>**#1** US-01: Contrôle double stick et tir (M0)<br>**#2** US-02: Attaque Super (M0)<br>**#8** Tech: Roster Initial - 4 Héros (M1)<br>**#21** Moteur CampusEngine, collisions salles, PNJ 3D & mini-carte radar (M4) |
+| **Agent 2** | **PEDA-6e** (Programme 6e, Questions & Elo) | `feat/peda-6e-elo` / `feat/campus-quests-service` | `src/services/`, `src/data/` | **#7** Tech: Service QuestionProvider (M1)<br>**#10** Tech: Algorithme d'Elo Pédagogique K=32 (M2)<br>**#9** Data: Import des 200 premières questions (M1)<br>**#22** Catalogue de 12 quêtes/missions du collège & QuestService (M4) |
+| **Agent 3** | **MODES** (Level Design & 5 Modes d'Arène) | `feat/modes-arenas` / `feat/campus-world-mode` | `src/modes/` | **#11** Mode 1: Chasse aux Bonnes Notes (M2)<br>**#12** Mode 2: Le Match des Accords (M2)<br>**#13** Mode 3: L'Interro Surprise (M2)<br>**#14** Mode 4: Changement de Salle (M2)<br>**#15** Mode 5: Le Conseil de Classe (M2)<br>**#23** Carte du Collège (10 salles, PNJ, portails) & Mode6CampusExploration (M4) |
+| **Agent 4** | **META-Dash** (SQLite, Casiers & Dashboard Parent) | `feat/meta-parent-db` / `feat/campus-quests-ui-db` | `src/db/`, `src/ui/` | **#6** Tech: Base SQLite locale (M1)<br>**#3** US-03: Casier Mystère / Starr Drop (M0)<br>**#4** US-04: Dashboard Parent PIN (M0)<br>**#24** Table SQLite `quest_progress`, QuestJournalModal & suivi Parent (M4) |
 
 ---
 
@@ -26,6 +26,7 @@ Chaque agent travaille de manière isolée sur sa branche dédiée et dans ses r
 - **M1 - Moteur 60 FPS & SQLite** : Issues **#5**, **#6**, **#7**, **#8**, **#9** (Moteur physique 60 FPS, 4 héros jouables, base SQLite, QuestionProvider, 200 premières questions).
 - **M2 - 5 Modes & Elo** : Issues **#10**, **#11**, **#12**, **#13**, **#14**, **#15** (Ouverture des 5 modes de jeu en rotation horaire, équilibrage de l'Elo pédagogique).
 - **M3 - Recette & Production** : Issue **#16** (Validation VABF/VSR, packaging APK Android / IPA iPadOS).
+- **M4 - Exploration du Collège, Quêtes & Missions** : Issues **#21**, **#22**, **#23**, **#24**, **#25** (Carte ouverte 3D `2400×1800` à 10 salles, 9 PNJ/bornes, boussole & mini-carte radar, 12 quêtes progressives, table SQLite `quest_progress`, Carnet de Quêtes).
 
 ---
 

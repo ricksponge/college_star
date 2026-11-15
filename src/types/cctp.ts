@@ -212,3 +212,115 @@ export interface IParentSubjectSummary {
   avg_reaction_time_ms: number;
   skills_to_consolidate: string[];
 }
+
+// ============================================================================
+// 5. JALON M4 : EXPLORATION DU COLLÈGE, QUÊTES & MISSIONS (#21 à #25)
+// ============================================================================
+
+export type CampusRoomId =
+  | 'COUR_HONNEUR'
+  | 'HALL_CASIERS'
+  | 'VIE_SCOLAIRE_CPE'
+  | 'CDI_BIBLIOTHEque'
+  | 'SALLE_101_MATHS'
+  | 'SALLE_102_FRANCAIS'
+  | 'SALLE_201_ANGLAIS'
+  | 'SALLE_204_SCIENCES'
+  | 'CANTINE_SELF'
+  | 'GYMNASE_SPORTS';
+
+export interface ICampusRoomZone {
+  id: CampusRoomId;
+  name: string;
+  floor_label: string;
+  subject?: SubjectCategory;
+  bounds: { x: number; y: number; width: number; height: number };
+  floor_color: string;
+  accent_color: string;
+  description: string;
+}
+
+export type CampusNpcRole =
+  | 'CPE'
+  | 'DOCUMENTALISTE_CDI'
+  | 'PROF_MATHS'
+  | 'PROF_FRANCAIS'
+  | 'PROF_ANGLAIS'
+  | 'PROF_SCIENCES'
+  | 'DELEGUE_ELEVE'
+  | 'COACH_GYM'
+  | 'PANNEAU_EDT';
+
+export interface ICampusNpc {
+  id: string;
+  name: string;
+  title: string;
+  role: CampusNpcRole;
+  room_id: CampusRoomId;
+  x: number;
+  y: number;
+  interaction_radius: number;
+  primary_color: string;
+  accent_color: string;
+  greeting_flash: string;
+  linked_arena_mode?: GameModeId;
+}
+
+export type QuestObjectiveType =
+  | 'VISIT_ROOM'
+  | 'TALK_NPC'
+  | 'SOLVE_ROOM_QUESTIONS'
+  | 'COLLECT_CAMPUS_BADGE'
+  | 'COMPLETE_ARENA_PORTAL';
+
+export type QuestCategory = 'PRINCIPALE' | 'MATIERE' | 'VIE_COLLEGE' | 'DEFIS_204';
+
+export interface IQuestObjective {
+  id: string;
+  type: QuestObjectiveType;
+  description: string;
+  target_room_id: CampusRoomId;
+  target_npc_id?: string;
+  subject?: SubjectCategory;
+  required_count: number;
+}
+
+export interface IQuestReward {
+  coins: number;
+  trophies: number;
+  combat_stars: number;
+  knowledge_points: number;
+  starr_drop_bonus?: number;
+  unlocked_title_or_badge?: string;
+}
+
+export interface ICampusQuest {
+  id: string;
+  chapter_order: number;
+  category: QuestCategory;
+  title: string;
+  giver_npc_id: string;
+  briefing_short: string;
+  objectives: IQuestObjective[];
+  reward: IQuestReward;
+}
+
+export type QuestStatus = 'LOCKED' | 'AVAILABLE' | 'ACTIVE' | 'COMPLETED' | 'CLAIMED';
+
+export interface IQuestProgressRecord {
+  quest_id: string;
+  status: QuestStatus;
+  current_objective_index: number;
+  current_count: number;
+  updated_at: string;
+}
+
+export interface IQuestStepAdvanceResult {
+  advanced: boolean;
+  objectiveCompleted: boolean;
+  questCompleted: boolean;
+  completedQuest?: ICampusQuest;
+  rewardGranted?: IQuestReward;
+  message?: string;
+  nextActiveQuest?: ICampusQuest | null;
+}
