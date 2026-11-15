@@ -1,0 +1,1402 @@
+[
+  {
+    "id": "PREV_001",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_HARCELEMENT",
+    "elo_difficulty": 900,
+    "hud_prompt": "Un élève se fait moquer chaque jour : c'est...",
+    "explanation_flash": "Quand c'est répété et fait du mal, c'est du harcèlement : il faut agir !",
+    "targets": [
+      { "label": "Du harcèlement", "is_correct": true },
+      { "label": "Une blague", "is_correct": false },
+      { "label": "Un jeu normal", "is_correct": false },
+      { "label": "Sans importance", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_002",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_HARCELEMENT",
+    "elo_difficulty": 920,
+    "hud_prompt": "Tu vois un groupe se moquer d'un camarade. Bon réflexe ?",
+    "explanation_flash": "En tant que témoin actif, tu peux le soutenir et prévenir un adulte.",
+    "targets": [
+      { "label": "Alerter un adulte", "is_correct": true },
+      { "label": "Rire avec eux", "is_correct": false },
+      { "label": "Filmer la scène", "is_correct": false },
+      { "label": "Rester muet", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_003",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_HARCELEMENT",
+    "elo_difficulty": 940,
+    "hud_prompt": "Quel numéro gratuit aide contre le cyberharcèlement ?",
+    "explanation_flash": "Le 3018 est gratuit, anonyme et protège les jeunes face au harcèlement !",
+    "targets": [
+      { "label": "3018", "is_correct": true },
+      { "label": "15", "is_correct": false },
+      { "label": "18", "is_correct": false },
+      { "label": "112", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_004",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_HARCELEMENT",
+    "elo_difficulty": 950,
+    "hud_prompt": "Tu reçois un message méchant en ligne. Que fais-tu d'abord ?",
+    "explanation_flash": "Fais une capture d'écran comme preuve et montre-la à un adulte de confiance !",
+    "targets": [
+      { "label": "Capture + adulte", "is_correct": true },
+      { "label": "Insulter en retour", "is_correct": false },
+      { "label": "Tout effacer", "is_correct": false },
+      { "label": "Partager partout", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_005",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_HARCELEMENT",
+    "elo_difficulty": 930,
+    "hud_prompt": "Pourquoi l'effet de groupe peut-il être dangereux en récré ?",
+    "explanation_flash": "Suivre le groupe par peur encourage les moqueries. Oser dire stop protège !",
+    "targets": [
+      { "label": "Il amplifie le mal", "is_correct": true },
+      { "label": "Il calme tout", "is_correct": false },
+      { "label": "Il rend invisible", "is_correct": false },
+      { "label": "Il aide à réviser", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_006",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_HARCELEMENT",
+    "elo_difficulty": 910,
+    "hud_prompt": "Avant de publier la photo d'un ami, il faut...",
+    "explanation_flash": "L'image de chacun lui appartient : demande toujours son accord clair !",
+    "targets": [
+      { "label": "Son accord clair", "is_correct": true },
+      { "label": "Un filtre drôle", "is_correct": false },
+      { "label": "Beaucoup de likes", "is_correct": false },
+      { "label": "Attendre le soir", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_007",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_HARCELEMENT",
+    "elo_difficulty": 960,
+    "hud_prompt": "Règle des 3R face au harcèlement : Reconnaître, Réagir et...",
+    "explanation_flash": "La règle des 3R : Reconnaître la situation, Réagir vite et Rapporter à un adulte !",
+    "targets": [
+      { "label": "Rapporter (alerter)", "is_correct": true },
+      { "label": "Rire fort", "is_correct": false },
+      { "label": "Reculer seul", "is_correct": false },
+      { "label": "Répéter la rumeur", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_008",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_HARCELEMENT",
+    "elo_difficulty": 950,
+    "hud_prompt": "Différence entre une dispute ponctuelle et le harcèlement ?",
+    "explanation_flash": "Une dispute arrive une fois ; le harcèlement se répète dans le temps.",
+    "targets": [
+      { "label": "La répétition", "is_correct": true },
+      { "label": "Le lieu exact", "is_correct": false },
+      { "label": "La météo du jour", "is_correct": false },
+      { "label": "La couleur du sac", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_009",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_HARCELEMENT",
+    "elo_difficulty": 920,
+    "hud_prompt": "Si on se moque de toi, est-ce jamais de ta faute ?",
+    "explanation_flash": "Jamais ! Personne ne mérite d'être moqué ou exclu au collège.",
+    "targets": [
+      { "label": "Non, jamais", "is_correct": true },
+      { "label": "Oui, parfois", "is_correct": false },
+      { "label": "Seulement en sport", "is_correct": false },
+      { "label": "Si tu es timide", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_010",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_HARCELEMENT",
+    "elo_difficulty": 970,
+    "hud_prompt": "Sur un groupe de discussion, on critique un élève absent. Tu...",
+    "explanation_flash": "Quitter ou recadrer poliment le groupe coupe l'effet boule de neige !",
+    "targets": [
+      { "label": "Dis stop et quittes", "is_correct": true },
+      { "label": "Mets un émoji rire", "is_correct": false },
+      { "label": "Relances la rumeur", "is_correct": false },
+      { "label": "Envoies un mème", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_011",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_HARCELEMENT",
+    "elo_difficulty": 940,
+    "hud_prompt": "Que faire si un inconnu insiste pour te parler en jeu en ligne ?",
+    "explanation_flash": "Bloque le compte, ne donne aucune info personnelle et préviens tes parents !",
+    "targets": [
+      { "label": "Bloquer + parents", "is_correct": true },
+      { "label": "Donner ton prénom", "is_correct": false },
+      { "label": "Dire ton collège", "is_correct": false },
+      { "label": "Accepter l'appel", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_012",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_HARCELEMENT",
+    "elo_difficulty": 960,
+    "hud_prompt": "Prévenir le CPE d'un camarade harcelé, c'est de la délation ?",
+    "explanation_flash": "Non ! Dénoncer une injustice pour protéger quelqu'un, c'est du courage citoyen.",
+    "targets": [
+      { "label": "Non, c'est protéger", "is_correct": true },
+      { "label": "Oui, c'est mal", "is_correct": false },
+      { "label": "C'est interdit", "is_correct": false },
+      { "label": "C'est inutile", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_013",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_HARCELEMENT",
+    "elo_difficulty": 930,
+    "hud_prompt": "Le harcèlement scolaire peut aussi se faire sans coups, par...",
+    "explanation_flash": "L'exclusion, les surnoms blessants et les rumeurs sont aussi du harcèlement.",
+    "targets": [
+      { "label": "Mots et exclusion", "is_correct": true },
+      { "label": "Bons devoirs", "is_correct": false },
+      { "label": "Sourires sincères", "is_correct": false },
+      { "label": "Aide en maths", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_014",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_HARCELEMENT",
+    "elo_difficulty": 950,
+    "hud_prompt": "Un camarade isolé reste seul sur un banc. Geste de Gardien ?",
+    "explanation_flash": "S'asseoir près de lui ou l'inviter à jouer casse l'isolement immédiatement !",
+    "targets": [
+      { "label": "L'inviter à jouer", "is_correct": true },
+      { "label": "L'ignorer", "is_correct": false },
+      { "label": "Pointer du doigt", "is_correct": false },
+      { "label": "Chuchoter derrière", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_015",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_HARCELEMENT",
+    "elo_difficulty": 980,
+    "hud_prompt": "Combien de temps dure le programme pHARe contre le harcèlement ?",
+    "explanation_flash": "pHARe mobilise élèves ambassadeurs et adultes toute l'année dans les collèges !",
+    "targets": [
+      { "label": "Toute l'année", "is_correct": true },
+      { "label": "Un seul lundi", "is_correct": false },
+      { "label": "Juste en juin", "is_correct": false },
+      { "label": "Jamais au collège", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_016",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_HARCELEMENT",
+    "elo_difficulty": 940,
+    "hud_prompt": "Quel mot décrit celui qui choisit d'aider une cible de moqueries ?",
+    "explanation_flash": "Un témoin actif ou allié protège son camarade et fait cesser le harcèlement.",
+    "targets": [
+      { "label": "Témoin actif", "is_correct": true },
+      { "label": "Spectateur passif", "is_correct": false },
+      { "label": "Complaisant", "is_correct": false },
+      { "label": "Silencieux", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_017",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_HARCELEMENT",
+    "elo_difficulty": 970,
+    "hud_prompt": "À partir de quel âge conseille-t-on les grands réseaux sociaux ?",
+    "explanation_flash": "En France, la majorité numérique est fixée pour protéger les moins de 13-15 ans.",
+    "targets": [
+      { "label": "13 ans minimum", "is_correct": true },
+      { "label": "6 ans", "is_correct": false },
+      { "label": "8 ans", "is_correct": false },
+      { "label": "Sans limite", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_018",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_HARCELEMENT",
+    "elo_difficulty": 930,
+    "hud_prompt": "Ton meilleur ami publie une vidéo gênante d'un autre élève. Tu...",
+    "explanation_flash": "Un vrai ami sait dire gentiment qu'il vaut mieux supprimer une vidéo blessante.",
+    "targets": [
+      { "label": "Lui dis d'effacer", "is_correct": true },
+      { "label": "La repartages vite", "is_correct": false },
+      { "label": "La commentes mal", "is_correct": false },
+      { "label": "Ne dis rien", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_019",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_HARCELEMENT",
+    "elo_difficulty": 960,
+    "hud_prompt": "Quel danger pose une fausse rumeur envoyée par message ?",
+    "explanation_flash": "En ligne, une rumeur se diffuse très vite et peut blesser durablement.",
+    "targets": [
+      { "label": "Diffusion rapide", "is_correct": true },
+      { "label": "Elle aide la classe", "is_correct": false },
+      { "label": "Elle disparaît seule", "is_correct": false },
+      { "label": "Elle améliore la note", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_020",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_HARCELEMENT",
+    "elo_difficulty": 950,
+    "hud_prompt": "Avec qui garder ton mot de passe de messagerie secret ?",
+    "explanation_flash": "Ton mot de passe est personnel : ne le donne même pas à un camarade !",
+    "targets": [
+      { "label": "Toi et tes parents", "is_correct": true },
+      { "label": "Toute la classe", "is_correct": false },
+      { "label": "Un groupe public", "is_correct": false },
+      { "label": "Sur ton casier", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_021",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_HARCELEMENT",
+    "elo_difficulty": 990,
+    "hud_prompt": "Pourquoi dit-on que le cyberharcèlement ne s'arrête pas à la grille ?",
+    "explanation_flash": "Parce que les messages peuvent arriver le soir chez soi : coupe les notifs et parle !",
+    "targets": [
+      { "label": "Il continue le soir", "is_correct": true },
+      { "label": "Il reste en gym", "is_correct": false },
+      { "label": "Il dure 2 secondes", "is_correct": false },
+      { "label": "Il aide à dormir", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_022",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_HARCELEMENT",
+    "elo_difficulty": 940,
+    "hud_prompt": "Que permet l'application 3018 sur smartphone ?",
+    "explanation_flash": "L'appli 3018 permet de chatter avec des pros et de faire supprimer des contenus nuisibles.",
+    "targets": [
+      { "label": "Signaler et aider", "is_correct": true },
+      { "label": "Jouer aux cartes", "is_correct": false },
+      { "label": "Noter ses amis", "is_correct": false },
+      { "label": "Envoyer des rumeurs", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_023",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_HARCELEMENT",
+    "elo_difficulty": 950,
+    "hud_prompt": "Un élève reçoit un surnom qu'il n'aime pas. Que faire ?",
+    "explanation_flash": "Si ça ne fait pas rire la personne concernée, on arrête immédiatement !",
+    "targets": [
+      { "label": "Arrêter aussitôt", "is_correct": true },
+      { "label": "Continuer fort", "is_correct": false },
+      { "label": "L'écrire au tableau", "is_correct": false },
+      { "label": "Dire qu'il exagère", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_024",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_HARCELEMENT",
+    "elo_difficulty": 960,
+    "hud_prompt": "Si tu as participé à une moquerie sans réfléchir, tu peux...",
+    "explanation_flash": "Reconnaître son erreur et présenter des excuses sincères répare le lien !",
+    "targets": [
+      { "label": "T'excuser et réparer", "is_correct": true },
+      { "label": "Mentir encore", "is_correct": false },
+      { "label": "Accuser la victime", "is_correct": false },
+      { "label": "Faire plus fort", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_025",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_HARCELEMENT",
+    "elo_difficulty": 920,
+    "hud_prompt": "À la Vie Scolaire, qui peut recevoir une alerte harcèlement ?",
+    "explanation_flash": "Le CPE et les surveillants sont là pour écouter avec discrétion et protéger chaque élève.",
+    "targets": [
+      { "label": "Le CPE", "is_correct": true },
+      { "label": "Un passant", "is_correct": false },
+      { "label": "Le bus scolaire", "is_correct": false },
+      { "label": "Personne", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_026",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_INTIMITE",
+    "elo_difficulty": 900,
+    "hud_prompt": "À qui appartient ton corps et ton espace personnel ?",
+    "explanation_flash": "Ton corps t'appartient à 100% : chacun doit respecter tes limites !",
+    "targets": [
+      { "label": "À toi uniquement", "is_correct": true },
+      { "label": "Au plus grand", "is_correct": false },
+      { "label": "À la classe", "is_correct": false },
+      { "label": "À tout le monde", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_027",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_INTIMITE",
+    "elo_difficulty": 920,
+    "hud_prompt": "C'est quoi un « bon secret » ?",
+    "explanation_flash": "Un bon secret rend joyeux et ne dure pas, comme une surprise d'anniversaire !",
+    "targets": [
+      { "label": "Une fête surprise", "is_correct": true },
+      { "label": "Un secret qui fait peur", "is_correct": false },
+      { "label": "Un geste qui blesse", "is_correct": false },
+      { "label": "Une menace cachée", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_028",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_INTIMITE",
+    "elo_difficulty": 930,
+    "hud_prompt": "Si un secret te rend triste ou te met mal à l'aise, il faut...",
+    "explanation_flash": "Un mauvais secret ne doit JAMAIS être gardé : confie-le vite à un adulte sûr !",
+    "targets": [
+      { "label": "En parler vite", "is_correct": true },
+      { "label": "Le garder toujours", "is_correct": false },
+      { "label": "Avoir honte", "is_correct": false },
+      { "label": "Ne rien dire", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_029",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_INTIMITE",
+    "elo_difficulty": 940,
+    "hud_prompt": "As-tu le droit de dire NON si un contact physique te gêne ?",
+    "explanation_flash": "Oui ! Tu as toujours le droit de dire NON à un contact ou un geste qui te gêne.",
+    "targets": [
+      { "label": "Oui, absolument", "is_correct": true },
+      { "label": "Non, jamais", "is_correct": false },
+      { "label": "Seulement à midi", "is_correct": false },
+      { "label": "Sauf si c'est drôle", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_030",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_INTIMITE",
+    "elo_difficulty": 950,
+    "hud_prompt": "Quel numéro gratuit protège les enfants en danger en France ?",
+    "explanation_flash": "Le 119 (Allô Enfance en Danger) est gratuit, confidentiel et ouvert 24h/24 !",
+    "targets": [
+      { "label": "119", "is_correct": true },
+      { "label": "3631", "is_correct": false },
+      { "label": "123", "is_correct": false },
+      { "label": "999", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_031",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_INTIMITE",
+    "elo_difficulty": 960,
+    "hud_prompt": "Si un adulte te demande un geste qui te gêne, as-tu le droit de dire NON ?",
+    "explanation_flash": "OUI ! Même face à un adulte, personne n'a le droit de dépasser tes limites.",
+    "targets": [
+      { "label": "Oui, même à un adulte", "is_correct": true },
+      { "label": "Jamais à un adulte", "is_correct": false },
+      { "label": "Uniquement dehors", "is_correct": false },
+      { "label": "Il faut obéir", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_032",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_INTIMITE",
+    "elo_difficulty": 930,
+    "hud_prompt": "Dans les vestiaires de sport, quel est le bon comportement ?",
+    "explanation_flash": "Chacun a droit à son intimité : pas de photos ni de remarques sur le corps.",
+    "targets": [
+      { "label": "Respecter l'intimité", "is_correct": true },
+      { "label": "Prendre des photos", "is_correct": false },
+      { "label": "Se moquer des autres", "is_correct": false },
+      { "label": "Ouvrir les casiers", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_033",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_INTIMITE",
+    "elo_difficulty": 950,
+    "hud_prompt": "Qu'est-ce que le consentement ?",
+    "explanation_flash": "Le consentement, c'est un OUI libre, clair et joyeux, sans aucune pression !",
+    "targets": [
+      { "label": "Un OUI libre", "is_correct": true },
+      { "label": "Un silence forcé", "is_correct": false },
+      { "label": "Un pari obligé", "is_correct": false },
+      { "label": "Une menace", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_034",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_INTIMITE",
+    "elo_difficulty": 940,
+    "hud_prompt": "Un élève tire le sac ou les vêtements d'un autre pour « rigoler ». Tu...",
+    "explanation_flash": "Un jeu n'est drôle que si tout le monde s'amuse : on arrête dès qu'un élève dit stop !",
+    "targets": [
+      { "label": "Dis STOP et aides", "is_correct": true },
+      { "label": "Tires plus fort", "is_correct": false },
+      { "label": "Rigoles avec lui", "is_correct": false },
+      { "label": "Caches son sac", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_035",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_INTIMITE",
+    "elo_difficulty": 970,
+    "hud_prompt": "Si le premier adulte à qui tu parles ne t'écoute pas bien, que faire ?",
+    "explanation_flash": "Cherche un deuxième adulte de confiance (infirmière, CPE, prof, 119) jusqu'à être aidé !",
+    "targets": [
+      { "label": "Parler à un autre adulte", "is_correct": true },
+      { "label": "Abandonner", "is_correct": false },
+      { "label": "Te taire à vie", "is_correct": false },
+      { "label": "Te sentir coupable", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_036",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_INTIMITE",
+    "elo_difficulty": 940,
+    "hud_prompt": "Peut-on forcer un ami à faire un câlin ou une bise ?",
+    "explanation_flash": "Non ! On peut dire bonjour avec un sourire, un check ou un salut de la main.",
+    "targets": [
+      { "label": "Non, jamais forcer", "is_correct": true },
+      { "label": "Oui, par politesse", "is_correct": false },
+      { "label": "Toujours le matin", "is_correct": false },
+      { "label": "Oui pour un gage", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_037",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_INTIMITE",
+    "elo_difficulty": 950,
+    "hud_prompt": "En ligne, quelqu'un te demande une photo intime ou privée. Réflexe ?",
+    "explanation_flash": "Refuse net, bloque la personne et préviens tout de suite un adulte de confiance !",
+    "targets": [
+      { "label": "Refuser + prévenir", "is_correct": true },
+      { "label": "Envoyer vite", "is_correct": false },
+      { "label": "Négocier avec lui", "is_correct": false },
+      { "label": "Cacher à tout prix", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_038",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_INTIMITE",
+    "elo_difficulty": 960,
+    "hud_prompt": "Un jeu « Action ou Vérité » te demande quelque chose qui te gêne.",
+    "explanation_flash": "Tu as toujours le droit de passer ton tour ou de quitter le jeu sans te justifier !",
+    "targets": [
+      { "label": "Dire NON et partir", "is_correct": true },
+      { "label": "Obéir au gage", "is_correct": false },
+      { "label": "Céder par peur", "is_correct": false },
+      { "label": "Forcer un autre", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_039",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_INTIMITE",
+    "elo_difficulty": 930,
+    "hud_prompt": "Qui est un adulte de santé à l'écoute dans ton collège ?",
+    "explanation_flash": "L'infirmière scolaire accueille les élèves en toute confidentialité pour écouter et soigner.",
+    "targets": [
+      { "label": "L'infirmière scolaire", "is_correct": true },
+      { "label": "Le portail d'entrée", "is_correct": false },
+      { "label": "Le tableau blanc", "is_correct": false },
+      { "label": "Un inconnu", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_040",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_INTIMITE",
+    "elo_difficulty": 980,
+    "hud_prompt": "Que signifie la « règle des sous-vêtements » ?",
+    "explanation_flash": "Personne ne doit toucher ni voir ce qui est sous les sous-vêtements (sauf soin médical avec parent).",
+    "targets": [
+      { "label": "Zone privée protégée", "is_correct": true },
+      { "label": "Règle de sport", "is_correct": false },
+      { "label": "Code du casier", "is_correct": false },
+      { "label": "Tenue de cantine", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_041",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_INTIMITE",
+    "elo_difficulty": 950,
+    "hud_prompt": "Un camarade te confie qu'on lui fait du mal chez lui. Que fais-tu ?",
+    "explanation_flash": "Même s'il a peur, préviens un adulte de confiance ou appelle le 119 pour le protéger !",
+    "targets": [
+      { "label": "Prévenir un adulte", "is_correct": true },
+      { "label": "Garder le silence", "is_correct": false },
+      { "label": "Oublier l'histoire", "is_correct": false },
+      { "label": "En rire demain", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_042",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_INTIMITE",
+    "elo_difficulty": 920,
+    "hud_prompt": "Si on te menace pour que tu gardes un secret, c'est un...",
+    "explanation_flash": "Une menace prouve que c'est un mauvais secret : il faut briser le silence !",
+    "targets": [
+      { "label": "Mauvais secret", "is_correct": true },
+      { "label": "Bon secret", "is_correct": false },
+      { "label": "Jeu d'énigme", "is_correct": false },
+      { "label": "Gage amical", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_043",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_INTIMITE",
+    "elo_difficulty": 940,
+    "hud_prompt": "Comment montrer qu'on respecte l'espace vital d'un camarade ?",
+    "explanation_flash": "Garder une distance confortable et demander avant de toucher son bras ou ses affaires.",
+    "targets": [
+      { "label": "Demander avant", "is_correct": true },
+      { "label": "Pousser pour passer", "is_correct": false },
+      { "label": "Prendre son stylo", "is_correct": false },
+      { "label": "Crier près de lui", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_044",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_INTIMITE",
+    "elo_difficulty": 970,
+    "hud_prompt": "Est-ce que le 119 s'affiche sur la facture téléphonique ?",
+    "explanation_flash": "Non ! L'appel au 119 est totalement gratuit et n'apparaît jamais sur les factures.",
+    "targets": [
+      { "label": "Non, anonyme", "is_correct": true },
+      { "label": "Oui, payant", "is_correct": false },
+      { "label": "Oui, très cher", "is_correct": false },
+      { "label": "Seulement le soir", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_045",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_INTIMITE",
+    "elo_difficulty": 950,
+    "hud_prompt": "Dans la rue, un inconnu te propose un cadeau pour monter en voiture.",
+    "explanation_flash": "Dis NON fermement, éloigne-toi vite vers un lieu sûr (école, commerce) et préviens un adulte !",
+    "targets": [
+      { "label": "Refuser et fuir", "is_correct": true },
+      { "label": "Accepter le cadeau", "is_correct": false },
+      { "label": "Monter 2 minutes", "is_correct": false },
+      { "label": "Donner ton adresse", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_046",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_INTIMITE",
+    "elo_difficulty": 930,
+    "hud_prompt": "Si tu as subi une agression, qui est responsable ?",
+    "explanation_flash": "La responsabilité appartient TOUJOURS à l'agresseur, jamais à l'enfant victime !",
+    "targets": [
+      { "label": "L'agresseur seul", "is_correct": true },
+      { "label": "La victime", "is_correct": false },
+      { "label": "Ses vêtements", "is_correct": false },
+      { "label": "Personne", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_047",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_INTIMITE",
+    "elo_difficulty": 960,
+    "hud_prompt": "Que faire si un camarade te frappe ou te bouscule violemment ?",
+    "explanation_flash": "Ne réponds pas par la violence : mets-toi à l'abri et signale-le aussitôt au CPE !",
+    "targets": [
+      { "label": "Se protéger + alerter", "is_correct": true },
+      { "label": "Frapper plus fort", "is_correct": false },
+      { "label": "Ne rien dire", "is_correct": false },
+      { "label": "Attendre les vacances", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_048",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_INTIMITE",
+    "elo_difficulty": 940,
+    "hud_prompt": "Si tu changes d'avis au milieu d'un jeu physique (chat, lutte)...",
+    "explanation_flash": "Le consentement peut se retirer à tout moment : si tu dis STOP, le jeu s'arrête !",
+    "targets": [
+      { "label": "Le jeu s'arrête", "is_correct": true },
+      { "label": "Trop tard, on continue", "is_correct": false },
+      { "label": "Tu dois finir", "is_correct": false },
+      { "label": "On accélère", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_049",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_INTIMITE",
+    "elo_difficulty": 970,
+    "hud_prompt": "Qui sont tes « adultes boucliers » ?",
+    "explanation_flash": "Parents, grands-parents, professeurs, CPE, infirmière : garde en tête 3 personnes sûres !",
+    "targets": [
+      { "label": "Adultes de confiance", "is_correct": true },
+      { "label": "Inconnus en ligne", "is_correct": false },
+      { "label": "Bots du jeu", "is_correct": false },
+      { "label": "Personnages TV", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_050",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_INTIMITE",
+    "elo_difficulty": 950,
+    "hud_prompt": "Quand demander de l'aide à un adulte est-il une bonne idée ?",
+    "explanation_flash": "Dès que tu as peur, mal ou un doute : demander de l'aide est une force, pas une faiblesse !",
+    "targets": [
+      { "label": "Dès qu'on a un doute", "is_correct": true },
+      { "label": "Jamais avant 18 ans", "is_correct": false },
+      { "label": "Uniquement le vendredi", "is_correct": false },
+      { "label": "Seulement blessé", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_051",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_ECOUTE",
+    "elo_difficulty": 900,
+    "hud_prompt": "Tu te sens très triste plusieurs jours de suite. Que faire ?",
+    "explanation_flash": "Ne reste jamais seul avec ta peine : confie-la à tes parents ou à l'infirmière !",
+    "targets": [
+      { "label": "Parler à un proche", "is_correct": true },
+      { "label": "Tout garder en soi", "is_correct": false },
+      { "label": "T'isoler encore plus", "is_correct": false },
+      { "label": "Dire que tout va bien", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_052",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_ECOUTE",
+    "elo_difficulty": 930,
+    "hud_prompt": "Quel numéro national d'écoute est ouvert 24h/24 pour la détresse ?",
+    "explanation_flash": "Le 3114 offre une écoute gratuite, bienveillante et confidentielle à tout moment !",
+    "targets": [
+      { "label": "3114", "is_correct": true },
+      { "label": "1010", "is_correct": false },
+      { "label": "1200", "is_correct": false },
+      { "label": "4444", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_053",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_ECOUTE",
+    "elo_difficulty": 920,
+    "hud_prompt": "Un ami ne rigole plus, dort en classe et s'isole. Réflexe ?",
+    "explanation_flash": "Demander doucement « Ça va ? Je suis là pour toi » peut déjà alléger son cœur.",
+    "targets": [
+      { "label": "L'écouter et soutenir", "is_correct": true },
+      { "label": "Te moquer de lui", "is_correct": false },
+      { "label": "L'éviter la semaine", "is_correct": false },
+      { "label": "Dire qu'il est nul", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_054",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_ECOUTE",
+    "elo_difficulty": 940,
+    "hud_prompt": "Un camarade te dit qu'il a des idées très noires. Que fais-tu ?",
+    "explanation_flash": "C'est trop lourd pour un seul enfant : alerte immédiatement un adulte ou le 3114 !",
+    "targets": [
+      { "label": "Alerter un adulte", "is_correct": true },
+      { "label": "Promettre le silence", "is_correct": false },
+      { "label": "Changer de sujet", "is_correct": false },
+      { "label": "Attendre un mois", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_055",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_ECOUTE",
+    "elo_difficulty": 910,
+    "hud_prompt": "Avoir envie de pleurer quand on est stressé en 6ème, c'est...",
+    "explanation_flash": "Les larmes aident le corps à relâcher la pression : toutes les émotions sont valables !",
+    "targets": [
+      { "label": "Humain et normal", "is_correct": true },
+      { "label": "Honteux", "is_correct": false },
+      { "label": "Interdit aux garçons", "is_correct": false },
+      { "label": "Une faiblesse grave", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_056",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_ECOUTE",
+    "elo_difficulty": 930,
+    "hud_prompt": "Avant une évaluation stressante, quelle respiration calme le cœur ?",
+    "explanation_flash": "La cohérence cardiaque (inspirer 4-5s, expirer 5s) envoie un signal de calme au cerveau !",
+    "targets": [
+      { "label": "Respirer lentement", "is_correct": true },
+      { "label": "Retenir son souffle", "is_correct": false },
+      { "label": "Crier très fort", "is_correct": false },
+      { "label": "Courir en cercle", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_057",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_ECOUTE",
+    "elo_difficulty": 950,
+    "hud_prompt": "Qui est le Psy EN (Psychologue de l'Éducation Nationale) ?",
+    "explanation_flash": "Le Psy EN reçoit gratuitement les collégiens qui ont besoin d'écoute ou d'orientation.",
+    "targets": [
+      { "label": "Spécialiste d'écoute", "is_correct": true },
+      { "label": "Prof de natation", "is_correct": false },
+      { "label": "Chef de cantine", "is_correct": false },
+      { "label": "Chauffeur de car", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_058",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_ECOUTE",
+    "elo_difficulty": 940,
+    "hud_prompt": "La « Météo Intérieure » sert à...",
+    "explanation_flash": "Mettre un mot ou un symbole sur son humeur aide à comprendre ce dont on a besoin.",
+    "targets": [
+      { "label": "Nommer son émotion", "is_correct": true },
+      { "label": "Prévoir la pluie", "is_correct": false },
+      { "label": "Noter ses voisins", "is_correct": false },
+      { "label": "Calculer une aire", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_059",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_ECOUTE",
+    "elo_difficulty": 920,
+    "hud_prompt": "Tu as eu une mauvaise note et tu te sens découragé. Tu te dis...",
+    "explanation_flash": "Une note mesure un essai à un instant T, jamais ta valeur en tant que personne !",
+    "targets": [
+      { "label": "Je vais progresser", "is_correct": true },
+      { "label": "Je suis nul à vie", "is_correct": false },
+      { "label": "Personne ne m'aime", "is_correct": false },
+      { "label": "J'arrête d'essayer", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_060",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_ECOUTE",
+    "elo_difficulty": 960,
+    "hud_prompt": "Comment aider un ami qui traverse un moment difficile ?",
+    "explanation_flash": "Écouter sans juger, rester bienveillant et l'accompagner vers un adulte relais.",
+    "targets": [
+      { "label": "Écouter sans juger", "is_correct": true },
+      { "label": "Raconter à la classe", "is_correct": false },
+      { "label": "Minimiser sa peine", "is_correct": false },
+      { "label": "Lui faire la morale", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_061",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_ECOUTE",
+    "elo_difficulty": 950,
+    "hud_prompt": "Le sommeil d'un élève de 10-12 ans doit durer environ...",
+    "explanation_flash": "9 à 10 heures de sommeil rechargent le cerveau et apaisent les émotions !",
+    "targets": [
+      { "label": "9 à 10 heures", "is_correct": true },
+      { "label": "4 heures", "is_correct": false },
+      { "label": "2 heures", "is_correct": false },
+      { "label": "16 heures", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_062",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_ECOUTE",
+    "elo_difficulty": 940,
+    "hud_prompt": "Quelle habitude aide le soir à garder un esprit serein ?",
+    "explanation_flash": "Couper les écrans 1h avant de dormir et parler de sa journée favorise un bon sommeil.",
+    "targets": [
+      { "label": "Poser les écrans", "is_correct": true },
+      { "label": "Scroller jusqu'à minuit", "is_correct": false },
+      { "label": "Boire 3 sodas", "is_correct": false },
+      { "label": "Lire des disputes", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_063",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_ECOUTE",
+    "elo_difficulty": 970,
+    "hud_prompt": "Que signifie « briser le silence » quand on souffre ?",
+    "explanation_flash": "C'est oser mettre des mots sur son mal-être auprès d'un adulte ou du 3114.",
+    "targets": [
+      { "label": "Oser en parler", "is_correct": true },
+      { "label": "Casser un objet", "is_correct": false },
+      { "label": "Crier en classe", "is_correct": false },
+      { "label": "Rester muré", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_064",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_ECOUTE",
+    "elo_difficulty": 930,
+    "hud_prompt": "Quand tu ressens une grosse colère, que faire avant de réagir ?",
+    "explanation_flash": "Prendre une pause au Coin Calme (compter jusqu'à 10, boire un verre d'eau) évite les regrets !",
+    "targets": [
+      { "label": "Faire une pause", "is_correct": true },
+      { "label": "Casser un cahier", "is_correct": false },
+      { "label": "Insulter ton voisin", "is_correct": false },
+      { "label": "Claquer la porte", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_065",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_ECOUTE",
+    "elo_difficulty": 950,
+    "hud_prompt": "Peut-on demander de l'aide même si son problème semble « petit » ?",
+    "explanation_flash": "Oui ! Il n'y a pas de petit souci : mieux vaut en parler tôt avant qu'il ne grandisse.",
+    "targets": [
+      { "label": "Oui, toujours", "is_correct": true },
+      { "label": "Non, jamais", "is_correct": false },
+      { "label": "Attendre qu'il explose", "is_correct": false },
+      { "label": "C'est interdit", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_066",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_ECOUTE",
+    "elo_difficulty": 960,
+    "hud_prompt": "Quel adulte de la classe suit le bien-être global des élèves ?",
+    "explanation_flash": "Le Professeur Principal fait le lien entre la classe, les familles et l'équipe éducative.",
+    "targets": [
+      { "label": "Professeur Principal", "is_correct": true },
+      { "label": "Livre de maths", "is_correct": false },
+      { "label": "Rétroprojecteur", "is_correct": false },
+      { "label": "Arbitre externe", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_067",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_ECOUTE",
+    "elo_difficulty": 940,
+    "hud_prompt": "Que faire si tu as mal au ventre tous les matins avant le collège ?",
+    "explanation_flash": "Le corps exprime parfois une inquiétude : parles-en à tes parents et à l'infirmière !",
+    "targets": [
+      { "label": "En parler aux parents", "is_correct": true },
+      { "label": "Souffrir en silence", "is_correct": false },
+      { "label": "Sécher sans le dire", "is_correct": false },
+      { "label": "Rater les repas", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_068",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_ECOUTE",
+    "elo_difficulty": 980,
+    "hud_prompt": "Un élève se sent seul depuis son déménagement. Comment l'aider ?",
+    "explanation_flash": "Devenir son « parrain/marraine de rentrée » pendant quelques jours change tout !",
+    "targets": [
+      { "label": "Lui faire visiter", "is_correct": true },
+      { "label": "Le laisser chercher", "is_correct": false },
+      { "label": "Fermer le groupe", "is_correct": false },
+      { "label": "Rire de son accent", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_069",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_ECOUTE",
+    "elo_difficulty": 950,
+    "hud_prompt": "Pourquoi est-il important d'avoir des loisirs hors des écrans ?",
+    "explanation_flash": "Sport, dessin, lecture ou jeux dehors libèrent des endorphines qui protègent le moral !",
+    "targets": [
+      { "label": "Libérer du bien-être", "is_correct": true },
+      { "label": "Fatiguer les yeux", "is_correct": false },
+      { "label": "Rester anxieux", "is_correct": false },
+      { "label": "Perdre des amis", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_070",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_ECOUTE",
+    "elo_difficulty": 940,
+    "hud_prompt": "Quel effet a un compliment sincère envoyé à un camarade ?",
+    "explanation_flash": "Un mot gentil renforce la confiance de l'autre et améliore le climat de toute la classe !",
+    "targets": [
+      { "label": "Donner du courage", "is_correct": true },
+      { "label": "Rendre triste", "is_correct": false },
+      { "label": "Créer un conflit", "is_correct": false },
+      { "label": "Perdre des points", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_071",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_ECOUTE",
+    "elo_difficulty": 960,
+    "hud_prompt": "Que propose l'outil « Coin Calme » en cas de trop-plein d'émotions ?",
+    "explanation_flash": "Une pause respiration guidée + météo intérieure pour retrouver son équilibre !",
+    "targets": [
+      { "label": "Respiration + météo", "is_correct": true },
+      { "label": "Une punition", "is_correct": false },
+      { "label": "Un chrono rapide", "is_correct": false },
+      { "label": "Un contrôle surprise", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_072",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_ECOUTE",
+    "elo_difficulty": 970,
+    "hud_prompt": "Les appels au 3114 sont-ils réservés aux adultes ?",
+    "explanation_flash": "Non ! Les enfants, ados, parents ou amis inquiets peuvent appeler le 3114 gratuitement.",
+    "targets": [
+      { "label": "Ouvert à tous âges", "is_correct": true },
+      { "label": "Adultes seulement", "is_correct": false },
+      { "label": "Profs uniquement", "is_correct": false },
+      { "label": "Fermé le week-end", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_073",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_ECOUTE",
+    "elo_difficulty": 930,
+    "hud_prompt": "Quand tu fais une erreur en classe, est-ce utile d'en rire méchamment ?",
+    "explanation_flash": "Chacun apprend en se trompant : la bienveillance permet à tous d'oser participer !",
+    "targets": [
+      { "label": "Non, soutenir plutôt", "is_correct": true },
+      { "label": "Oui, très drôle", "is_correct": false },
+      { "label": "Oui, pour montrer", "is_correct": false },
+      { "label": "C'est obligatoire", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_074",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_ECOUTE",
+    "elo_difficulty": 950,
+    "hud_prompt": "Où trouver un endroit tranquille au collège pour lire au calme ?",
+    "explanation_flash": "Le CDI est un havre de paix idéal pour souffler, lire ou avancer sereinement !",
+    "targets": [
+      { "label": "Au CDI", "is_correct": true },
+      { "label": "Dans les escaliers", "is_correct": false },
+      { "label": "Sur la route", "is_correct": false },
+      { "label": "Sous le préau bruyant", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_075",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_ECOUTE",
+    "elo_difficulty": 940,
+    "hud_prompt": "Si tu ne sais pas comment commencer à parler de ta peine...",
+    "explanation_flash": "Tu peux écrire un petit mot sur papier ou dire simplement : « J'ai besoin qu'on m'écoute ».",
+    "targets": [
+      { "label": "Écrire un petit mot", "is_correct": true },
+      { "label": "Rester muet toujours", "is_correct": false },
+      { "label": "Partir sans prévenir", "is_correct": false },
+      { "label": "Dire que c'est rien", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_076",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_NEURO_HANDICAP",
+    "elo_difficulty": 910,
+    "hud_prompt": "Que veut dire TSA (Trouble du Spectre de l'Autisme) ?",
+    "explanation_flash": "Le cerveau autiste traite les sens et les détails différemment : ce n'est pas une maladie !",
+    "targets": [
+      { "label": "Cerveau différent", "is_correct": true },
+      { "label": "Un virus contagieux", "is_correct": false },
+      { "label": "De la paresse", "is_correct": false },
+      { "label": "Un mauvais caractère", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_077",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_NEURO_HANDICAP",
+    "elo_difficulty": 930,
+    "hud_prompt": "Un camarade TSA porte un casque anti-bruit en classe. Pourquoi ?",
+    "explanation_flash": "Ses oreilles captent les sons beaucoup plus fort : le casque le protège de la surcharge !",
+    "targets": [
+      { "label": "Calmer les sons forts", "is_correct": true },
+      { "label": "Écouter des jeux", "is_correct": false },
+      { "label": "Ignorer ses amis", "is_correct": false },
+      { "label": "Faire une sieste", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_078",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_NEURO_HANDICAP",
+    "elo_difficulty": 950,
+    "hud_prompt": "Qu'est-ce qu'une « surcharge sensorielle » ?",
+    "explanation_flash": "Trop de bruit, de lumières ou d'agitation d'un coup : baisser le volume aide aussitôt !",
+    "targets": [
+      { "label": "Trop de bruit/lumières", "is_correct": true },
+      { "label": "Un cartable trop lourd", "is_correct": false },
+      { "label": "Une panne de stylo", "is_correct": false },
+      { "label": "Trop de vacances", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_079",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_NEURO_HANDICAP",
+    "elo_difficulty": 940,
+    "hud_prompt": "Quel est le rôle d'un(e) AESH au collège ?",
+    "explanation_flash": "L'AESH accompagne l'élève en situation de handicap pour lui donner autonomie et confiance.",
+    "targets": [
+      { "label": "Accompagner l'élève", "is_correct": true },
+      { "label": "Donner les notes", "is_correct": false },
+      { "label": "Surveiller la rue", "is_correct": false },
+      { "label": "Faire les devoirs", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_080",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_NEURO_HANDICAP",
+    "elo_difficulty": 920,
+    "hud_prompt": "La dyslexie empêche-t-elle d'être très intelligent ?",
+    "explanation_flash": "Jamais ! La dyslexie rend juste le déchiffrage des lettres plus lent ; l'intelligence est intacte.",
+    "targets": [
+      { "label": "Jamais, zéro lien", "is_correct": true },
+      { "label": "Oui, en sciences", "is_correct": false },
+      { "label": "Un peu en sport", "is_correct": false },
+      { "label": "Oui à l'oral", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_081",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_NEURO_HANDICAP",
+    "elo_difficulty": 940,
+    "hud_prompt": "Qu'aide un élève dyslexique à lire plus confortablement ?",
+    "explanation_flash": "Une police aérée, des lignes espacées ou la synthèse vocale facilitent la lecture !",
+    "targets": [
+      { "label": "Texte aéré + audio", "is_correct": true },
+      { "label": "Tout en tout petit", "is_correct": false },
+      { "label": "Des flashs rapides", "is_correct": false },
+      { "label": "Lire dans le noir", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_082",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_NEURO_HANDICAP",
+    "elo_difficulty": 950,
+    "hud_prompt": "Un élève TDAH a beaucoup d'énergie cinétique et d'idées. Son besoin ?",
+    "explanation_flash": "Des consignes claires une par une et de courtes pauses actives canalisent son super-élan !",
+    "targets": [
+      { "label": "Consignes par étapes", "is_correct": true },
+      { "label": "Le punir sans arrêt", "is_correct": false },
+      { "label": "L'exclure du groupe", "is_correct": false },
+      { "label": "Lui parler vite", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_083",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_NEURO_HANDICAP",
+    "elo_difficulty": 960,
+    "hud_prompt": "Pourquoi certains élèves utilisent-ils un ordinateur en classe ?",
+    "explanation_flash": "En cas de dysgraphie ou trouble moteur, le clavier contourne la fatigue de la main !",
+    "targets": [
+      { "label": "Compenser la dysgraphie", "is_correct": true },
+      { "label": "Jouer pendant le cours", "is_correct": false },
+      { "label": "Avoir un privilège", "is_correct": false },
+      { "label": "Copier sur le voisin", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_084",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_NEURO_HANDICAP",
+    "elo_difficulty": 970,
+    "hud_prompt": "Que garantit un PAP (Plan d'Accompagnement Personnalisé) ?",
+    "explanation_flash": "Le PAP prévoit des aménagements justes (tiers-temps, feuille agrandie) pour les troubles Dys/TDAH.",
+    "targets": [
+      { "label": "Aménagements scolaires", "is_correct": true },
+      { "label": "Moins de récréation", "is_correct": false },
+      { "label": "Des points cadeaux", "is_correct": false },
+      { "label": "Pas d'évaluation", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_085",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_NEURO_HANDICAP",
+    "elo_difficulty": 980,
+    "hud_prompt": "Le « tiers-temps » aux contrôles est-il de la triche ?",
+    "explanation_flash": "C'est de l'équité ! Comme des lunettes pour bien voir, il compense la lenteur de lecture/écriture.",
+    "targets": [
+      { "label": "Non, c'est l'équité", "is_correct": true },
+      { "label": "Oui, de la triche", "is_correct": false },
+      { "label": "Un bonus injuste", "is_correct": false },
+      { "label": "Une faveur secrète", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_086",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_NEURO_HANDICAP",
+    "elo_difficulty": 940,
+    "hud_prompt": "Un camarade se déplace en fauteuil roulant. Bon réflexe au couloir ?",
+    "explanation_flash": "Laisser le passage dégagé, tenir la porte et parler à sa hauteur avec naturel !",
+    "targets": [
+      { "label": "Dégager le passage", "is_correct": true },
+      { "label": "Pousser sans prévenir", "is_correct": false },
+      { "label": "Bloquer la rampe", "is_correct": false },
+      { "label": "Fixer sans parler", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_087",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_NEURO_HANDICAP",
+    "elo_difficulty": 950,
+    "hud_prompt": "Un élève malentendant lit parfois sur les lèvres. Comment lui parler ?",
+    "explanation_flash": "Face à lui, clairement sans crier et sans cacher sa bouche : la communication devient fluide !",
+    "targets": [
+      { "label": "En face et clairement", "is_correct": true },
+      { "label": "Dos tourné", "is_correct": false },
+      { "label": "En chuchotant", "is_correct": false },
+      { "label": "En criant fort", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_088",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_NEURO_HANDICAP",
+    "elo_difficulty": 960,
+    "hud_prompt": "Quelle force accompagne souvent les profils Dys ou TDAH ?",
+    "explanation_flash": "Créativité hors pair, vision 3D, pensée rapide en arborescence et grande empathie !",
+    "targets": [
+      { "label": "Créativité et vision 3D", "is_correct": true },
+      { "label": "Aucune qualité", "is_correct": false },
+      { "label": "Manque d'envie", "is_correct": false },
+      { "label": "Mémoire vide", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_089",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_NEURO_HANDICAP",
+    "elo_difficulty": 930,
+    "hud_prompt": "Si un camarade autiste a besoin d'une routine claire avant une sortie...",
+    "explanation_flash": "Expliquer le programme étape par étape rassure énormément et évite le stress de l'imprévu.",
+    "targets": [
+      { "label": "Expliquer les étapes", "is_correct": true },
+      { "label": "Changer tout au hasard", "is_correct": false },
+      { "label": "Lui faire peur", "is_correct": false },
+      { "label": "Ne rien prévoir", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_090",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_NEURO_HANDICAP",
+    "elo_difficulty": 970,
+    "hud_prompt": "Qu'est-ce qu'un dispositif ULIS au collège ?",
+    "explanation_flash": "L'ULIS permet aux élèves ayant un handicap de suivre des cours en classe avec un soutien adapté.",
+    "targets": [
+      { "label": "Soutien d'inclusion", "is_correct": true },
+      { "label": "Une sanction sévère", "is_correct": false },
+      { "label": "Un club de foot", "is_correct": false },
+      { "label": "La salle des casiers", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_091",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_NEURO_HANDICAP",
+    "elo_difficulty": 950,
+    "hud_prompt": "Un élève bégaie quand il lit à voix haute. Attitude bienveillante ?",
+    "explanation_flash": "Lui laisser le temps de finir sa phrase calmement, sans jamais couper ni finir ses mots !",
+    "targets": [
+      { "label": "Attendre calmement", "is_correct": true },
+      { "label": "Finir sa phrase", "is_correct": false },
+      { "label": "Pouffer de rire", "is_correct": false },
+      { "label": "Imiter sa voix", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_092",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_NEURO_HANDICAP",
+    "elo_difficulty": 960,
+    "hud_prompt": "Quelle différence entre « égalité » et « équité » à l'école ?",
+    "explanation_flash": "L'équité donne à chacun l'outil précis dont il a besoin pour réussir ensemble !",
+    "targets": [
+      { "label": "Adapter à chacun", "is_correct": true },
+      { "label": "Donner moins aux autres", "is_correct": false },
+      { "label": "Ignorer les besoins", "is_correct": false },
+      { "label": "Supprimer les cours", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_093",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_NEURO_HANDICAP",
+    "elo_difficulty": 940,
+    "hud_prompt": "Un camarade a un « coussin d'assise » ou un objet antistress discret.",
+    "explanation_flash": "Cet outil l'aide à concentrer son attention sans déranger personne : respectons-le !",
+    "targets": [
+      { "label": "Outil de concentration", "is_correct": true },
+      { "label": "Un jouet interdit", "is_correct": false },
+      { "label": "Une farce de classe", "is_correct": false },
+      { "label": "Un trophée sportif", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_094",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_NEURO_HANDICAP",
+    "elo_difficulty": 980,
+    "hud_prompt": "Que signifie le sigle PPS au collège ?",
+    "explanation_flash": "Projet Personnalisé de Scolarisation : il coordonne les aides humaines (AESH) et matérielles.",
+    "targets": [
+      { "label": "Projet de Scolarisation", "is_correct": true },
+      { "label": "Pause Pour Sport", "is_correct": false },
+      { "label": "Permis Pour Sortir", "is_correct": false },
+      { "label": "Plan de Piscine", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_095",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_NEURO_HANDICAP",
+    "elo_difficulty": 940,
+    "hud_prompt": "En sport (EPS), un camarade a un handicap moteur. En équipe, on...",
+    "explanation_flash": "On adapte les règles ensemble pour que tout le monde participe et marque des points !",
+    "targets": [
+      { "label": "Adapte pour inclure", "is_correct": true },
+      { "label": "Le laisse sur le banc", "is_correct": false },
+      { "label": "Le choisit en dernier", "is_correct": false },
+      { "label": "Annule le match", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_096",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_NEURO_HANDICAP",
+    "elo_difficulty": 950,
+    "hud_prompt": "Que fait le bouton « Confort Sensoriel TSA » dans le jeu ?",
+    "explanation_flash": "Il coupe les flashs et secousses d'écran pour jouer avec un vrai confort visuel et sonore !",
+    "targets": [
+      { "label": "Coupe flashs/secousses", "is_correct": true },
+      { "label": "Accélère tout", "is_correct": false },
+      { "label": "Monte le son fort", "is_correct": false },
+      { "label": "Cache les questions", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_097",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_NEURO_HANDICAP",
+    "elo_difficulty": 930,
+    "hud_prompt": "À la cantine, un élève est malvoyant. Comment l'aider gentiment ?",
+    "explanation_flash": "Lui proposer de l'aide s'il le souhaite et décrire la place des plats comme sur une horloge !",
+    "targets": [
+      { "label": "Proposer sans forcer", "is_correct": true },
+      { "label": "Déplacer son plateau", "is_correct": false },
+      { "label": "L'attraper sans parler", "is_correct": false },
+      { "label": "Partir en courant", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_098",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_NEURO_HANDICAP",
+    "elo_difficulty": 960,
+    "hud_prompt": "La dyscalculie touche la compréhension de...",
+    "explanation_flash": "La dyscalculie rend les nombres abstraits : schémas visuels et manipuler des objets aident beaucoup !",
+    "targets": [
+      { "label": "Nombres et quantités", "is_correct": true },
+      { "label": "Dessin artistique", "is_correct": false },
+      { "label": "Course de vitesse", "is_correct": false },
+      { "label": "Chant choral", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_099",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_NEURO_HANDICAP",
+    "elo_difficulty": 950,
+    "hud_prompt": "Pourquoi certains handicaps sont-ils dits « invisibles » ?",
+    "explanation_flash": "TSA, TDAH, Dys ou maladies chroniques ne se voient pas toujours de l'extérieur mais méritent respect !",
+    "targets": [
+      { "label": "Ne se voient pas", "is_correct": true },
+      { "label": "N'existent pas", "is_correct": false },
+      { "label": "Disparaissent la nuit", "is_correct": false },
+      { "label": "Sont des inventions", "is_correct": false }
+    ]
+  },
+  {
+    "id": "PREV_100",
+    "subject": "vie_au_college",
+    "skill_code": "PREV_NEURO_HANDICAP",
+    "elo_difficulty": 920,
+    "hud_prompt": "Que nous apporte la neurodiversité dans une classe de 6ème ?",
+    "explanation_flash": "Des façons uniques de penser, créer et coopérer qui rendent toute la classe plus forte !",
+    "targets": [
+      { "label": "Richesse et talents", "is_correct": true },
+      { "label": "Des problèmes seuls", "is_correct": false },
+      { "label": "Moins d'idées", "is_correct": false },
+      { "label": "Rien d'utile", "is_correct": false }
+    ]
+  }
+]
