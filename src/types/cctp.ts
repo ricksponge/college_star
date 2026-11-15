@@ -92,6 +92,8 @@ export interface IBrawler {
   title: string;
   archetype: string;
   favorite_subject: SubjectCategory;
+  /** Matière secondaire éventuelle (ex: Zack : Anglais & Vie au Collège) */
+  secondary_subject?: SubjectCategory;
   visual_description: string;
   /** Points de vie de base au niveau 1 (PV_max) */
   base_hp: number;
@@ -211,6 +213,17 @@ export interface IParentSubjectSummary {
   success_rate_pct: number;
   avg_reaction_time_ms: number;
   skills_to_consolidate: string[];
+}
+
+export interface IDailyQuest {
+  id: string;
+  title: string;
+  target: number;
+  progress: number;
+  reward_coins: number;
+  reward_stars: number;
+  claimed: boolean;
+  kind: 'CORRECT_HITS' | 'FAST_REFLEX' | 'MATCH_WINS';
 }
 
 // ============================================================================
