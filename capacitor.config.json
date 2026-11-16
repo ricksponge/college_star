@@ -1,0 +1,9 @@
+{
+  "appId": "fr.brawlcollege.operation6eme",
+  "appName": "Brawl Collège 6ème",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  }
+}

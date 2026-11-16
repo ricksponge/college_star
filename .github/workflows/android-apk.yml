@@ -1,0 +1,71 @@
+name: Build Android APK
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-android-apk:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Setup Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Install dependencies and build web app
+        run: |
+          npm ci
+          npm run build
+
+      - name: Initialize Capacitor Android project
+        run: |
+          npm install --no-save @capacitor/core@6.2.0 @capacitor/cli@6.2.0 @capacitor/android@6.2.0
+          npx cap add android
+          npx cap sync android
+
+      - name: Configure landscape orientation
+        run: |
+          sed -i -E 's/<activity([[:space:]]|$)/<activity android:screenOrientation="sensorLandscape"\1/' android/app/src/main/AndroidManifest.xml
+          grep -n "sensorLandscape" android/app/src/main/AndroidManifest.xml
+
+      - name: Build Android APK (Debug)
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+          cp app/build/outputs/apk/debug/app-debug.apk ../BrawlCollege-Operation6eme.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: BrawlCollege-Operation6eme-apk
+          path: BrawlCollege-Operation6eme.apk
+
+      - name: Publish APK to GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view apk-latest >/dev/null 2>&1; then
+            gh release upload apk-latest BrawlCollege-Operation6eme.apk --clobber
+          else
+            gh release create apk-latest BrawlCollege-Operation6eme.apk \
+              --title "Brawl Collège : Opération 6ème (APK Android)" \
+              --notes "APK Android installable directement sur smartphone et tablette (mode Paysage)."
+          fi
